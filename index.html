@@ -134,6 +134,42 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .stars span.on{background:radial-gradient(circle at 32% 28%, #FFFFFF 0 30%, #F2EFE6 60%, #D5CFBE 100%);
   border-color:var(--sage);box-shadow:inset -2px -3px 5px #00000014, 0 0 0 2px #8A9A7855;transform:scale(1.08)}
 .small{font-size:.82rem;color:var(--dim)}
+/* scorecard notation: golf's own symbol vocabulary (circle under par, square
+   over par, doubled ring for two+) — Fried Egg tagging pattern */
+.sym{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;
+  padding:0 4px;border:1.2px solid currentColor;font-family:var(--mono);color:var(--ink)}
+.sym.circ{border-radius:999px}
+.sym.sq{border-radius:3px}
+.sym.dbl{box-shadow:0 0 0 2px var(--card),0 0 0 3.2px currentColor}
+.scm{display:inline-block;width:9px;height:9px;border:1.2px solid currentColor;
+  vertical-align:-1px;margin-right:6px;border-radius:1.5px}
+.scm.circ{border-radius:50%}
+.scm.dbl{box-shadow:0 0 0 1.5px var(--card),0 0 0 2.4px currentColor}
+.lv .sym-ring{display:inline-block;padding:0 7px;border:1.1px solid currentColor;border-radius:999px}
+.lv .sym-box{display:inline-block;padding:0 6px;border:1.1px solid currentColor;border-radius:3px}
+/* yardage-book corner numeral (Golf Digest / Number magazine convention) */
+.corner-num{position:absolute;top:8px;right:12px;text-align:right;pointer-events:none;line-height:1}
+.corner-num span{font:700 3rem/1 var(--mono);letter-spacing:-.02em;color:#33362B26}
+@supports(-webkit-text-stroke:1px #000){.corner-num span{color:transparent;-webkit-text-stroke:1.1px #33362B4D}}
+.corner-num i{display:block;font:400 .6rem var(--mono);font-style:normal;letter-spacing:.14em;
+  color:var(--dim);margin-top:3px;text-transform:uppercase}
+/* Eephus scorebook: log entries sit on a punched page edge, summary card folds */
+#logentries .card{margin-left:16px;border-radius:4px 12px 12px 4px;position:relative}
+#logentries .card::before{content:"";position:absolute;left:-10px;top:4px;bottom:4px;width:10px;
+  background-image:radial-gradient(circle at 5px 9px,#33362B1C 2.2px,transparent 2.9px);
+  background-size:10px 22px;background-repeat:repeat-y}
+#view-log .card:first-of-type{overflow:hidden}
+#view-log .card:first-of-type::after{content:"";position:absolute;top:0;right:0;width:0;height:0;
+  border-style:solid;border-width:0 20px 20px 0;
+  border-color:transparent var(--sandbg) transparent transparent;
+  filter:drop-shadow(-1px 1px 1px #00000014)}
+/* motion: ranked options rise in with stagger; chosen pick pulses; zone-band
+   markers snap on springs. All springs, all killed by reduced-motion. */
+.call{animation:rise .4s var(--spring)}
+.opt{opacity:0;animation:rise .45s var(--spring) forwards}
+.opt.chosen{opacity:1;animation:pick .35s var(--spring)}
+@keyframes pick{from{transform:scale(.96)}to{transform:none}}
+.zone-band .me,.zone-band .melab{transition:left .35s var(--spring),opacity .2s}
 table{border-collapse:collapse;width:100%}
 td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:.9rem}
 th{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:400}
@@ -782,6 +818,15 @@ function buildBag(drTotal, c7, hcp) {
     ["Hybrid", Math.round(drC * 0.85), Math.round(drC * 0.85 + roll * 0.6)]];
   const irons = [["4i", 3], ["5i", 2], ["6i", 1], ["7i", 0], ["8i", -1], ["9i", -2], ["PW", -3]];
   irons.forEach(([n, k]) => bag.push([n, c7 + k * step, c7 + k * step + 8]));
+  // weak-driver bags can invert (hybrid shorter than the 4-iron); keep the top
+  // of the bag descending, squeezed under the driver's ceiling
+  const i4 = bag[3][1];
+  bag[2][1] = Math.max(bag[2][1], i4 + 5);
+  bag[1][1] = Math.max(bag[1][1], bag[2][1] + 8);
+  if (bag[1][1] > drC - 5) bag[1][1] = Math.max(drC - 5, i4 + 8);
+  if (bag[2][1] > bag[1][1] - 5) bag[2][1] = Math.max(bag[1][1] - 5, i4 + 2);
+  bag[1][2] = bag[1][1] + roll * 0.8;
+  bag[2][2] = bag[2][1] + roll * 0.6;
   bag.push(["GW", c7 - 3 * step - 12, c7 - 3 * step - 6],
            ["SW", c7 - 3 * step - 24, c7 - 3 * step - 20],
            ["LW", c7 - 3 * step - 34, c7 - 3 * step - 31]);
@@ -1007,8 +1052,12 @@ const COURSE_META={
 function courseMetaLine(c){const m=COURSE_META[c.slug]||{};
   const par=c.holes.reduce((a,h)=>a+(h.par||0),0);
   return [m.kind,m.where,par?"Par "+par:null,c.trust&&c.trust.rank].filter(Boolean).join(" · ");}
-function lvSpan(l){const cls=l==="HIGH"?"hi":l==="MED"?"md":"lo";
-  return `<span class='lv ${cls}'>${l==="HIGH"?"High":l==="MED"?"Medium":"Low"}</span>`;}
+function lvSpan(l,sym){const cls=l==="HIGH"?"hi":l==="MED"?"md":"lo";
+  const word=l==="HIGH"?"High":l==="MED"?"Medium":"Low";
+  if(!sym)return `<span class='lv ${cls}'>${word}</span>`;
+  // scorecard notation: circle = under par (good), square = over par (weak)
+  const wrap=l==="HIGH"?"sym-ring":l==="LOW"?"sym-box":"";
+  return `<span class='lv ${cls}'>${wrap?`<span class='${wrap}'>${word}</span>`:word}</span>`;}
 function renderTrust(){const t=COURSES[cur.course].trust,card=$("#trustcard");
   if(!t){card.classList.add("hidden");return}
   card.classList.remove("hidden");
@@ -1018,7 +1067,7 @@ function renderTrust(){const t=COURSES[cur.course].trust,card=$("#trustcard");
    <p class='trust-rank'>${t.rank||""}<span class='src'>${t.rank_src||""}</span></p>
    <p class='trust-blurb'>${t.blurb||""}</p>
    <div class='trust-aspects'>${["yardages","strategy","greens"].map(k=>
-     `<div class='ta'><b>${k}</b><span>${lvSpan(a[k].level)} <span class='note'>${fmt(a[k].note)}</span></span></div>`).join("")}</div>
+     `<div class='ta'><b>${k}</b><span>${lvSpan(a[k].level,true)} <span class='note'>${fmt(a[k].note)}</span></span></div>`).join("")}</div>
    <p class='trust-meta'>${t.srcs??"?"} sources · ${t.conflicts} conflicts flagged, never merged · ${t.gaps} open gaps · updated ${t.updated}</p>`;}
 function renderCourseSel(){
   const btn=$("#course-btn"),menu=$("#course-menu"),dd=$("#course-dd");
@@ -1075,7 +1124,8 @@ function renderHoles(){const c=COURSES[cur.course];store.cur=cur;
   const ty=h.ty&&h.ty[sel];
   const par=(h.tpar&&h.tpar[sel])||h.par;
   const shown=ty||h.yards;
-  $("#holecard").innerHTML=`<p class="eyebrow">Hole ${h.n}${h.name?" · "+h.name:""} ${h.si?`<span class='pill'>SI ${h.si}</span>`:""}</p>
+  $("#holecard").innerHTML=`<div class='corner-num num' aria-hidden='true'><span>${h.n}</span>${h.si?`<i>SI ${h.si}</i>`:""}</div>
+   <p class="eyebrow">Hole ${h.n}${h.name?" · "+h.name:""}</p>
    <h2 class="parline">Par ${par}${shown?` <span class='num'>· <i class='teedot ${ty?tc:"gold"}'></i>${shown} yds</span>`:""}</h2>
    ${ty?((h.tpar&&h.tpar[sel]&&h.tpar[sel]!==h.par)?`<p class="teenote">Par changes by tee here. From the ${sel} tees this is a par ${par}.</p>`
        :(sel!=="champ"&&h.ty.champ&&h.ty.champ!==ty?`<p class="teenote">From the ${sel} tees. Champ card: ${h.ty.champ}y.</p>`:""))
@@ -1128,6 +1178,10 @@ function fieldData(){const c=COURSES[cur.course],h=c.holes.find(x=>x.n===cur.hol
   return bits.filter(Boolean).join(" ")+" ";}
 function buildField(el,shape,data,W,H){
   el.textContent="";
+  // measure the mono advance so blended display-face glyphs keep the grid true
+  // (Glyph Drawing Club move: ASCII beyond one typeface, positions locked)
+  const meas=document.createElement("span");meas.textContent="0";el.appendChild(meas);
+  const chw=meas.getBoundingClientRect().width;el.removeChild(meas);
   const cells=[],frag=document.createDocumentFragment();let di=0;
   for(let y=0;y<H;y++){for(let x=0;x<W;x++){
     const d=shape(x*(40/W),y*(45/H));
@@ -1139,6 +1193,8 @@ function buildField(el,shape,data,W,H){
       const col=roll<.05?"var(--brick)":roll<.13?"var(--slate)":roll<.24?"var(--sage)":
         (d>.8?"#33362B":"#33362BB0");
       s.style.color=col;
+      if(chw>0&&d>.85&&Math.random()<.3){
+        s.style.cssText+=`;font-family:var(--disp);font-weight:600;display:inline-block;width:${chw}px;text-align:center`;}
       cells.push({s,x,y,base:ch,baseCol:col,t:0});}
     else s.textContent=" ";
     frag.appendChild(s);}
@@ -1207,6 +1263,13 @@ function lineToPin(ball,pin,g){
   return [...hits.values()].filter(h=>h.first>6)
     .sort((a,b)=>a.first-b.first).map(h=>({kind:h.kind,name:h.name,clear:Math.round(h.clear/5)*5}));}
 let lastTap=null;
+/* card calibration factor, gated: a 2-point centerline is a straight line —
+   if the card runs long over it (dogleg), scaling straight-line taps by the
+   ratio fabricates distance (audit: St Andrews 14, DGC 17). Trust the tap. */
+function mapCF(g){if(!g||!g.card||!g.len)return 1;
+  const r=g.card/g.len;
+  if(g.cl&&g.cl.length<=2&&r>1.1)return 1;
+  return Math.min(1.25,r);}
 function renderHoleMap(h){
   lastTap=null;
   const wrap=$("#holemap"),g=h.geo;
@@ -1247,14 +1310,16 @@ function renderHoleMap(h){
   }
   /* card calibration: every distance the map hands out is scaled so it
      reconciles with the scorecard (doglegs measure long/short on the line) */
-  const cf=g.card&&g.len?g.card/g.len:1;
-  const cardLen=g.card||g.len;
+  const cf=mapCF(g);
+  const straightUnderCard=!!(g.card&&g.cl.length<=2&&g.card/g.len>1.1);
+  const cardLen=straightUnderCard?g.len:(g.card||g.len);
   let ticks="";
   for(let y=50;y<cardLen;y+=50){const mx=SX(y/cf);
     ticks+=`<line x1='${mx.toFixed(0)}' y1='${Hh-5}' x2='${mx.toFixed(0)}' y2='${Hh}' class='hm-tick'/>`;
     if(y%100===0)ticks+=`<text x='${mx.toFixed(0)}' y='${Hh-8}' text-anchor='middle' class='hm-lab'>${y}</text>`;}
   const partial=!(g.fw&&g.fw.length)||!(g.gn&&g.gn.length);
-  const calNote=Math.abs(cf-1)>0.03?` <em class='hm-warn'>· ×${cf.toFixed(2)} card-calibrated</em>`:"";
+  const calNote=straightUnderCard?` <em class='hm-warn'>· straight-line map, card ${g.card}y</em>`
+    :Math.abs(cf-1)>0.03?` <em class='hm-warn'>· ×${cf.toFixed(2)} card-calibrated</em>`:"";
   wrap.innerHTML=`<div class='hm-cap'><span>Hole ${h.n} · tap to drop your ball</span><span id='hm-read'>${partial?`<em class='hm-warn'>partial map · line ${g.gn&&g.gn.length?"":"+ bunkers "}only</em>`:`${cardLen}y · OSM`}${calNote}</span></div>
    <svg viewBox='0 0 ${W.toFixed(0)} ${Hh.toFixed(0)}' preserveAspectRatio='xMidYMid meet'>
     ${corridor}${polys(g.tr,"hm-tr")}${polys(g.fw,"hm-fw")}${polys(g.wa,"hm-wa")}${polys(g.te,"hm-te")}${polys(g.bk,"hm-bk")}${polys(g.gn,"hm-gn")}${rings}${greenArt}
@@ -1363,7 +1428,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
      distance typed (card yards mapped back onto the line). */
   let elevAdj=0;
   if(distShot&&h.geo&&h.geo.el&&h.geo.el.p&&h.geo.el.p.length>1){
-    const gE=h.geo,cfE=gE.card&&gE.len?gE.card/gE.len:1,p=gE.el.p;
+    const gE=h.geo,cfE=mapCF(gE),p=gE.el.p;
     let along=(lastTap&&lastTap.holeN===h.n&&lastTap.ball)?lastTap.ball[1]
       :gE.len-sit.dist/cfE;
     along=Math.min(gE.len,Math.max(0,along));
@@ -1384,16 +1449,6 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
     const club=pickClub(pool,eff,poolLie(h,sit));
     clubLine=club.club;
     const windLab=sit.wind==="into"?"into the wind":sit.wind==="down"?"downwind":sit.wind==="cross"?"crosswind":null;
-    callMath=`<div class='callmath'><span class='cm'>${sit.dist} to the pin</span><span class='cm'>plays <b>${eff}</b></span>`+
-      (windLab?`<span class='cm'>${windLab}</span>`:"")+
-      (elevAdj?`<span class='cm'>${elevAdj>0?"uphill, +"+elevAdj:"downhill, "+elevAdj}</span>`:"")+
-      (c.stimp?`<span class='cm'>greens ${c.stimp}</span>`:"")+
-      (sit.temp!=="mild"?`<span class='cm'>${sit.temp} air</span>`:"")+
-      (sit.lie==="rough"?`<span class='cm'>rough allowance</span>`:"")+
-      (sit.lieq==="sitting"?`<span class='cm'>sitting down, no woods</span>`:"")+
-      (sit.lieq==="buried"?`<span class='cm'>buried lie</span>`:"")+
-      (bias?`<span class='cm'>one less club, local rule</span>`:"")+
-      `<span class='cm'>${club.club} carries <b>${club.carry}</b></span></div>`;
 
     /* ranked decision core: candidates scored by bag fit, rule pressure,
        geometry on the line, and club-family profile fit. Sourced heuristics:
@@ -1434,7 +1489,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
         const leave=Math.max(40,sit.dist-layClub.carry);
         const wIn=wPool9.reduce((a,b)=>Math.abs(b.carry-leave)<Math.abs(a.carry-leave)?b:a);
         const full=Math.abs(wIn.carry-leave)<=12;
-        var lay={id:"lay",club:layClub,why:[],score:52,
+        var lay={id:"lay",club:layClub,leave,why:[],score:52,
           title:`Lay up with ${layClub.club}, ${full?"full":"comfortable"} ${wIn.club} in`,
           body:`${layClub.club} leaves about ${leave}. A ${full?"stock":"controlled"} ${wIn.club} beats a stretched long club.`};}
       if(lay){
@@ -1451,20 +1506,37 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
       title:`${club.club}, centre of the green`,
       body:"Same club, aim the fat side and take the long putt."});
     cands.sort((a,b)=>b.score-a.score);
-    // options always render; the winner keeps the big club line above them
+    // options always render; the winner keeps the big club line above them,
+    // and the call math is built from the WINNER so headline and numbers can
+    // never name different clubs (call-audit severe finding, 2026-08-04)
     {
-      clubLine=cands[0].club.club;
+      const win=cands[0];
+      clubLine=win.club.club;
+      callMath=`<div class='callmath'><span class='cm'>${sit.dist} to the pin</span><span class='cm'>plays <b>${eff}</b></span>`+
+        (windLab?`<span class='cm'>${windLab}</span>`:"")+
+        (elevAdj?`<span class='cm'>${elevAdj>0?"uphill, +"+elevAdj:"downhill, "+elevAdj}</span>`:"")+
+        (c.stimp?`<span class='cm'>greens ${c.stimp}</span>`:"")+
+        (sit.temp!=="mild"?`<span class='cm'>${sit.temp} air</span>`:"")+
+        (sit.lie==="rough"?`<span class='cm'>rough allowance</span>`:"")+
+        (sit.lieq==="sitting"?`<span class='cm'>sitting down, no woods</span>`:"")+
+        (sit.lieq==="buried"?`<span class='cm'>buried lie</span>`:"")+
+        (bias?`<span class='cm'>one less club, local rule</span>`:"")+
+        (win.id==="lay"?`<span class='cm'>${win.club.club} leaves <b>${win.leave}</b></span>`
+          :`<span class='cm'>${win.club.club} carries <b>${win.club.carry}</b></span>`)+`</div>`;
       // recommendation %: scores normalized over the field (floored so nothing
       // honest reads as 0), shown on every card — tap a card to lock it in
       const mnS=Math.min(...cands.map(o=>o.score));
       const totS=cands.reduce((a,o)=>a+(o.score-mnS+15),0);
       const pct=o=>Math.round((o.score-mnS+15)/totS*100);
       approachOpts=`<div class='opts'>`+cands.slice(0,3).map((o,i)=>
-        `<div class='opt ${i===0?"rec":""}' data-pick='${o.title}' role='button' tabindex='0'><span class='oicon'>${ICONS[o.id==="lay"?"punch":o.id==="cons"?"advance":"window"]}</span><div><span class='orank'>${String(i+1).padStart(2,"0")}${i===0?" · The play":""} · rec ${pct(o)}%</span><h4>${o.title}</h4><p>${fmt(o.body||`${sit.dist} plays ${eff}. Your ${o.club.club} carries ${o.club.carry}.`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p></div></div>`).join("")+
+        `<div class='opt ${i===0?"rec":""}' data-pick='${o.title}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="lay"?"punch":o.id==="cons"?"advance":"window"]}</span><div><span class='orank'>${String(i+1).padStart(2,"0")}${i===0?" · The play":""} · rec ${pct(o)}%</span><h4>${o.title}</h4><p>${fmt(o.body||`${sit.dist} plays ${eff}. Your ${o.club.club} carries ${o.club.carry}.`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p></div></div>`).join("")+
         `<p class='small' style='margin:2px 0 0'>Tap the option you're playing. It goes in the log.</p></div>`;
     }}
   else if(sit.lie==="tee"){const g=(h.gates||[])[0];
-    clubLine=g&&drC<Math.max(0,g.carry-teeDelta)?"Position club":"Your tee club per the rules below";}
+    // a listed driving weakness demotes the driver here, not just in prose
+    const drivingWeak=(p.weaknesses||[]).includes("driving");
+    clubLine=g&&drC<Math.max(0,g.carry-teeDelta)?"Position club"
+      :drivingWeak?"Position club over driver":"Your tee club per the rules below";}
   // gate arithmetic: off the tee compare driver carry; on approaches/par-3s compare
   // the club actually being hit for this distance
   let gateClub={club:"driver",carry:drC};
@@ -1476,11 +1548,15 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
     return `<div class='gate'>${g.label}: needs <b>${need}</b> carry${teeDelta?` <span class='small'>(${g.carry} on the champ card, translated to your ${selT} tees)</span>`:""}. Your ${gateClub.club} carries <b>${gateClub.carry}</b>.
      ${ok?`<b>You clear it${gateClub.carry-need<10?", barely. Only with a good one":""}.</b> ${fmt(g.beat)}`:`<b>Not your number.</b> ${fmt(g.fail)}`}${teeShort?` <span class='small'>(championship-tee number — from your tees the real carry is shorter)</span>`:""}</div>`;}).join("");
   const persona=[];
+  if(sit.lie==="tee"&&h.par>3&&p.weaknesses.includes("driving"))persona.push("Driving is your listed weakness. Unless a rule below demands the driver, take the 3-wood or position club and play to the widest number, not the longest.");
   if(sit.pin!=="mid"&&p.weaknesses.includes("chipping"))persona.push("Chipping is your listed weakness — double down on centre-green here; short-side misses cost YOU more than most.");
   if(p.weaknesses.includes("bunkers"))persona.push("Bunkers are your weakness: treat every bunker-carry number as needing one extra club.");
   if(p.style==="aggressive"&&h.summary?.match(/birdie|scoring|drivable/i))persona.push("Scoring hole and you like to attack — this is the RIGHT place for it. Pick the aggressive option below.");
   if(p.style==="cautious")persona.push("Where a rule below offers two lines, take the safe one — that's your game and this course rewards it.");
   if(sit.lie==="tee"&&sit.dist===null){}
+  // crosswind must have a visible consequence even though it moves aim, not club
+  const crossNote=(sit.wind==="cross"&&distShot)?
+    noteRow("","the wind",`A ${sit.windstr===2?"strong ":""}crosswind moves everything toward the downwind side. Start your line on the windward edge of the target and let it ride back.`):"";
   const ruleRow=r=>{const warn=/never|dead|forbidden|NOT|no-go|danger|worst/i.test(r.advice);
     return `<div class='rule ${warn?"warn":""}'>${r.when&&r.when!=="always"?`<span class='when'>${r.when}</span>`:""}${fmt(r.advice)}<span class='src'>${r.src||""}</span></div>`};
   const noteRow=(cls,label,text)=>`<div class='rule ${cls}'><span class='when'>${label}</span>${text}</div>`;
@@ -1533,7 +1609,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
     const sitText=rec?`${rec.what}.${rec.cost?` Usually costs ${rec.cost}.`:""}${rec.srcd===false?" (General read; not course-sourced yet.)":""}`
       :`In the trouble${side?` on the ${side}`:""}. No course-sourced recovery notes for this hole yet; standard rule applies: out first, score second.`;
     troubleHTML=`<div class='sitblock'><span class='who'>The situation${side?` · ${side} side`:""}${rec&&rec.src?` · ${rec.src}`:""}</span>${fmt(sitText)}</div>
-      <div class='opts'>${opts.map(o=>`<div class='opt ${o.recc?"rec":""}' data-pick='${o.title}' role='button' tabindex='0'><span class='oicon'>${ICONS[o.icon]}</span><div><span class='orank'>${o.rank}</span><h4>${o.title}</h4><p>${fmt(o.body)}</p></div></div>`).join("")}
+      <div class='opts'>${opts.map((o,i)=>`<div class='opt ${o.recc?"rec":""}' data-pick='${o.title}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.icon]}</span><div><span class='orank'>${o.rank}</span><h4>${o.title}</h4><p>${fmt(o.body)}</p></div></div>`).join("")}
       <p class='small' style='margin:2px 0 0'>Tap the option you're playing. It goes in the log.</p></div>`;
     clubLine="";
   }
@@ -1552,10 +1628,16 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
   else if(rules.length===1){confPts+=0.5;confWhy.push("1 sourced rule in play");}
   if(mapConf==="full"){confPts+=1;confWhy.push("full hole map");}
   else if(mapConf==="partial")confPts+=0.5;
-  if(lastTap&&lastTap.holeN===h.n){confPts+=1;confWhy.push("exact ball position from the map");}
-  if(sit.pin!=="mid"||pinKnown){confPts+=0.5;confWhy.push("pin position known");}
+  // situational evidence: course knowledge alone caps at Medium — High means
+  // Albie knows the hole AND your actual shot (audit finding: 30/72 holes
+  // read High off static data with a guessed distance and unknown pin)
+  let sitPts=0;
+  if(lastTap&&lastTap.holeN===h.n){sitPts+=1;confWhy.push("exact ball position from the map");}
+  if(sit.pin!=="mid"||pinKnown){sitPts+=0.5;confWhy.push("pin position known");}
+  confPts+=sitPts;
   if(h.ty)confPts+=0.5;
-  const albConf=confPts>=4?"High":confPts>=2?"Medium":"Low";
+  const albConf=confPts>=4&&sitPts>0?"High":confPts>=2?"Medium":"Low";
+  if(confPts>=4&&sitPts===0)confWhy.push("tap the map or set the pin and this becomes a High-confidence call");
   const confChips=`<div class='callmath' style='margin-bottom:8px'>`+
     `<span class='cm'>Albie confidence <b>${albConf}</b></span>`+
     `<span class='cm'>map ${mapConf}</span>`+
@@ -1566,7 +1648,9 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
   const gsl=h.geo&&h.geo.el&&h.geo.el.gs;
   if(gsl&&(sit.lie!=="tee"||h.par===3)){
     const mag=Math.hypot(gsl[0],gsl[1]);
-    if(mag>=1.5){
+    // >8y/100y at a green is a 1-in-12 grade: at that point the 30m DEM is
+    // reading a building or road, not turf (audit: St Andrews 18) - suppress
+    if(mag>=1.5&&mag<=8){
       const dir=Math.abs(gsl[0])>=Math.abs(gsl[1])?(gsl[0]>0?"to the left":"to the right"):(gsl[1]>0?"toward the front":"over the back");
       runoutNote=noteRow("","the ground",`The land falls ${dir} at this green, about ${Math.round(mag)}y per 100. Runout and misses feed that way. <span class='src'>SRTM elevation, 30m</span>`);}}
   $("#advice").innerHTML=`
@@ -1579,8 +1663,8 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
      <div class='call-more hidden'>
      <p class='small' style='margin:2px 0 8px'>Confidence is computed, not claimed: ${confWhy.length?confWhy.join("; ")+".":"thin data for this exact spot; Albie is going on general golf sense."}</p>
      ${sit.lie==="trouble"?"":gates}
-     ${persona.map(x=>`<p class='voice'>${x}</p>`).join("")}
-     <div class='rules'>${angleBlock}${missNote}
+     ${persona.map(x=>`<p class='voice'>${fmt(x)}</p>`).join("")}
+     <div class='rules'>${angleBlock}${missNote}${crossNote}
        ${rules.map(ruleRow).join("")||noteRow("","this spot","No hole-specific rule for this exact spot. Centre of the green, middle of the fairway, take your par.")}
      </div>
      </div>
@@ -1622,16 +1706,19 @@ let chosenPick=null;
 /* hole nav + score capture */
 function goHole(n){const c=COURSES[cur.course];if(n<1||n>c.holes.length)return;
   cur.hole=n;resetSituation();renderHoles();}
-/* Full score range for the hole's par: 1 through par+3, named properly. */
+/* Full score range for the hole's par: 1 through par+3, named properly.
+   Scorecard notation rides along: circle under par, square over, doubled 2+. */
 function scoreOpts(par){const name=s=>
     s===1?"Hole-in-one":s===par-3?"Albatross":s===par-2?"Eagle":s===par-1?"Birdie"
     :s===par?"Par":s===par+1?"Bogey":"+"+(s-par);
   const o=[];for(let s=1;s<=par+3;s++)o.push([name(s),s]);return o;}
+function scoreMark(rel){if(rel===0)return "";
+  return `<i class='scm ${rel<0?"circ":""} ${Math.abs(rel)>=2?"dbl":""}'></i>`;}
 function scoreSheet(holeN,par,title,onPick){
   const ex=document.getElementById("scoresheet");if(ex)ex.remove();
   document.body.insertAdjacentHTML("beforeend",
    `<div id='scoresheet'><span class='ss-t'>${title}</span><div class='chips'>`+
-   scoreOpts(par).map(([l,v])=>`<div class='chip' data-s='${v}'>${l}</div>`).join("")+
+   scoreOpts(par).map(([l,v])=>`<div class='chip' data-s='${v}'>${scoreMark(v-par)}${l}</div>`).join("")+
    `<div class='chip' data-s='skip'>Skip</div></div></div>`);
   document.getElementById("scoresheet").addEventListener("click",e=>{
     const c=e.target.closest(".chip");if(!c)return;
@@ -1665,7 +1752,7 @@ function renderLog(){const log=store.log;
    .map(({e,idx})=>`<div class='card' style='padding:9px 12px'>
     <span class='pill'>${e.type==="round"?"ROUND":e.type==="signup"?"LIST":"H"+e.hole}</span>
     <span class='small'> ${e.type==="round"?`score ${e.score||"?"} · ${e.notes||""}`
-      :e.type==="hole"?`scored ${e.score}, par ${e.par}`
+      :e.type==="hole"?`scored ${e.score===e.par?e.score:`<span class='sym ${e.score<e.par?"circ":"sq"} ${Math.abs(e.score-e.par)>=2?"dbl":""}'>${e.score}</span>`} par ${e.par}`
       :e.type==="signup"?`updates signup pending export`
       :e.type==="choice"?`picked: ${e.pick}${e.rec?"":", against the recommendation"}`
       :`${e.advice} · ${"★".repeat(e.rating||0)} ${e.note||""}`}</span>
