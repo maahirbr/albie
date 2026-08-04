@@ -1814,7 +1814,7 @@ function renderAbout(){
    The endpoint is injected at build time; when it's missing or the network is
    blocked (published artifact), the signup is banked into the feedback export
    instead — captured either way, address never surfaced. */
-const UPDATES_ENDPOINT="".startsWith("__")?"":"";
+const UPDATES_ENDPOINT="https://formspree.io/f/xzeppzgd".startsWith("__")?"":"https://formspree.io/f/xzeppzgd";
 $("#updates-form").addEventListener("submit",async e=>{
   e.preventDefault();
   const em=$("#upd-email").value.trim();if(!em)return;
