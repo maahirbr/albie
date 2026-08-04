@@ -1355,7 +1355,53 @@ function lineToPin(ball,pin,g){
         h.clear=d+2;hits.set(i,h);}}}
   return [...hits.values()].filter(h=>h.first>6)
     .sort((a,b)=>a.first-b.first).map(h=>({kind:h.kind,name:h.name,clear:Math.round(h.clear/5)*5}));}
-let lastTap=null,hmCtx=null;
+let lastTap=null,hmCtx=null,hmPlaceFn=null,hmPlaceHole=0;
+
+/* ---------- GPS mode, phase A: the phone places the ball ----------
+   Every mapped hole carries a frame [ox,oy,ang] in course-local yards
+   built for exactly this: fix -> course-local (anchor equirectangular,
+   same math as the extractor) -> hole-local -> the same placement path
+   a map tap uses. Lie, side, crossings, elevation all come free. */
+let gpsWatch=null,gpsLastT=0;
+const YPD=6371000*1.0936133;
+function gpsAvailable(){const c=COURSES[cur.course];
+  return !!(navigator.geolocation&&c.anchor&&c.holes.some(x=>x.geo&&x.geo.frame));}
+function paintGps(state,note){
+  const chip=document.getElementById("gps-chip");if(!chip)return;
+  if(!gpsAvailable()){chip.style.display="none";return}
+  chip.style.display="";
+  const st=state||(gpsWatch!==null?"on":"off");
+  chip.classList.toggle("on",st==="on");
+  chip.textContent=st==="locating"?"GPS…":st==="on"?("GPS"+(note?" "+note:"")):"GPS";}
+function gpsFix(pos){
+  const t=Date.now();if(t-gpsLastT<3500)return;gpsLastT=t;
+  const c=COURSES[cur.course],a=c.anchor;if(!a)return;
+  const cx=(pos.coords.longitude-a[1])*Math.PI/180*Math.cos(a[0]*Math.PI/180)*YPD,
+        cy=(pos.coords.latitude-a[0])*Math.PI/180*YPD;
+  const acc=Math.max(3,Math.round(pos.coords.accuracy*1.0936));
+  // whose corridor holds the fix? sticky preference for the current hole
+  let best=null;
+  for(const hh of c.holes){if(!hh.geo||!hh.geo.frame)continue;
+    const [ox,oy,ang]=hh.geo.frame,ca=Math.cos(ang),sa=Math.sin(ang);
+    const hx=(cx-ox)*ca-(cy-oy)*sa,hy=(cx-ox)*sa+(cy-oy)*ca;
+    if(hy<-45||hy>hh.geo.len+45||Math.abs(hx)>115)continue;
+    const score=Math.abs(hx)+(hh.n===cur.hole?-45:0);
+    if(!best||score<best.score)best={n:hh.n,ball:[hx,hy],score};}
+  if(!best){paintGps("on","· off the map");return}
+  if(acc>40){paintGps("on",`±${acc}y, weak`);return}
+  if(best.n!==cur.hole)goHole(best.n);
+  if(typeof hmPlaceFn==="function"&&hmPlaceHole===best.n)
+    hmPlaceFn(best.ball,{src:"gps",acc});
+  paintGps("on",`±${acc}y`);}
+function gpsToggle(){
+  if(gpsWatch!==null){navigator.geolocation.clearWatch(gpsWatch);gpsWatch=null;
+    paintGps("off");toast("GPS off.");return}
+  paintGps("locating");
+  gpsWatch=navigator.geolocation.watchPosition(gpsFix,
+    e=>{if(gpsWatch!==null)navigator.geolocation.clearWatch(gpsWatch);gpsWatch=null;paintGps("off");
+      toast(e.code===1?"Location permission was denied. GPS mode needs it.":"No location fix. Tap the map instead.");},
+    {enableHighAccuracy:true,maximumAge:2000,timeout:15000});}
+
 /* the current map's render frame, so the call can draw on it after the fact */
 function clPoint(g,along){let acc=0;
   for(let i=0;i<g.cl.length-1;i++){const a=g.cl[i],b=g.cl[i+1];
@@ -1449,7 +1495,7 @@ function renderHoleMap(h){
   const partial=!(g.fw&&g.fw.length)||!(g.gn&&g.gn.length);
   const calNote=straightUnderCard?` <em class='hm-warn'>· straight-line map, card ${g.card}y</em>`
     :Math.abs(cf-1)>0.03?` <em class='hm-warn'>· ×${cf.toFixed(2)} card-calibrated</em>`:"";
-  wrap.innerHTML=`<div class='hm-cap'><span>Hole ${h.n} · tap to drop your ball</span><span id='hm-read'>${partial?`<em class='hm-warn'>partial map · line ${g.gn&&g.gn.length?"":"+ bunkers "}only</em>`:`${cardLen}y · OSM`}${calNote}</span></div>
+  wrap.innerHTML=`<div class='hm-cap'><span>Hole ${h.n} · tap to drop your ball</span><span id='hm-read'>${partial?`<em class='hm-warn'>partial map · line ${g.gn&&g.gn.length?"":"+ bunkers "}only</em>`:`${cardLen}y · OSM`}${calNote}</span><button class='chip' id='gps-chip' style='padding:3px 11px;font-size:.66rem;font-family:var(--mono);letter-spacing:.08em'>GPS</button></div>
    <svg viewBox='0 0 ${W.toFixed(0)} ${Hh.toFixed(0)}' preserveAspectRatio='xMidYMid meet'>
     ${corridor}${polys(g.tr,"hm-tr")}${polys(g.fw,"hm-fw")}${polys(g.wa,"hm-wa")}${polys(g.te,"hm-te")}${polys(g.bk,"hm-bk")}${polys(g.gn,"hm-gn")}${rings}${greenArt}
     <polyline points='${P(g.cl)}' class='hm-cl'/>${ticks}
@@ -1461,10 +1507,8 @@ function renderHoleMap(h){
    </svg>
    ${COURSES[cur.course].surveyed?`<div class='hm-cap' style='padding:5px 3px 1px'><span>${COURSES[cur.course].course}</span><span>Surveyed ${COURSES[cur.course].surveyed} · OSM${h.geo.el?" · SRTM":""}</span></div>`:""}`;
   const svg=wrap.querySelector("svg");
-  svg.addEventListener("click",e=>{
-    const r=svg.getBoundingClientRect();
-    const vx=(e.clientX-r.left)/r.width*W, vy=(e.clientY-r.top)/r.height*Hh;
-    const ball=[vy+mnL, vx+mnA];               // back to hole-local (x lateral, y along)
+  // shared placement: the tap and the GPS fix land the ball the same way
+  function place(ball,opts){opts=opts||{};
     const dist=Math.max(5,Math.round(Math.hypot(ball[0]-pin[0],ball[1]-pin[1])*cf/5)*5);
     const s=sideOf(ball,g.cl);
     let lie="rough";
@@ -1488,16 +1532,27 @@ function renderHoleMap(h){
     // (carry numbers card-calibrated like every other distance)
     const crossings=lineToPin(ball,pin,g)
       .map(x=>({kind:x.kind,name:x.name,raw:x.clear,clear:Math.round(x.clear*cf/5)*5}));
-    lastTap={holeN:h.n,ball,pin,crossings,dist,lie,side:sideVal};
+    lastTap={holeN:h.n,ball,pin,crossings,dist,lie,side:sideVal,src:opts.src||"tap"};
     const LL=Math.hypot(pin[0]-ball[0],pin[1]-ball[1])||1;
     svg.querySelector("#hm-shot").innerHTML=
       `<line x1='${SX(ball[1]).toFixed(1)}' y1='${SY(ball[0]).toFixed(1)}' x2='${SX(pin[1]).toFixed(1)}' y2='${SY(pin[0]).toFixed(1)}' class='hm-shotline'/>`+
       crossings.slice(0,3).map(c=>{const t=Math.min(.92,c.raw/LL);
         const px=ball[0]+(pin[0]-ball[0])*t,py=ball[1]+(pin[1]-ball[1])*t;
         return `<text x='${SX(py).toFixed(1)}' y='${(SY(px)-3).toFixed(1)}' text-anchor='middle' class='hm-carry'>${c.clear}</text>`;}).join("");
-    $("#hm-read").innerHTML=`<b>${lie==="tee"?"on the tee":dist+" out"}</b> · ${lie}${sideVal!=="centre"?" · "+sideVal:""}`;
+    // GPS fixes carry their accuracy as an honest ring around the ball
+    const oldAcc=svg.querySelector("#hm-acc");if(oldAcc)oldAcc.remove();
+    if(opts.acc)svg.insertAdjacentHTML("beforeend",
+      `<circle id='hm-acc' cx='${SX(ball[1]).toFixed(1)}' cy='${SY(ball[0]).toFixed(1)}' r='${(opts.acc/cf).toFixed(1)}' fill='#5A71850E' stroke='#5A71855A' stroke-width='.8' stroke-dasharray='2 3'/>`);
+    $("#hm-read").innerHTML=`<b>${lie==="tee"?"on the tee":dist+" out"}</b> · ${lie}${sideVal!=="centre"?" · "+sideVal:""}${opts.src==="gps"?" · GPS":""}`;
     autoAsk();
+  }
+  hmPlaceFn=place;hmPlaceHole=h.n;
+  svg.addEventListener("click",e=>{
+    const r=svg.getBoundingClientRect();
+    const vx=(e.clientX-r.left)/r.width*W, vy=(e.clientY-r.top)/r.height*Hh;
+    place([vy+mnL, vx+mnA]);   // back to hole-local (x lateral, y along)
   });
+  paintGps();
 }
 function renderBand(h){const band=$("#posband");band.innerHTML="";
   const bsel=(store.p&&store.p.tees)||"member";
@@ -1875,6 +1930,8 @@ $("#prevhole").addEventListener("click",()=>goHole(cur.hole-1));
 $("#nextholenav").addEventListener("click",()=>{
   const c=COURSES[cur.course],h=c.holes.find(x=>x.n===cur.hole);
   askScore(h,()=>{if(cur.hole<c.holes.length)goHole(cur.hole+1);else show("log");});});
+$("#holemap").addEventListener("click",e=>{
+  if(e.target.id==="gps-chip")gpsToggle();});
 $("#trust-toggle").addEventListener("click",()=>{const tc=$("#trustcard");
   tc.classList.toggle("open");$("#trust-body").classList.toggle("hidden");
   $("#trust-toggle").setAttribute("aria-expanded",String(tc.classList.contains("open")));});
