@@ -1048,6 +1048,7 @@ if (typeof module !== "undefined") {
 
 
 /* ---------- onboarding ---------- */
+const escAttr=s=>String(s).replace(/'/g,"&#39;");
 function saveOnboard(){
   const p={name:$("#ob-name").value||"Player",hcp:Math.min(54,Math.max(0,+$("#ob-hcp").value||14)),
     drTotal:+$("#ob-dr").value||230,c7:+$("#ob-7i").value||145,
@@ -1057,6 +1058,7 @@ function saveOnboard(){
     tees:(store.p&&store.p.tees)||"member"};
   p.bag=buildBag(p.drTotal,p.c7,p.hcp);
   store.p=p; renderBag(); show("caddie");
+  renderHoles();   // the first call renders the moment setup finishes
 }
 function prefillOnboard(){const p=store.p;if(!p)return;
   $("#ob-name").value=p.name==="Player"?"":p.name;
@@ -1119,7 +1121,7 @@ $("#paste-profile").addEventListener("change",e=>{
   const v=e.target.value.trim();
   if(!v.startsWith("ALB1")&&!v.startsWith("ALB2")){toast("That doesn't look like an Albie profile code.");return}
   try{store.p=decodeProfile(v);renderBag();e.target.value="";
-    toast("Profile restored.");show("caddie");}
+    toast("Profile restored.");show("caddie");renderHoles();}
   catch(err){toast("Couldn't read that code. Check it copied fully.")}});
 
 /* ---------- bag view ---------- */
@@ -1143,7 +1145,8 @@ function renderBag(){const p=store.p;if(!p)return;
     const p=store.p;
     if(t.dataset.f==="out"){p.bag[+t.dataset.i].out=!t.checked;}
     else p.bag[+t.dataset.i][t.dataset.f]=+t.value;
-    store.p=p;renderBag();});}
+    store.p=p;renderBag();
+    if(typeof autoAsk==="function")autoAsk();});}   // carries changed: re-think
 
 /* text hygiene: no em-dash cadence anywhere the caddie speaks */
 function fmt(s){if(!s)return s;
@@ -1777,6 +1780,10 @@ function renderBand(h){const band=$("#posband");band.innerHTML="";
   band.addEventListener("pointerup",()=>{pdown=false;autoAsk();});}
 function ask(){const p=store.p;if(!p){show("onboard");return}
   chosenPick=null;
+  // every club marked out: say so instead of crashing on an empty pool
+  if(!p.bag||!p.bag.some(b=>!b.out)){
+    $("#advice").innerHTML=`<div class='call'><p class='eyebrow'>The call</p><p class='albiesays'><span class='who'>ALBIE ▸</span> Your whole bag is marked out of play. Check some clubs back in on the Bag tab and I'll get back to work.</p></div>`;
+    return;}
   const c=COURSES[cur.course],h=c.holes.find(x=>x.n===cur.hole);
   const sit={lie:chipVal("sit-lie"),dist:+$("#sit-dist").value||null,
     wind:windState.dir,windstr:windState.str,pin:pinVal(),
@@ -1844,6 +1851,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
     if((p.weaknesses||[]).includes("chipping")){sof.score-=8;pit.score+=6;pit.why.push("the stock pitch is the safe hands play");}
     const bkChip=((lastTap&&lastTap.holeN===h.n&&lastTap.crossings)||[]).find(x=>x.kind==="bk");
     if(bkChip){run.score-=30;sof.score+=10;sof.why.push(`${bkChip.name||"a bunker"} sits between you and the pin`);}
+    if(sit.wind==="into"&&sit.windstr===2){sof.score-=5;run.score+=4;run.why.push("strong wind hurts the high one");}
     let frac0=0;
     if(elevAdj>=3)frac0=.07;else if(elevAdj<=-3)frac0=-.07;
     const aim=Math.abs(glat)>=2?`Start it a step ${glat>0?"right":"left"}; the slope brings it back.`:"";
@@ -1860,7 +1868,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
       (galong<-1.5?`<span class='cm'>runs away</span>`:galong>1.5?`<span class='cm'>into the slope</span>`:"")+
       (buried?`<span class='cm'>buried lie</span>`:roughy?`<span class='cm'>out of the grass</span>`:"")+`</div>`;
     approachOpts=`<div class='opts'>`+cands.slice(0,3).map((o,i)=>
-      `<div class='opt ${i===0?"rec":""}' data-pick='${o.club.club} ${o.name}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="run"?"advance":o.id==="pitch"?"punch":"window"]}</span><div><span class='orank'>${String(i+1).padStart(2,"0")}${i===0?" · The play":""} · rec ${pct(o)}%</span><h4>${o.club.club}, ${o.name}</h4><p>${fmt(`Land it at ${land(o)}, the ground does the rest.${aim?" "+aim:""}`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p></div></div>`).join("")+
+      `<div class='opt ${i===0?"rec":""}' data-pick='${escAttr(o.club.club+" "+o.name)}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="run"?"advance":o.id==="pitch"?"punch":"window"]}</span><div><span class='orank'>${String(i+1).padStart(2,"0")}${i===0?" · The play":""} · rec ${pct(o)}%</span><h4>${o.club.club}, ${o.name}</h4><p>${fmt(`Land it at ${land(o)}, the ground does the rest.${aim?" "+aim:""}`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p></div></div>`).join("")+
       `<p class='small' style='margin:2px 0 0'>Tap the option you're playing. It goes in the log. Putting stays yours.</p></div>`;
     drawCallTarget(h,{id:"chip",club:cands[0].club,leave:D-land(cands[0])},sit);
   }
@@ -1957,7 +1965,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
       const totS=cands.reduce((a,o)=>a+(o.score-mnS+15),0);
       const pct=o=>Math.round((o.score-mnS+15)/totS*100);
       approachOpts=`<div class='opts'>`+cands.slice(0,3).map((o,i)=>
-        `<div class='opt ${i===0?"rec":""}' data-pick='${o.title}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="lay"?"punch":o.id==="cons"?"advance":"window"]}</span><div><span class='orank'>${String(i+1).padStart(2,"0")}${i===0?" · The play":""} · rec ${pct(o)}%</span><h4>${o.title}</h4><p>${fmt(o.body||`${sit.dist} plays ${eff}. Your ${o.club.club} carries ${o.club.carry}.`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p></div></div>`).join("")+
+        `<div class='opt ${i===0?"rec":""}' data-pick='${escAttr(o.title)}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="lay"?"punch":o.id==="cons"?"advance":"window"]}</span><div><span class='orank'>${String(i+1).padStart(2,"0")}${i===0?" · The play":""} · rec ${pct(o)}%</span><h4>${o.title}</h4><p>${fmt(o.body||`${sit.dist} plays ${eff}. Your ${o.club.club} carries ${o.club.carry}.`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p></div></div>`).join("")+
         `<p class='small' style='margin:2px 0 0'>Tap the option you're playing. It goes in the log.</p></div>`;
       drawCallTarget(h,win,sit);
     }}
@@ -2041,7 +2049,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
     const sitText=rec?`${rec.what}.${rec.cost?` Usually costs ${rec.cost}.`:""}${rec.srcd===false?" (General read; not course-sourced yet.)":""}`
       :`In the trouble${side?` on the ${side}`:""}. No course-sourced recovery notes for this hole yet; standard rule applies: out first, score second.`;
     troubleHTML=`<div class='sitblock'><span class='who'>The situation${side?` · ${side} side`:""}${rec&&rec.src?` · ${rec.src}`:""}</span>${fmt(sitText)}</div>
-      <div class='opts'>${opts.map((o,i)=>`<div class='opt ${o.recc?"rec":""}' data-pick='${o.title}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.icon]}</span><div><span class='orank'>${o.rank}</span><h4>${o.title}</h4><p>${fmt(o.body)}</p></div></div>`).join("")}
+      <div class='opts'>${opts.map((o,i)=>`<div class='opt ${o.recc?"rec":""}' data-pick='${escAttr(o.title)}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.icon]}</span><div><span class='orank'>${o.rank}</span><h4>${o.title}</h4><p>${fmt(o.body)}</p></div></div>`).join("")}
       <p class='small' style='margin:2px 0 0'>Tap the option you're playing. It goes in the log.</p></div>`;
     clubLine="";
   }
