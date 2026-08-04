@@ -70,6 +70,15 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
   transition:transform .3s var(--spring),opacity .2s}
 .btn2:active{transform:scale(.97)}
 .btn2.sage{background:var(--sage)}
+/* buttons answer the hand: an arrow slides in on hover/press */
+.btn2{position:relative}
+.btn2::after{content:"→";position:absolute;right:15px;top:50%;transform:translate(-6px,-50%);
+  opacity:0;transition:opacity .22s,transform .35s var(--spring)}
+.btn2:hover::after,.btn2:focus-visible::after,.btn2:active::after{opacity:.9;transform:translate(0,-50%)}
+.btn:hover{transform:translateY(-1.5px)}
+/* typing caret for the About headline */
+.typing::after{content:"▌";color:var(--sage);animation:blink .8s steps(1) infinite;font-weight:400}
+@keyframes blink{50%{opacity:0}}
 .btn:active{transform:scale(.965)}
 .btn.red{background-image:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgMTAwJz48ZGVmcz48ZmlsdGVyIGlkPSdzJz48ZmVEcm9wU2hhZG93IGR4PScwJyBkeT0nMi41JyBzdGREZXZpYXRpb249JzIuNScgZmxvb2QtY29sb3I9JyMwMDAwMDAzMCcvPjwvZmlsdGVyPjxsaW5lYXJHcmFkaWVudCBpZD0nZycgeDE9JzAnIHkxPScwJyB4Mj0nMCcgeTI9JzEnPjxzdG9wIG9mZnNldD0nMCcgc3RvcC1jb2xvcj0nIzNBM0QzMScvPjxzdG9wIG9mZnNldD0nMScgc3RvcC1jb2xvcj0nIzJDMkYyNScvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxwYXRoIGQ9J00yOTIuOSw0Ni4wIEwyOTIuNSw0OS44IEwyOTAuMCw1My41IEwyODUuNiw1Ny4yIEwyNzkuNiw2MC42IEwyNzIuMSw2My45IEwyNjMuNCw2Ni45IEwyNTMuNyw2OS43IEwyNDMuMSw3Mi4yIEwyMzEuNSw3NC41IEwyMTkuMSw3Ni40IEwyMDYuMCw3Ny45IEwxOTIuNCw3OS4xIEwxNzguNCw3OS45IEwxNjQuMiw4MC4zIEwxNTAuMCw4MC40IEwxMzUuOSw4MC4xIEwxMjEuOSw3OS41IEwxMDguMSw3OC43IEw5NC43LDc3LjUgTDgxLjYsNzYuMCBMNjkuMyw3NC4yIEw1Ny44LDcyLjAgTDQ3LjUsNjkuNCBMMzguNSw2Ni41IEwzMS4wLDYzLjQgTDI1LjAsNjAuMSBMMjAuNCw1Ni43IEwxNy4xLDUzLjIgTDE0LjksNDkuNiBMMTMuNyw0Ni4wIEwxMy42LDQyLjQgTDE0LjcsMzguNyBMMTcuMiwzNS4xIEwyMS4zLDMxLjUgTDI3LjEsMjguMCBMMzQuNiwyNC43IEw0My45LDIxLjggTDU0LjYsMTkuMSBMNjYuNSwxNi44IEw3OS4zLDE0LjkgTDkyLjgsMTMuNCBMMTA2LjgsMTIuMyBMMTIxLjEsMTEuNSBMMTM1LjYsMTEuMiBMMTUwLjAsMTEuMiBMMTY0LjMsMTEuNiBMMTc4LjEsMTIuNCBMMTkxLjUsMTMuNiBMMjA0LjIsMTUuMSBMMjE2LjIsMTYuOSBMMjI3LjUsMTguOSBMMjM4LjIsMjEuMiBMMjQ4LjMsMjMuNSBMMjU3LjksMjYuMSBMMjY2LjksMjguOSBMMjc1LjAsMzEuOSBMMjgyLjAsMzUuMSBMMjg3LjUsMzguNiBMMjkxLjIsNDIuMiBMMjkyLjksNDYuMCBaJyBmaWxsPSd1cmwoI2cpJyBmaWx0ZXI9J3VybCgjcyknLz48cGF0aCBkPSdNMjkzLjUsNzQuMCBMMjkzLjQsNzUuNiBMMjkzLjEsNzcuMyBMMjkyLjcsNzkuMCBMMjkyLjAsODAuNyBMMjkxLjAsODIuNCBMMjg5LjQsODQuMCBMMjg3LjMsODUuNCBMMjg0LjgsODYuNiBMMjgxLjgsODcuNyBMMjc4LjcsODguNCBMMjc1LjQsODkuMSBMMjcyLjEsODkuNiBMMjY4LjgsOTAuMSBMMjY1LjUsOTAuNiBMMjYyLjAsOTEuMiBMMjU4LjMsOTEuNyBMMjU0LjQsOTIuMCBMMjUwLjMsOTIuMCBMMjQ2LjMsOTEuNyBMMjQyLjUsOTAuOSBMMjM5LjEsODkuNyBMMjM2LjQsODguMiBMMjM0LjMsODYuNSBMMjMyLjksODQuNiBMMjMxLjksODIuNyBMMjMxLjQsODAuOCBMMjMxLjIsNzkuMCBMMjMxLjEsNzcuMyBMMjMxLjMsNzUuNiBMMjMxLjcsNzQuMCBMMjMyLjQsNzIuNCBMMjMzLjMsNzAuOSBMMjM0LjQsNjkuNSBMMjM1LjYsNjguMSBMMjM2LjksNjYuNyBMMjM4LjEsNjUuMyBMMjM5LjQsNjMuOCBMMjQwLjcsNjIuMiBMMjQyLjMsNjAuNSBMMjQ0LjMsNTguNyBMMjQ2LjksNTcuMSBMMjUwLjEsNTUuNyBMMjUzLjgsNTQuNiBMMjU3LjgsNTQuMSBMMjYyLjAsNTQuMSBMMjY2LjEsNTQuNSBMMjY5LjksNTUuNCBMMjczLjQsNTYuNSBMMjc2LjUsNTcuOCBMMjc5LjIsNTkuMSBMMjgxLjgsNjAuNCBMMjg0LjIsNjEuNyBMMjg2LjUsNjMuMCBMMjg4LjUsNjQuNCBMMjkwLjMsNjUuOCBMMjkxLjcsNjcuNCBMMjkyLjcsNjkuMCBMMjkzLjIsNzAuNyBMMjkzLjUsNzIuMyBMMjkzLjUsNzQuMCBaJyBmaWxsPScjQ0JCQjhFJy8+PHBhdGggZD0nTTI5My41LDc0LjAgTDI5My40LDc1LjYgTDI5My4xLDc3LjMgTDI5Mi43LDc5LjAgTDI5Mi4wLDgwLjcgTDI5MS4wLDgyLjQgTDI4OS40LDg0LjAgTDI4Ny4zLDg1LjQgTDI4NC44LDg2LjYgTDI4MS44LDg3LjcgTDI3OC43LDg4LjQgTDI3NS40LDg5LjEgTDI3Mi4xLDg5LjYgTDI2OC44LDkwLjEgTDI2NS41LDkwLjYgTDI2Mi4wLDkxLjIgTDI1OC4zLDkxLjcgTDI1NC40LDkyLjAgTDI1MC4zLDkyLjAgTDI0Ni4zLDkxLjcgTDI0Mi41LDkwLjkgTDIzOS4xLDg5LjcgTDIzNi40LDg4LjIgTDIzNC4zLDg2LjUgTDIzMi45LDg0LjYgTDIzMS45LDgyLjcgTDIzMS40LDgwLjggTDIzMS4yLDc5LjAgTDIzMS4xLDc3LjMgTDIzMS4zLDc1LjYgTDIzMS43LDc0LjAgTDIzMi40LDcyLjQgTDIzMy4zLDcwLjkgTDIzNC40LDY5LjUgTDIzNS42LDY4LjEgTDIzNi45LDY2LjcgTDIzOC4xLDY1LjMgTDIzOS40LDYzLjggTDI0MC43LDYyLjIgTDI0Mi4zLDYwLjUgTDI0NC4zLDU4LjcgTDI0Ni45LDU3LjEgTDI1MC4xLDU1LjcgTDI1My44LDU0LjYgTDI1Ny44LDU0LjEgTDI2Mi4wLDU0LjEgTDI2Ni4xLDU0LjUgTDI2OS45LDU1LjQgTDI3My40LDU2LjUgTDI3Ni41LDU3LjggTDI3OS4yLDU5LjEgTDI4MS44LDYwLjQgTDI4NC4yLDYxLjcgTDI4Ni41LDYzLjAgTDI4OC41LDY0LjQgTDI5MC4zLDY1LjggTDI5MS43LDY3LjQgTDI5Mi43LDY5LjAgTDI5My4yLDcwLjcgTDI5My41LDcyLjMgTDI5My41LDc0LjAgWicgZmlsbD0nbm9uZScgc3Ryb2tlPScjMDAwMDAwMjInIHN0cm9rZS13aWR0aD0nMScvPjwvc3ZnPg==")}
 .btn.ghost{background-image:none;border:1.5px solid var(--sage);border-radius:12px;color:var(--ink);
@@ -374,8 +383,14 @@ select{appearance:none;-webkit-appearance:none;font-family:var(--disp);font-weig
 .af.r{right:-4ch;top:30px;animation-delay:-8s;animation-duration:19s}
 @media(max-width:859px){
   .af{font-size:8.5px;opacity:.5}
-  .af.l{left:-5ch;bottom:10px}
+  /* hug the edge hard: the field's dense middle must never sit mid-column */
+  .af.l{left:-16ch;bottom:10px}
   .af.r{display:none}}
+/* text beats the ambient field, at every scroll position: a soft paper halo
+   lifts every out-of-card line off the glyphs (invisible over cards) */
+h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
+.view>.small,.askhead,.foot-line,.secnum{
+  text-shadow:0 1px 4px var(--paper),0 0 10px var(--paper),0 0 18px var(--paper)}
 .hidden{display:none !important}
 .facts{font-size:.84rem;color:var(--dim)}
 .sil{position:absolute;pointer-events:none;background-size:contain;background-repeat:no-repeat;
@@ -1330,7 +1345,7 @@ const SHAPES={
       if(Math.abs(fy-top)<=1.1)return .9;
       if(fy>top)return .3;}
     if(fy>15&&fy<39&&fx>11.5&&fx<22.5)
-      return (Math.sin(fx*3.1)*Math.cos(fy*2.3)>.9)?.75:0;
+      return (Math.sin(fx*3.1)*Math.cos(fy*2.3)>.9)?.85:.3;   // beer + bubbles
     return 0;}
 };
 const FIELDS=[];
@@ -1341,7 +1356,7 @@ function fieldData(){const c=COURSES[cur.course],h=c.holes.find(x=>x.n===cur.hol
     if(g.carry)bits.push(String(g.carry));});
   bits.push("ALBIE");
   return bits.filter(Boolean).join(" ")+" ";}
-function buildField(el,shape,data,W,H){
+function buildField(el,shape,data,W,H,tint){
   el.textContent="";
   // measure the mono advance so blended display-face glyphs keep the grid true
   // (Glyph Drawing Club move: ASCII beyond one typeface, positions locked)
@@ -1355,8 +1370,9 @@ function buildField(el,shape,data,W,H){
     if(show){let ch;do{ch=data[di%data.length];di++}while(ch===" ");
       s.textContent=ch;
       const roll=Math.random();
-      const col=roll<.05?"var(--brick)":roll<.13?"var(--slate)":roll<.24?"var(--sage)":
-        (d>.8?"#33362B":"#33362BB0");
+      const col=(tint&&tint(x*(40/W),y*(45/H),d,roll))||
+        (roll<.05?"var(--brick)":roll<.13?"var(--slate)":roll<.24?"var(--sage)":
+        (d>.8?"#33362B":"#33362BB0"));
       s.style.color=col;
       if(chw>0&&d>.85&&Math.random()<.3){
         s.style.cssText+=`;font-family:var(--disp);font-weight:600;display:inline-block;width:${chw}px;text-align:center`;}
@@ -1382,7 +1398,11 @@ function renderBgArt(){FIELDS.length=0;
   const lf=document.getElementById("log-field");
   if(lf)buildField(lf,SHAPES.ball,data,40,24);
   const bf=document.getElementById("beer-field");
-  if(bf)buildField(bf,SHAPES.beer,data,44,30);}
+  // the beer is poured in gold, the foam pale, the glass stays ink
+  if(bf)buildField(bf,SHAPES.beer,data,44,30,(fx,fy,d,roll)=>{
+    if(fy>=6&&fy<13.5&&fx>=8.5&&fx<=25.5)return roll<.5?"#C9B98A":"#B5A67E";
+    if(fy>=13.5&&fy<=39.5&&fx>11&&fx<23)return roll<.3?"#A8842F":"#C9A23F";
+    return null;});}
 const motionOK=!matchMedia("(prefers-reduced-motion: reduce)").matches;
 function flick(f,c,hot){c.s.textContent=f.digits[Math.floor(Math.random()*f.digits.length)];
   c.s.style.color=hot?"var(--brick)":"var(--slate)";
@@ -2384,7 +2404,15 @@ function show(v){if(v==="onboard")prefillOnboard();
   $$(".view").forEach(x=>x.classList.add("hidden"));$("#view-"+v).classList.remove("hidden");
   $$(".tab").forEach(t=>t.classList.toggle("on",t.dataset.view===v));
   moveTabInd();
-  if(v==="about")countUpStats();
+  if(v==="about"){countUpStats();
+    // the headline types itself on, once, mono caret, brick period lands last
+    const m=document.querySelector("#view-about .ab-mark");
+    if(m&&!m.dataset.typed&&motionOK){m.dataset.typed=1;
+      const txt="For the love of golf";let i=0;
+      m.textContent="";m.classList.add("typing");
+      const iv=setInterval(()=>{m.textContent=txt.slice(0,++i);
+        if(i>=txt.length){clearInterval(iv);m.classList.remove("typing");
+          m.insertAdjacentHTML("beforeend","<i>.</i>");}},38);}}
   window.scrollTo(0,0);}
 $$(".tab").forEach(t=>t.addEventListener("click",()=>show(t.dataset.view)));
 window.addEventListener("resize",moveTabInd);
