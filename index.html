@@ -161,6 +161,12 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .sym.circ{border-radius:999px}
 .sym.sq{border-radius:3px}
 .sym.dbl{box-shadow:0 0 0 2px var(--card),0 0 0 3.2px currentColor}
+.scard{border-collapse:collapse;min-width:340px}
+.scard td{padding:4px 3px;text-align:center;font-size:.8rem;border-bottom:1px solid var(--line)}
+.scard .ghead td{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;color:var(--slate);text-transform:uppercase;padding-top:9px;border-bottom:0}
+.scard .scc{cursor:pointer;min-width:29px}
+.scard .scc:active{background:#8A9A781A}
+.scard .sym{min-width:18px;height:18px;font-size:.74rem;padding:0 2px}
 .scm{display:inline-block;width:9px;height:9px;border:1.2px solid currentColor;
   vertical-align:-1px;margin-right:6px;border-radius:1.5px}
 .scm.circ{border-radius:50%}
@@ -625,6 +631,11 @@ select{appearance:none;-webkit-appearance:none;font-family:var(--disp);font-weig
     <h1 id="log-count"></h1>
     <pre class="ab-field" id="log-field" aria-hidden="true" style="margin:4px auto 0"></pre>
     <div class="card">
+      <p class="eyebrow">Today's card</p>
+      <div id="scorecard"></div>
+      <p class="small" style="margin:8px 0 0">Tap any hole to add or fix its score.</p>
+    </div>
+    <div class="card">
       <p class="eyebrow">End of round</p>
       <label>Score today</label><input type="number" id="rs-score" inputmode="numeric">
       <label>Caddie overall</label>
@@ -667,6 +678,10 @@ select{appearance:none;-webkit-appearance:none;font-family:var(--disp);font-weig
         <div class="how-step"><b>04</b><span><i>Personalize.</i> Your carries, misses and weaknesses re-rank every option. Never a club you can't hit.</span></div>
         <div class="how-step"><b>05</b><span><i>Learn.</i> Your call ratings and rounds become ground truth in the next update.</span></div>
       </div>
+    </div>
+    <div class="card">
+      <p class="eyebrow">The short game</p>
+      <p class="small" style="font-size:.9rem">Inside 40 yards Albie switches to the chip engine: it reads your lie, the green speed and the slope at the green, picks runner, pitch or high-soft, and marks the exact landing spot on the map. Putting stays yours. No green-reading theater.</p>
     </div>
     <div class="card">
       <p class="eyebrow">Honesty, by design</p>
@@ -1584,14 +1599,15 @@ function drawCallTarget(h,win,sit){
   const ball=(lastTap&&lastTap.holeN===h.n&&lastTap.ball)?lastTap.ball
     :clPoint(g,Math.max(0,g.len-sit.dist/cf));
   let el="";
-  if(win.id==="lay"&&win.leave){
+  if((win.id==="lay"||win.id==="chip")&&win.leave!=null){
     const L=Math.hypot(pin[0]-ball[0],pin[1]-ball[1])||1;
     const t=Math.max(.1,Math.min(.95,((sit.dist-win.leave)/cf)/L));
     const px=ball[0]+(pin[0]-ball[0])*t,py=ball[1]+(pin[1]-ball[1])*t;
+    const lab=win.id==="chip"?"land it here":`lay to here · ${win.leave} left`;
     el=`<line x1='${SX(ball[1])}' y1='${SY(ball[0])}' x2='${SX(py)}' y2='${SY(px)}' stroke='#5C6B4F' stroke-width='1' stroke-dasharray='2 3'/>
      <circle cx='${SX(py)}' cy='${SY(px)}' r='4.5' fill='none' stroke='#5C6B4F' stroke-width='1.4'/>
      <circle cx='${SX(py)}' cy='${SY(px)}' r='1.3' fill='#5C6B4F'/>
-     <text x='${SX(py)}' y='${SY(px)-7}' text-anchor='middle' class='hm-carry' style='fill:#5C6B4F'>lay to here · ${win.leave} left</text>`;
+     <text x='${SX(py)}' y='${SY(px)-7}' text-anchor='middle' class='hm-carry' style='fill:#5C6B4F'>${lab}</text>`;
   }else if(win.id==="cons"){
     el=`<circle cx='${SX(pin[1])}' cy='${SY(pin[0])}' r='7.5' fill='none' stroke='#5C6B4F' stroke-width='1.3' stroke-dasharray='3 3'/>
      <text x='${SX(pin[1])}' y='${SY(pin[0])-11}' text-anchor='middle' class='hm-carry' style='fill:#5C6B4F'>centre, fat side</text>`;
@@ -1797,7 +1813,58 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
     if(Math.abs(elevAdj)>15)elevAdj=15*Math.sign(elevAdj); // 30m DEM sanity cap
     if(Math.abs(elevAdj)<3)elevAdj=0;
   }
-  if(distShot){let eff=windAdjust(sit.dist,sit.wind,sit.windstr);
+  /* ---------- chip engine: inside 40y the question changes from "which
+     club covers the number" to "where do you LAND it". Lie quality picks the
+     flight (runner / pitch / high-soft), green speed + the SRTM fall at the
+     green move the landing spot, pin depth moves the whole choice. Putting
+     stays the golfer's - no green-reading theater. ---------- */
+  const chipRange=distShot&&sit.dist<=40&&sit.lie!=="bunker";
+  if(chipRange){
+    const D=sit.dist;
+    const stimp=parseFloat(c.stimp)||9.5;
+    const gsC=h.geo&&h.geo.el&&h.geo.el.gs;
+    const galong=gsC?gsC[1]:0,glat=gsC?gsC[0]:0;   // fall per 100y at the green
+    const pick=re=>{const cand=p.bag.filter(b=>!b.out&&re.test(b.club));
+      return cand[0]||p.bag.filter(b=>!b.out).slice(-1)[0];};
+    const clean=sit.lieq==="clean"&&sit.lie==="fairway";
+    const buried=sit.lieq==="buried";
+    const roughy=sit.lie==="rough"||sit.lieq==="sitting";
+    const run={id:"run",club:pick(/^(8i|9i)$/),name:"bump and run",frac:.32,score:60,why:[]};
+    const pit={id:"pitch",club:pick(/^(PW|GW)$/),name:"standard pitch",frac:.58,score:58,why:[]};
+    const sof={id:"soft",club:pick(/^(SW|LW)$/),name:"high and soft",frac:.8,score:48,why:[]};
+    if(clean){run.score+=12;run.why.push("clean lie, use the ground");}
+    if(roughy){run.score-=18;sof.score+=8;sof.why.push("grass grabs a runner from here");}
+    if(buried){run.score-=40;pit.score-=15;sof.score+=10;sof.why.push("sitting down, only loft gets it out clean");}
+    if(sit.pin==="front"){run.score-=14;sof.score+=10;sof.why.push("front pin, not much green to work with");}
+    if(sit.pin==="back"){run.score+=9;run.why.push("back pin, the whole green to run at");}
+    if(stimp>=10.5){run.score-=6;sof.score+=4;sof.why.push(`quick greens (${c.stimp})`);}
+    if(galong<-1.5){run.score-=8;sof.score+=6;sof.why.push("the green runs away downhill");}
+    if(galong>1.5){run.score+=7;run.why.push("uphill chip, the slope kills the roll");}
+    if((p.strengths||[]).includes("chipping")){run.score+=4;pit.score+=4;}
+    if((p.weaknesses||[]).includes("chipping")){sof.score-=8;pit.score+=6;pit.why.push("the stock pitch is the safe hands play");}
+    const bkChip=((lastTap&&lastTap.holeN===h.n&&lastTap.crossings)||[]).find(x=>x.kind==="bk");
+    if(bkChip){run.score-=30;sof.score+=10;sof.why.push(`${bkChip.name||"a bunker"} sits between you and the pin`);}
+    let frac0=0;
+    if(elevAdj>=3)frac0=.07;else if(elevAdj<=-3)frac0=-.07;
+    const aim=Math.abs(glat)>=2?`Start it a step ${glat>0?"right":"left"}; the slope brings it back.`:"";
+    const cands=[run,pit,sof].filter(o=>o.club).sort((a,b)=>b.score-a.score);
+    const mnS=Math.min(...cands.map(o=>o.score));
+    const totS=cands.reduce((a,o)=>a+(o.score-mnS+15),0);
+    const pct=o=>Math.round((o.score-mnS+15)/totS*100);
+    const land=o=>Math.max(3,Math.round(D*(Math.min(.9,Math.max(.2,o.frac+frac0)))));
+    clubLine=cands[0].club.club;
+    callMath=`<div class='callmath'><span class='cm'>${D} to the pin</span>`+
+      `<span class='cm'>land it at <b>${land(cands[0])}</b></span>`+
+      (c.stimp?`<span class='cm'>greens ${c.stimp}</span>`:"")+
+      (elevAdj?`<span class='cm'>${elevAdj>0?"uphill chip":"downhill chip"}</span>`:"")+
+      (galong<-1.5?`<span class='cm'>runs away</span>`:galong>1.5?`<span class='cm'>into the slope</span>`:"")+
+      (buried?`<span class='cm'>buried lie</span>`:roughy?`<span class='cm'>out of the grass</span>`:"")+`</div>`;
+    approachOpts=`<div class='opts'>`+cands.slice(0,3).map((o,i)=>
+      `<div class='opt ${i===0?"rec":""}' data-pick='${o.club.club} ${o.name}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="run"?"advance":o.id==="pitch"?"punch":"window"]}</span><div><span class='orank'>${String(i+1).padStart(2,"0")}${i===0?" · The play":""} · rec ${pct(o)}%</span><h4>${o.club.club}, ${o.name}</h4><p>${fmt(`Land it at ${land(o)}, the ground does the rest.${aim?" "+aim:""}`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p></div></div>`).join("")+
+      `<p class='small' style='margin:2px 0 0'>Tap the option you're playing. It goes in the log. Putting stays yours.</p></div>`;
+    drawCallTarget(h,{id:"chip",club:cands[0].club,leave:D-land(cands[0])},sit);
+  }
+  if(distShot&&!chipRange){let eff=windAdjust(sit.dist,sit.wind,sit.windstr);
     eff=tempAdj(eff,sit.temp);
     eff+=elevAdj;
     if(sit.lieq==="sitting")eff+=5;
@@ -1906,7 +1973,8 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
   if(distShot){const eff=windAdjust(sit.dist,sit.wind,sit.windstr);
     const c=pickClub(p.bag.filter(b=>!b.out),eff,poolLie(h,sit));gateClub={club:c.club,carry:c.carry};}
   const teeShort=p.tees&&p.tees!=="champ"&&sit.lie==="tee"&&!tyH;
-  const gates=applicableGates(h,sit).map(g=>{const need=Math.max(0,g.carry-teeDelta);
+  // carry gates are tee/approach furniture; a 25y chip has no gate to argue
+  const gates=chipRange?"":applicableGates(h,sit).map(g=>{const need=Math.max(0,g.carry-teeDelta);
     const ok=gateClub.carry>=need;
     return `<div class='gate'>${g.label}: needs <b>${need}</b> carry${teeDelta?` <span class='small'>(${g.carry} on the champ card, translated to your ${selT} tees)</span>`:""}. Your ${gateClub.club} carries <b>${gateClub.carry}</b>.
      ${ok?`<b>You clear it${gateClub.carry-need<10?", barely. Only with a good one":""}.</b> ${fmt(g.beat)}`:`<b>Not your number.</b> ${fmt(g.fail)}`}${teeShort?` <span class='small'>(championship-tee number; from your tees the real carry is shorter)</span>`:""}</div>`;}).join("");
@@ -2043,9 +2111,27 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
     const log=store.log;log.push({t:new Date().toISOString(),type:"shot",course:c.slug,hole:h.n,
       sit,advice:chosenPick||clubLine||"rules",rating:i+1,note:""});store.log=log;renderLog();
     $("#advice .fb-note").onchange=e2=>{const lg=store.log;lg[lg.length-1].note=e2.target.value;store.log=lg;};
+    // a hole is many shots: rating one call offers the NEXT SHOT first and
+    // the hole advance second - never pushes you off the hole (tester bug)
     if(!$("#nexthole"))$("#advice .call").insertAdjacentHTML("beforeend",
-      h.n<c.holes.length?`<button class='btn' id='nexthole'>Hole ${h.n+1} →</button>`
-      :`<button class='btn red' id='nexthole'>Round done. Save &amp; export →</button>`);
+      `<div class='row' style='margin-top:12px'>
+        <button class='btn2' id='nextshot'>Next shot, same hole</button>
+        ${h.n<c.holes.length?`<button class='btn2 sage' id='nexthole'>Hole ${h.n+1} →</button>`
+        :`<button class='btn2 sage' id='nexthole'>Round done →</button>`}
+      </div>`);
+    $("#nextshot").onclick=()=>{
+      // the ball moved: clear position and the old call, keep hole/wind/pin
+      $("#sit-dist").value="";lastTap=null;chosenPick=null;
+      const sv=document.querySelector("#holemap svg");
+      if(sv){const b=sv.querySelector("#hm-ball");if(b)b.style.display="none";
+        const sh=sv.querySelector("#hm-shot");if(sh)sh.innerHTML="";
+        const tg=sv.querySelector("#hm-target");if(tg)tg.remove();
+        const ac=sv.querySelector("#hm-acc");if(ac)ac.remove();}
+      $("#advice").innerHTML="";
+      const hm=document.getElementById("holemap");
+      (hm.classList.contains("hidden")?$("#posband"):hm)
+        .scrollIntoView({block:"center",behavior:motionOK?"smooth":"auto"});
+      toast(gpsWatch!==null?"Walk to the ball. GPS picks it up.":"Tap the map where the ball ended up.");};
     $("#nexthole").onclick=()=>askScore(h,()=>{
       if(h.n<c.holes.length){cur.hole=h.n+1;resetSituation();renderHoles();}
       else show("log");});});
@@ -2099,11 +2185,19 @@ function scoreSheet(holeN,par,title,onPick){
     const c=e.target.closest(".chip");if(!c)return;
     document.getElementById("scoresheet").remove();
     onPick(c.dataset.s==="skip"?null:+c.dataset.s,c.textContent);});}
+/* one score per hole per day: re-scoring a hole UPDATES it (fixes the
+   double-count when a hole is advanced through twice) */
+function saveHoleScore(course,holeN,par,score){
+  const today=new Date().toISOString().slice(0,10);
+  const log=store.log;
+  const i=log.findIndex(e=>e.type==="hole"&&e.course===course&&e.hole===holeN
+    &&(e.t||"").slice(0,10)===today);
+  const entry={t:new Date().toISOString(),type:"hole",course,hole:holeN,par,score};
+  if(i>=0){entry.edited=entry.t;log[i]=entry;}else log.push(entry);
+  store.log=log;renderLog();}
 function askScore(h,then){
   scoreSheet(h.n,h.par,`Hole ${h.n} · par ${h.par} · what did you make?`,(score,label)=>{
-    if(score!==null){const log=store.log;
-      log.push({t:new Date().toISOString(),type:"hole",course:COURSES[cur.course].slug,
-        hole:h.n,par:h.par,score});store.log=log;renderLog();
+    if(score!==null){saveHoleScore(COURSES[cur.course].slug,h.n,h.par,score);
       toast(`Hole ${h.n}: ${label} saved.`);}
     then();});}
 $("#prevhole").addEventListener("click",()=>goHole(cur.hole-1));
@@ -2123,7 +2217,34 @@ $("#trust-toggle").addEventListener("click",()=>{const tc=$("#trustcard");
   $("#trust-toggle").setAttribute("aria-expanded",String(tc.classList.contains("open")));});
 
 /* ---------- log ---------- */
-function renderLog(){const log=store.log;
+/* the scorecard: today's round on the current course, every hole tappable
+   to add or correct a score, scorecard notation throughout */
+function renderScorecard(){
+  const el=document.getElementById("scorecard");if(!el)return;
+  const c=COURSES[cur.course];
+  const today=new Date().toISOString().slice(0,10);
+  const scores={};
+  store.log.forEach(e=>{if(e.type==="hole"&&e.course===c.slug
+    &&(e.t||"").slice(0,10)===today)scores[e.hole]=e.score;});
+  const cell=h=>{const s=scores[h.n],rel=s!=null?s-h.par:null;
+    return `<td data-sc='${h.n}' data-par='${h.par}' class='scc'>${s!=null
+      ?(rel===0?s:`<span class='sym ${rel<0?"circ":"sq"} ${Math.abs(rel)>=2?"dbl":""}'>${s}</span>`)
+      :"·"}</td>`;};
+  const half=(hs,label)=>{
+    const played=hs.filter(h=>scores[h.n]!=null);
+    const tot=played.reduce((a,h)=>a+scores[h.n],0);
+    return `<tr class='ghead'><td>${label}</td>${hs.map(h=>`<td>${h.n}</td>`).join("")}<td>Σ</td></tr>
+     <tr><td class='small'>Par</td>${hs.map(h=>`<td class='small'>${h.par}</td>`).join("")}<td class='small num'>${hs.reduce((a,h)=>a+h.par,0)}</td></tr>
+     <tr><td class='small'>You</td>${hs.map(cell).join("")}<td class='num'><b>${played.length?tot:"·"}</b></td></tr>`;};
+  el.innerHTML=`<div style='overflow-x:auto'><table class='scard'>${half(c.holes.slice(0,9),"Out")}${c.holes.length>9?half(c.holes.slice(9),"In"):""}</table></div>
+   <p class='small num' style='margin:6px 0 0;font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase'>${c.course}</p>`;
+  el.onclick=e=>{const td=e.target.closest("[data-sc]");if(!td)return;
+    const n=+td.dataset.sc,par=+td.dataset.par;
+    scoreSheet(n,par,`Hole ${n} · par ${par} · what did you make?`,(score,label)=>{
+      if(score===null)return;
+      saveHoleScore(c.slug,n,par,score);
+      toast(`Hole ${n}: ${label} saved.`);});};}
+function renderLog(){renderScorecard();const log=store.log;
   const today=new Date().toISOString().slice(0,10);
   const hs=log.filter(e=>e.type==="hole"&&(e.t||"").slice(0,10)===today);
   const dp=hs.reduce((a,e)=>a+(e.score-e.par),0);
@@ -2156,7 +2277,8 @@ $("#save-round").addEventListener("click",()=>{const log=store.log;
     player:store.p});store.log=log;renderLog();
   $("#rs-notes").value="";$("#rs-score").value="";});
 $("#export").addEventListener("click",async()=>{
-  const payload=JSON.stringify({exported:new Date().toISOString(),profile:store.p,log:store.log},null,1);
+  const payload=JSON.stringify({exported:new Date().toISOString(),build:"2026-08-05",
+    profile:store.p,log:store.log},null,1);
   const fname=`caddie-feedback-${(store.p?.name||"tester").toLowerCase()}-${new Date().toISOString().slice(0,10)}.json`;
   if(window.claude?.downloads?.save){try{await window.claude.downloads.save({filename:fname,data:payload});
     toast("Feedback file saved.");return}catch(e){}}
