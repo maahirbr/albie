@@ -210,6 +210,9 @@ input[type=checkbox]{accent-color:#8A9A78;width:17px;height:17px}
   text-align:left;padding:12px 14px;border:0;background:none;cursor:pointer;position:relative;
   border-bottom:1px solid var(--line);opacity:0;animation:rise .4s var(--spring) forwards}
 .dd-menu button:last-child{border-bottom:0}
+.dd-search{padding:8px;border-bottom:1px solid var(--line)}
+.dd-search input{padding:8px 11px;font-size:.92rem;font-family:var(--body);font-weight:400}
+.dd-empty{padding:12px 14px;font:400 .78rem var(--mono);color:var(--dim);letter-spacing:.03em}
 .dd-menu button::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2.5px;background:var(--sage);
   transform:scaleY(0);transition:transform .3s var(--spring)}
 .dd-menu button:hover,.dd-menu button:focus-visible{background:#EFE9D7;outline:none}
@@ -327,7 +330,10 @@ select{appearance:none;-webkit-appearance:none;font-family:var(--disp);font-weig
 .band.side-band .zone{position:absolute;top:0;bottom:0;width:32%;background:#00000007}
 .band.side-band .zl{left:0}.band.side-band .zr{right:0}
 .band .teelab,.band .pinlab{position:absolute;top:5px;font:600 .64rem var(--mono);color:#6E6852;letter-spacing:.1em}
-#bgart{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+#bgart{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;transition:opacity .25s}
+/* while the page moves, the ambient fields step back so text never fights
+   them mid-scroll; they settle back to full strength at rest */
+#bgart.scrolling{opacity:.14}
 .af{position:absolute;margin:0;font:13px/1.15 var(--mono);letter-spacing:.03em;white-space:pre;
   mix-blend-mode:multiply;opacity:.52;user-select:none;
   animation:drift 16s ease-in-out infinite alternate}
@@ -562,6 +568,7 @@ select{appearance:none;-webkit-appearance:none;font-family:var(--disp);font-weig
   <div id="view-bag" class="view hidden"><div class="sil bag" aria-hidden="true"></div>
     <p class="eyebrow">My bag</p>
     <h1>Estimated carries</h1>
+    <p class="small" id="bag-count" style="margin:0 0 4px"></p>
     <p class="small">Built from your driver + 7-iron numbers. Tap any number to correct it and the caddie updates instantly.</p>
     <div class="card"><table id="bagtable"></table></div>
     <div class="card">
@@ -637,8 +644,18 @@ select{appearance:none;-webkit-appearance:none;font-family:var(--disp);font-weig
       <p class="small hidden" id="upd-done">You're on the list. See you out there.</p>
     </div>
     <div class="card">
-      <p class="eyebrow">Open source</p>
-      <p class="small" style="font-size:.9rem">The app is free and public. The pipeline opens up as it's cleaned for release. Map data © OpenStreetMap contributors.</p>
+      <p class="eyebrow">Request a course</p>
+      <p class="small" style="font-size:.9rem">Tell Albie where to caddie next. Destination trips are the whole point: name the course and it joins the ingest queue.</p>
+      <form id="course-req">
+        <label for="cr-name">Course name</label>
+        <input type="text" id="cr-name" placeholder="e.g. Royal County Down" required>
+        <button class="btn2" type="submit">Send it to Albie</button>
+      </form>
+      <p class="small hidden" id="cr-done">Noted. It goes on the ingest list.</p>
+    </div>
+    <div class="card">
+      <p class="eyebrow">Open source, soon</p>
+      <p class="small" style="font-size:.9rem">The app is free, and the code is going open source: the app, then the ingestion pipeline as the data licensing sweep finishes. Build courses with us. Map data © OpenStreetMap contributors.</p>
       <a class="btn2" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="https://github.com/maahirbr/albie" target="_blank" rel="noopener">Albie on GitHub</a>
     </div>
     <div class="card" style="text-align:center">
@@ -721,7 +738,7 @@ function syncSide(){const lie=chipVal("sit-lie");
   let down=false;
   b.addEventListener("pointerdown",e=>{down=true;try{b.setPointerCapture(e.pointerId)}catch(_){}setSide(e.clientX);});
   b.addEventListener("pointermove",e=>{if(down)setSide(e.clientX);});
-  b.addEventListener("pointerup",()=>down=false);
+  b.addEventListener("pointerup",()=>{down=false;if(typeof autoAsk==="function")autoAsk();});
 })();
 document.getElementById("sit-lie").addEventListener("click",()=>setTimeout(syncSide,0));
 const chipVal=id=>($("#"+id+" .chip.on")||{}).dataset?.v||null;
@@ -739,7 +756,8 @@ function windFromV(){
   if(cross)windState={dir:"cross",str:Math.max(1,Math.abs(windV))};
   else if(windV===0)windState={dir:"calm",str:1};
   else windState={dir:windV<0?"into":"down",str:Math.abs(windV)};
-  paintWindBand();paintWindLab();}
+  paintWindBand();paintWindLab();
+  if(typeof autoAsk==="function")autoAsk();}
 function paintWindBand(){
   const f=(windV+2.5)/5,me=$("#wind-me"),pill=$("#wind-pill");
   me.style.left=(f*100)+"%";
@@ -792,13 +810,15 @@ function paintPinLab(){
     v==="front"?"Front pin.":v==="back"?"Back pin.":"Middle pin.";}
 (function(){const b=$("#pinband");let d=false;
   const set=x=>{pinDepth=Math.min(2,Math.floor(bandFrac(b,x)*3));pinKnown=true;
-    $("#pin-left").classList.remove("on");$("#pin-right").classList.remove("on");paintPinBand();};
+    $("#pin-left").classList.remove("on");$("#pin-right").classList.remove("on");paintPinBand();
+    if(typeof autoAsk==="function")autoAsk();};
   b.addEventListener("pointerdown",e=>{d=true;try{b.setPointerCapture(e.pointerId)}catch(_){}set(e.clientX);});
   b.addEventListener("pointermove",e=>{if(d)set(e.clientX);});
   b.addEventListener("pointerup",()=>d=false);})();
 [["#pin-left","#pin-right"],["#pin-right","#pin-left"]].forEach(([me,other])=>
   $(me).addEventListener("click",()=>{$(me).classList.toggle("on");
-    $(other).classList.remove("on");paintPinBand();}));
+    $(other).classList.remove("on");paintPinBand();
+    if(typeof autoAsk==="function")autoAsk();}));
 
 /* ---------- live weather: open-meteo at the course's own coordinates.
    Per-hole into/down/cross computed from the geometry frame bearing.
@@ -830,7 +850,8 @@ function applyWx(){
   else{let d=Math.abs((((wx.dirDeg-brg)%360)+360)%360);if(d>180)d=360-d;
     windState={dir:d<=60?"into":d>=120?"down":"cross",str};}
   setWindUI();
-  paintWindLab(`live ${wx.spd} mph from ${compass8(wx.dirDeg)}, ${wx.temp}° at the course`);}
+  paintWindLab(`live ${wx.spd} mph from ${compass8(wx.dirDeg)}, ${wx.temp}° at the course`);
+  if(typeof autoAsk==="function")autoAsk();}
 $("#wx-live").addEventListener("click",async()=>{
   if(wxAuto){wxAuto=false;$("#wx-live").classList.remove("on");paintWindLab();return}
   $("#wx-live").textContent="Fetching…";
@@ -1048,11 +1069,18 @@ $("#paste-profile").addEventListener("change",e=>{
   catch(err){toast("Couldn't read that code. Check it copied fully.")}});
 
 /* ---------- bag view ---------- */
+/* thin-line club heads for the bag groups: wood crown, iron blade, wedge */
+const CLUBICONS={
+ "Woods & hybrid":`<svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M11.5 1.5v5"/><path d="M11.5 6.5c0 3-1.6 5.6-4.6 5.6S2.2 10 2.2 8.2c0-1.6 1.6-2.4 4-2.2 2.6.2 4-.4 5.3.5z"/></svg>`,
+ "Irons":`<svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 1.5v6.2"/><path d="M11 7.7L4 9.6c-1.2.3-1.8 1.2-1.4 2.2.4 1 1.4 1.4 2.6 1L11 11z"/></svg>`,
+ "Wedges":`<svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.6 1.5v5.8"/><path d="M10.6 7.3L4.4 8.9c-1.5.4-2.2 1.8-1.3 3 .7 1 2 1.3 3.3.7l4.8-2.2c.6-.3.9-1 .6-1.9z"/></svg>`};
 function renderBag(){const p=store.p;if(!p)return;
   const grp=i=>i<3?"Woods & hybrid":i<10?"Irons":"Wedges";
+  const inPlay=p.bag.filter(b=>!b.out).length;
+  $("#bag-count").textContent=`${inPlay} of ${p.bag.length} clubs in play`;
   let lastG="";
   $("#bagtable").innerHTML="<tr><th>In</th><th>Club</th><th class='bagnum'>Carry</th><th class='bagnum'>Total</th></tr>"+
-   p.bag.map((b,i)=>{const g=grp(i);const head=g!==lastG?`<tr class='ghead'><td colspan='4'>${g}</td></tr>`:"";lastG=g;
+   p.bag.map((b,i)=>{const g=grp(i);const head=g!==lastG?`<tr class='ghead'><td colspan='4'><span style='display:inline-flex;align-items:center;gap:7px'>${CLUBICONS[g]||""}${g}</span></td></tr>`:"";lastG=g;
    return head+`<tr class='${b.out?"clubout":""}'>
    <td><input type='checkbox' data-i='${i}' data-f='out' ${b.out?"":"checked"}></td>`
    +`<td>${b.club}</td><td class='bagnum'><input class='num' data-i='${i}' data-f='carry' type='number' value='${b.carry}'></td>
@@ -1108,12 +1136,21 @@ function renderCourseSel(){
   function paint(){const c=COURSES[cur.course];
     $("#course-name").textContent=c.course;
     $("#course-meta").textContent=courseMetaLine(c);
-    menu.innerHTML=COURSES.map((k,i)=>`<button role='option' aria-selected='${i===cur.course}' class='${i===cur.course?"cur":""}' data-i='${i}' style='animation-delay:${i*45}ms'>
+    menu.innerHTML=`<div class='dd-search'><input type='text' id='course-search' placeholder='Search courses' autocomplete='off' aria-label='Search courses'></div>`+
+     COURSES.map((k,i)=>`<button role='option' aria-selected='${i===cur.course}' class='${i===cur.course?"cur":""}' data-i='${i}' style='animation-delay:${i*45}ms'>
       <span><span class='ddo-name'>${k.course}</span><span class='ddo-meta'>${courseMetaLine(k)}</span></span>
       <svg class='ddo-check' width='15' height='15' viewBox='0 0 15 15' fill='none' aria-hidden='true'><path d='M3 8l3 3 6-7' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>
-    </button>`).join("");}
+    </button>`).join("")+
+     `<div class='dd-empty hidden' id='course-none'>Not ingested yet. Request it in About and Albie will learn it.</div>`;
+    $("#course-search").addEventListener("input",e=>{
+      const q=e.target.value.trim().toLowerCase();let hits=0;
+      $$("#course-menu button[data-i]").forEach(b=>{
+        const hit=!q||b.textContent.toLowerCase().includes(q);
+        b.style.display=hit?"":"none";if(hit)hits++;});
+      $("#course-none").classList.toggle("hidden",hits>0);});}
   function setOpen(o){dd.classList.toggle("open",o);menu.classList.toggle("hidden",!o);
-    btn.setAttribute("aria-expanded",String(o));if(o)paint();}
+    btn.setAttribute("aria-expanded",String(o));
+    if(o){paint();if(matchMedia("(min-width:860px)").matches)$("#course-search").focus();}}
   paint();
   btn.addEventListener("click",()=>setOpen(!dd.classList.contains("open")));
   menu.addEventListener("click",e=>{const b=e.target.closest("button[data-i]");if(!b)return;
@@ -1175,7 +1212,8 @@ function renderHoles(){const c=COURSES[cur.course];store.cur=cur;
   // refetch when the course (and its coordinates) changed
   if(wxAuto){if(wx&&wx.slug===c.slug)applyWx();
     else fetchWx().then(applyWx).catch(()=>{wxAuto=false;$("#wx-live").classList.remove("on");});}
-  $("#advice").innerHTML="";}
+  $("#advice").innerHTML="";
+  autoAsk();}
 /* ---------- live ASCII fields: silhouettes spelled from real course data ----------
    Locked spec: glyph POSITIONS never move; glyphs swap IDENTITY and gain color,
    then settle back. Fields reseed with the current hole's actual numbers. */
@@ -1275,6 +1313,10 @@ if(motionOK)setInterval(()=>{if(document.hidden)return;
   for(const f of FIELDS)for(let k=0;k<2;k++){
     const c=f.cells[Math.floor(Math.random()*f.cells.length)];
     if(c)flick(f,c,Math.random()<.25);}},170);
+let scrollT;
+addEventListener("scroll",()=>{const b=document.getElementById("bgart");if(!b)return;
+  b.classList.add("scrolling");clearTimeout(scrollT);
+  scrollT=setTimeout(()=>b.classList.remove("scrolling"),320);},{passive:true});
 if(motionOK)document.addEventListener("pointermove",e=>{
   for(const f of FIELDS){const r=f.el.getBoundingClientRect();
     if(!r.width||e.clientX<r.left-40||e.clientX>r.right+40||e.clientY<r.top-40||e.clientY>r.bottom+40)continue;
@@ -1313,7 +1355,42 @@ function lineToPin(ball,pin,g){
         h.clear=d+2;hits.set(i,h);}}}
   return [...hits.values()].filter(h=>h.first>6)
     .sort((a,b)=>a.first-b.first).map(h=>({kind:h.kind,name:h.name,clear:Math.round(h.clear/5)*5}));}
-let lastTap=null;
+let lastTap=null,hmCtx=null;
+/* the current map's render frame, so the call can draw on it after the fact */
+function clPoint(g,along){let acc=0;
+  for(let i=0;i<g.cl.length-1;i++){const a=g.cl[i],b=g.cl[i+1];
+    const L=Math.hypot(b[0]-a[0],b[1]-a[1]);
+    if(acc+L>=along&&L>0){const t=(along-acc)/L;
+      return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];}
+    acc+=L;}
+  return g.cl[g.cl.length-1];}
+/* Albie's words land on the map: the winning option draws its target -
+   a lay-up ring at the leave number, the fat-side ring for centre-green,
+   a plain aim cross for the direct shot */
+function drawCallTarget(h,win,sit){
+  const g=h.geo,svg=document.querySelector("#holemap svg");
+  const old=svg&&svg.querySelector("#hm-target");if(old)old.remove();
+  if(!g||!g.cl||g.cl.length<2||!svg||!hmCtx||hmCtx.holeN!==h.n||!win||!sit.dist)return;
+  const cf=hmCtx.cf,pin=hmCtx.pin;
+  const SX=y=>+(y-hmCtx.mnA).toFixed(1),SY=x=>+(x-hmCtx.mnL).toFixed(1);
+  const ball=(lastTap&&lastTap.holeN===h.n&&lastTap.ball)?lastTap.ball
+    :clPoint(g,Math.max(0,g.len-sit.dist/cf));
+  let el="";
+  if(win.id==="lay"&&win.leave){
+    const L=Math.hypot(pin[0]-ball[0],pin[1]-ball[1])||1;
+    const t=Math.max(.1,Math.min(.95,((sit.dist-win.leave)/cf)/L));
+    const px=ball[0]+(pin[0]-ball[0])*t,py=ball[1]+(pin[1]-ball[1])*t;
+    el=`<line x1='${SX(ball[1])}' y1='${SY(ball[0])}' x2='${SX(py)}' y2='${SY(px)}' stroke='#5C6B4F' stroke-width='1' stroke-dasharray='2 3'/>
+     <circle cx='${SX(py)}' cy='${SY(px)}' r='4.5' fill='none' stroke='#5C6B4F' stroke-width='1.4'/>
+     <circle cx='${SX(py)}' cy='${SY(px)}' r='1.3' fill='#5C6B4F'/>
+     <text x='${SX(py)}' y='${SY(px)-7}' text-anchor='middle' class='hm-carry' style='fill:#5C6B4F'>lay to here · ${win.leave} left</text>`;
+  }else if(win.id==="cons"){
+    el=`<circle cx='${SX(pin[1])}' cy='${SY(pin[0])}' r='7.5' fill='none' stroke='#5C6B4F' stroke-width='1.3' stroke-dasharray='3 3'/>
+     <text x='${SX(pin[1])}' y='${SY(pin[0])-11}' text-anchor='middle' class='hm-carry' style='fill:#5C6B4F'>centre, fat side</text>`;
+  }else{
+    el=`<path d='M${SX(pin[1])-4} ${SY(pin[0])} h8 M${SX(pin[1])} ${SY(pin[0])-4} v8' stroke='#5C6B4F' stroke-width='1.2' fill='none'/>`;
+  }
+  svg.insertAdjacentHTML("beforeend",`<g id='hm-target'>${el}</g>`);}
 /* card calibration factor, gated: a 2-point centerline is a straight line —
    if the card runs long over it (dogleg), scaling straight-line taps by the
    ratio fabricates distance (audit: St Andrews 14, DGC 17). Trust the tap. */
@@ -1364,6 +1441,7 @@ function renderHoleMap(h){
   const cf=mapCF(g);
   const straightUnderCard=!!(g.card&&g.cl.length<=2&&g.card/g.len>1.1);
   const cardLen=straightUnderCard?g.len:(g.card||g.len);
+  hmCtx={holeN:h.n,pin,mnA,mnL,cf};
   let ticks="";
   for(let y=50;y<cardLen;y+=50){const mx=SX(y/cf);
     ticks+=`<line x1='${mx.toFixed(0)}' y1='${Hh-5}' x2='${mx.toFixed(0)}' y2='${Hh}' class='hm-tick'/>`;
@@ -1418,6 +1496,7 @@ function renderHoleMap(h){
         const px=ball[0]+(pin[0]-ball[0])*t,py=ball[1]+(pin[1]-ball[1])*t;
         return `<text x='${SX(py).toFixed(1)}' y='${(SY(px)-3).toFixed(1)}' text-anchor='middle' class='hm-carry'>${c.clear}</text>`;}).join("");
     $("#hm-read").innerHTML=`<b>${lie==="tee"?"on the tee":dist+" out"}</b> · ${lie}${sideVal!=="centre"?" · "+sideVal:""}`;
+    autoAsk();
   });
 }
 function renderBand(h){const band=$("#posband");band.innerHTML="";
@@ -1453,7 +1532,7 @@ function renderBand(h){const band=$("#posband");band.innerHTML="";
   band.addEventListener("pointerdown",e=>{pdown=true;
     try{band.setPointerCapture(e.pointerId)}catch(_){}setPos(e.clientX);});
   band.addEventListener("pointermove",e=>{if(pdown)setPos(e.clientX);});
-  band.addEventListener("pointerup",()=>pdown=false);}
+  band.addEventListener("pointerup",()=>{pdown=false;autoAsk();});}
 function ask(){const p=store.p;if(!p){show("onboard");return}
   chosenPick=null;
   const c=COURSES[cur.course],h=c.holes.find(x=>x.n===cur.hole);
@@ -1582,6 +1661,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
       approachOpts=`<div class='opts'>`+cands.slice(0,3).map((o,i)=>
         `<div class='opt ${i===0?"rec":""}' data-pick='${o.title}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="lay"?"punch":o.id==="cons"?"advance":"window"]}</span><div><span class='orank'>${String(i+1).padStart(2,"0")}${i===0?" · The play":""} · rec ${pct(o)}%</span><h4>${o.title}</h4><p>${fmt(o.body||`${sit.dist} plays ${eff}. Your ${o.club.club} carries ${o.club.carry}.`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p></div></div>`).join("")+
         `<p class='small' style='margin:2px 0 0'>Tap the option you're playing. It goes in the log.</p></div>`;
+      drawCallTarget(h,win,sit);
     }}
   else if(sit.lie==="tee"){const g=(h.gates||[])[0];
     // a listed driving weakness demotes the driver here, not just in prose
@@ -1704,6 +1784,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
     if(mag>=1.5&&mag<=8){
       const dir=Math.abs(gsl[0])>=Math.abs(gsl[1])?(gsl[0]>0?"to the left":"to the right"):(gsl[1]>0?"toward the front":"over the back");
       runoutNote=noteRow("","the ground",`The land falls ${dir} at this green, about ${Math.round(mag)}y per 100. Runout and misses feed that way. <span class='src'>SRTM elevation, 30m</span>`);}}
+  if(!distShot)drawCallTarget(h,null,sit);
   $("#advice").innerHTML=`
    <div class='call'><p class='eyebrow'>${sit.lie==="trouble"?"The way out":"The call"}</p>
      ${confChips}
@@ -1736,7 +1817,15 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
       if(h.n<c.holes.length){cur.hole=h.n+1;resetSituation();renderHoles();}
       else show("log");});});
 }
+/* pace of play: Albie speaks FIRST. The call renders the moment a hole opens
+   (tee, live wind, unknown pin) and re-thinks on every refinement - the
+   inputs are optional sharpening, not a form to fill (tester feedback). */
+let autoAskT;
+function autoAsk(){if(!store.p)return;clearTimeout(autoAskT);autoAskT=setTimeout(ask,90);}
 $("#ask").addEventListener("click",ask);
+$("#sit-dist").addEventListener("input",autoAsk);
+["sit-lieq","sit-window","sit-swing"].forEach(id=>
+  document.getElementById(id).addEventListener("click",autoAsk));
 $("#advice").addEventListener("click",e=>{
   if(e.target.id==="expand-call"){const m=$("#advice .call-more");
     m.classList.toggle("hidden");
@@ -1874,6 +1963,18 @@ $("#updates-form").addEventListener("submit",async e=>{
       body:JSON.stringify({email:em,source:"albie-app"})});
       if(r.ok){done();toast("You're on the list.");return}}catch(err){}}
   const log=store.log;log.push({t:new Date().toISOString(),type:"signup",email:em});
+  store.log=log;done();
+  toast("Saved. It reaches Albie with your next feedback export.");});
+$("#course-req").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const name=$("#cr-name").value.trim();if(!name)return;
+  const done=()=>{$("#course-req").classList.add("hidden");$("#cr-done").classList.remove("hidden");};
+  if(UPDATES_ENDPOINT){
+    try{const r=await fetch(UPDATES_ENDPOINT,{method:"POST",
+      headers:{"Accept":"application/json","Content-Type":"application/json"},
+      body:JSON.stringify({course_request:name,source:"albie-course-request"})});
+      if(r.ok){done();toast("On the list. "+name+" gets a caddie.");return}}catch(err){}}
+  const log=store.log;log.push({t:new Date().toISOString(),type:"course-request",course:name});
   store.log=log;done();
   toast("Saved. It reaches Albie with your next feedback export.");});
 if("serviceWorker" in navigator&&window===top&&location.protocol==="https:")
