@@ -84,12 +84,22 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .btn.ghost{background-image:none;border:1.5px solid var(--sage);border-radius:12px;color:var(--ink);
   font-weight:500;height:auto;min-height:48px;padding:11px 24px}
 .btn:focus-visible,.chip:focus-visible,.hole-n:focus-visible,.tab:focus-visible{outline:2px solid var(--brick);outline-offset:2px}
-.call{border:1px solid var(--line);border-left:3px solid var(--brick);border-radius:0 14px 14px 0;
-  padding:14px 15px;margin:12px 0;background:var(--card)}
+/* the call is a yardage-book plate, not an app card: survey frame, the
+   title set into the border, data as ruled mono lines instead of pills */
+.call{border:1.2px solid #33362B4A;border-radius:3px;position:relative;
+  padding:20px 16px 14px;margin:18px 0 12px;background:var(--card)}
+.call>.eyebrow{position:absolute;top:-9px;left:12px;background:var(--card);
+  padding:0 9px;color:var(--brick);font-weight:600}
 .call .club{font-family:var(--disp);font-weight:600;font-size:2.2rem;letter-spacing:-.02em;line-height:1.1;margin:2px 0 6px}
-.callmath{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 6px}
-.callmath .cm{font:500 .72rem var(--mono);letter-spacing:.03em;background:var(--sandbg);
-  border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:#565B3F;white-space:nowrap}
+/* flex-wrap, not inline: the spans carry no whitespace between them, so
+   only flex gives them a break opportunity (they clipped off-screen before) */
+.callmath{display:flex;flex-wrap:wrap;align-items:baseline;margin:2px 0 8px;
+  padding:5px 2px 7px;border-bottom:1px dashed var(--line);
+  font:500 .72rem var(--mono);letter-spacing:.04em;color:#565B3F;line-height:1.9}
+.callmath .cm{white-space:nowrap}
+/* the separator trails its own item so a wrapped line never opens with a
+   dot, and it keeps real breathing room either side */
+.callmath .cm:not(:last-child)::after{content:"·";margin:0 .55em;color:var(--sand)}
 .callmath .cm b{font-weight:700;color:var(--ink)}
 .albiesays{font-size:1rem;margin:12px 0;line-height:1.55;padding:10px 12px;
   background:#8A9A7814;border-left:2.5px solid var(--sage);border-radius:0 10px 10px 0}
@@ -106,18 +116,27 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .sitblock{margin:8px 0 12px;padding:10px 12px;border:1px solid var(--line);border-left:3px solid var(--slate);
   border-radius:0 10px 10px 0;background:#5A71850F;font-size:.94rem;line-height:1.5}
 .sitblock .who{font:600 .6rem var(--mono);letter-spacing:.13em;color:var(--slate);display:block;margin-bottom:3px;text-transform:uppercase}
-.opts{display:flex;flex-direction:column;gap:9px;margin:12px 0 6px}
-.opt{display:flex;gap:12px;align-items:flex-start;padding:12px 13px;border:1px solid var(--line);
-  border-radius:12px;background:var(--card)}
-.opt.rec{border-color:var(--sage);box-shadow:0 0 0 2.5px #8A9A7830;background:#8A9A780C}
-.opt[data-pick]{cursor:pointer;transition:transform .3s var(--spring),border-color .2s,box-shadow .2s}
+/* options read as entries on a yardage-book page: hairline rules between
+   them, no nested boxes. The play is marked the way a scorecard marks a
+   birdie, by circling its number, not by glowing. */
+.opts{display:flex;flex-direction:column;margin:10px 0 2px}
+.opt{display:flex;gap:12px;align-items:flex-start;padding:13px 2px;
+  border:0;border-top:1px solid var(--line);background:none}
+.opts .opt:first-of-type{border-top:0}
+.opt.rec{background:#8A9A7810;border-radius:6px;padding:13px 9px;margin:0 -7px}
+.opt[data-pick]{cursor:pointer;transition:transform .3s var(--spring),background .2s}
 .opt[data-pick]:active{transform:scale(.985)}
-.opt.chosen{border-color:var(--ink);box-shadow:0 0 0 2.5px #33362B33}
+.opt.chosen{background:#33362B0F;border-radius:6px;padding:13px 9px;margin:0 -7px}
 .opt.chosen .orank::after{content:" · your pick";color:var(--brick)}
-.opt .oicon{flex:0 0 46px;color:var(--ink);opacity:.7;margin-top:3px}
+.opt .oicon{flex:0 0 46px;color:var(--ink);opacity:.6;margin-top:3px}
 .opt.rec .oicon{color:#5C6B4F;opacity:1}
-.opt .orank{display:block;font:600 .6rem var(--mono);letter-spacing:.13em;color:var(--dim);text-transform:uppercase;margin-bottom:2px}
-.opt.rec .orank{color:var(--sage)}
+.opt .orank{display:flex;align-items:center;gap:7px;font:600 .6rem var(--mono);
+  letter-spacing:.13em;color:var(--dim);text-transform:uppercase;margin-bottom:3px}
+.opt.rec .orank{color:#5C6B4F}
+.oidx{display:inline-flex;align-items:center;justify-content:center;
+  min-width:19px;height:19px;font:600 .64rem var(--mono);color:var(--dim);flex:0 0 auto}
+.opt.rec .oidx{border:1.3px solid var(--sage);border-radius:999px;color:#5C6B4F}
+.opt .opct{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--dim)}
 .opt h4{font:600 .98rem var(--disp);margin:0 0 3px;letter-spacing:-.01em}
 .opt p{margin:0;font-size:.85rem;color:#4A4F3C;line-height:1.5}
 .opt .src{display:block;margin-top:4px;font:400 .62rem var(--mono);color:var(--dim);letter-spacing:.05em}
@@ -376,16 +395,27 @@ select{appearance:none;-webkit-appearance:none;font-family:var(--disp);font-weig
 /* while the page moves, the ambient fields step back so text never fights
    them mid-scroll; they settle back to full strength at rest */
 #bgart.scrolling{opacity:.14}
+/* HARD RULE: the ambient fields live in the page margins and are CLIPPED
+   there. They can never enter the 480px text column at any scroll offset,
+   which is the only reliable cure for glyphs behind body copy. Below the
+   width where real margins exist, they are gone entirely and the in-flow
+   fields (about/log/beer/flag) carry the texture instead. */
+.afw{position:fixed;top:0;bottom:0;width:calc(50vw - 258px);overflow:hidden}
+.afw.l{left:0}.afw.r{right:0}
+.afw .af{position:absolute}
+.afw.l .af{left:0}
+.afw.r .af{right:0}
+@media(max-width:1075px){#bgart{display:none}}
 .af{position:absolute;margin:0;font:13px/1.15 var(--mono);letter-spacing:.03em;white-space:pre;
   mix-blend-mode:multiply;opacity:.52;user-select:none;
   animation:drift 16s ease-in-out infinite alternate}
 .af.l{left:-2ch;bottom:-40px}
 .af.r{right:-4ch;top:30px;animation-delay:-8s;animation-duration:19s}
+/* the landing silhouette goes IN-FLOW on phones: its own space under the
+   strapline instead of floating behind it */
 @media(max-width:859px){
-  .af{font-size:8.5px;opacity:.5}
-  /* hug the edge hard: the field's dense middle must never sit mid-column */
-  .af.l{left:-16ch;bottom:10px}
-  .af.r{display:none}}
+  .land-sil{position:static;display:block;text-align:right;font-size:7px;
+    opacity:.55;margin:10px 0 0;animation:none}}
 /* text beats the ambient field, at every scroll position: a soft paper halo
    lifts every out-of-card line off the glyphs (invisible over cards) */
 h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
@@ -407,6 +437,11 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
 .ab-field{margin:14px auto 2px;font:10px/1.12 var(--mono);white-space:pre;mix-blend-mode:multiply;
   opacity:.95;user-select:none;display:block;text-align:center;overflow:hidden}
 .ab-fieldcap{text-align:center;font:400 .6rem var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:2px 0 14px}
+/* the flag gets its own ruled plate: in the flow, never behind copy */
+.flagfig{margin:16px 0;padding:14px 0 10px;border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);text-align:center}
+.flagfig figcaption{font:400 .6rem var(--mono);letter-spacing:.14em;
+  text-transform:uppercase;color:var(--dim);margin-top:6px}
 .ab-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 13px}
 .stat b{display:block;font:600 1.7rem/1.1 var(--disp);letter-spacing:-.02em}
@@ -450,7 +485,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
 @media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
 </style>
 
-<div id="bgart" aria-hidden="true"><pre class="af l" id="af-l"></pre><pre class="af r" id="af-r"></pre></div>
+<div id="bgart" aria-hidden="true"><div class="afw l"><pre class="af l" id="af-l"></pre></div><div class="afw r"><pre class="af r" id="af-r"></pre></div></div>
 <div class="wrap" id="app">
   <div id="view-landing" class="view hidden">
     <div class="land-hero">
@@ -694,6 +729,10 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
         <div class="how-step"><b>05</b><span><i>Learn.</i> Your call ratings and rounds become ground truth in the next update.</span></div>
       </div>
     </div>
+    <figure class="flagfig">
+      <pre class="ab-field" id="about-flag" aria-hidden="true"></pre>
+      <figcaption>The pin, spelled from this course's own numbers</figcaption>
+    </figure>
     <div class="card">
       <p class="eyebrow">The short game</p>
       <p class="small" style="font-size:.9rem">Inside 40 yards Albie switches to the chip engine: it reads your lie, the green speed and the slope at the green, picks runner, pitch or high-soft, and marks the exact landing spot on the map. Putting stays yours. No green-reading theater.</p>
@@ -977,7 +1016,11 @@ function windAdjust(d, w, s) {
 }
 
 function pickClub(bag, d, lie) {
-  const pool = bag.filter(b => b.club !== "Driver" || lie === "tee");
+  let pool = bag.filter(b => b.club !== "Driver" || lie === "tee");
+  // a driver-only bag empties the pool off the tee: hand back the driver
+  // rather than undefined, which crashed every caller (call-audit 2026-08-05)
+  if (!pool.length) pool = bag.slice();
+  if (!pool.length) return {club: "—", carry: 0};
   const flying = lie === "rough" ? Math.round(d * 1.07) : d;
   let best = null;
   for (const b of pool) {
@@ -1397,6 +1440,8 @@ function renderBgArt(){FIELDS.length=0;
   if(ab)buildField(ab,SHAPES[names[(cur.course+2)%3]],data,52,30);
   const lf=document.getElementById("log-field");
   if(lf)buildField(lf,SHAPES.ball,data,40,24);
+  const ff=document.getElementById("about-flag");
+  if(ff)buildField(ff,SHAPES.flag,data,46,28);
   const bf=document.getElementById("beer-field");
   // the beer is poured in gold, the foam pale, the glass stays ink
   if(bf)buildField(bf,SHAPES.beer,data,44,30,(fx,fy,d,roll)=>{
@@ -1863,31 +1908,45 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
     const stimp=parseFloat(c.stimp)||9.5;
     const gsC=h.geo&&h.geo.el&&h.geo.el.gs;
     const galong=gsC?gsC[1]:0,glat=gsC?gsC[0]:0;   // fall per 100y at the green
-    const pick=re=>{const cand=p.bag.filter(b=>!b.out&&re.test(b.club));
-      return cand[0]||p.bag.filter(b=>!b.out).slice(-1)[0];};
+    // a substituted club is named honestly: no "9i, high and soft" theatre
+    const pick=(re,name,alt)=>{const cand=p.bag.filter(b=>!b.out&&re.test(b.club));
+      if(cand[0])return {club:cand[0],name};
+      const sub=p.bag.filter(b=>!b.out).slice(-1)[0];
+      return sub?{club:sub,name:alt,subbed:true}:null;};
     const clean=sit.lieq==="clean"&&sit.lie==="fairway";
     const buried=sit.lieq==="buried";
     const roughy=sit.lie==="rough"||sit.lieq==="sitting";
-    const run={id:"run",club:pick(/^(8i|9i)$/),name:"bump and run",frac:.32,score:60,why:[]};
-    const pit={id:"pitch",club:pick(/^(PW|GW)$/),name:"standard pitch",frac:.58,score:58,why:[]};
-    const sof={id:"soft",club:pick(/^(SW|LW)$/),name:"high and soft",frac:.8,score:48,why:[]};
-    if(clean){run.score+=12;run.why.push("clean lie, use the ground");}
-    if(roughy){run.score-=18;sof.score+=8;sof.why.push("grass grabs a runner from here");}
-    if(buried){run.score-=40;pit.score-=15;sof.score+=10;sof.why.push("sitting down, only loft gets it out clean");}
-    if(sit.pin==="front"){run.score-=14;sof.score+=10;sof.why.push("front pin, not much green to work with");}
-    if(sit.pin==="back"){run.score+=9;run.why.push("back pin, the whole green to run at");}
-    if(stimp>=10.5){run.score-=6;sof.score+=4;sof.why.push(`quick greens (${c.stimp})`);}
-    if(galong<-1.5){run.score-=8;sof.score+=6;sof.why.push("the green runs away downhill");}
-    if(galong>1.5){run.score+=7;run.why.push("uphill chip, the slope kills the roll");}
-    if((p.strengths||[]).includes("chipping")){run.score+=4;pit.score+=4;}
-    if((p.weaknesses||[]).includes("chipping")){sof.score-=8;pit.score+=6;pit.why.push("the stock pitch is the safe hands play");}
+    const mk=(id,p0,frac,score)=>p0?{id,club:p0.club,name:p0.name,subbed:p0.subbed,frac,score,why:[]}:null;
+    const run=mk("run",pick(/^(8i|9i)$/,"bump and run","the low runner you have"),.32,60);
+    const pit=mk("pitch",pick(/^(PW|GW)$/,"standard pitch","your longest wedge, controlled"),.58,58);
+    const sof=mk("soft",pick(/^(SW|LW)$/,"high and soft","the most loft you have"),.8,48);
+    // a substituted club is not the shot it stands in for: demote it honestly
+    [run,pit,sof].forEach(o=>{if(o&&o.subbed){o.score-=12;o.why.push("closest club you have in play");}});
+    const S=(o,n,why)=>{if(!o)return;o.score+=n;if(why)o.why.push(why);};
+    if(clean)S(run,12,"clean lie, use the ground");
+    if(roughy){S(run,-18);S(sof,8,"grass grabs a runner from here");}
+    if(buried){S(run,-40);S(pit,-15);S(sof,10,"sitting down, only loft gets it out clean");}
+    if(sit.pin==="front"){S(run,-14);S(sof,10,"front pin, not much green to work with");}
+    if(sit.pin==="back")S(run,9,"back pin, the whole green to run at");
+    if(stimp>=10.5){S(run,-14,`quick greens (${c.stimp}), a runner keeps going`);S(sof,6);}
+    if(galong<-1.5){S(run,-12,"the green runs away downhill");S(sof,6);}
+    if(galong>1.5)S(run,7,"uphill chip, the slope kills the roll");
+    if((p.strengths||[]).includes("chipping")){S(run,4);S(pit,4);}
+    if((p.weaknesses||[]).includes("chipping")){S(sof,-8);S(pit,6,"the stock pitch is the safe hands play");}
+    // sand on the line is a VETO, not a nudge: you cannot run it through a
+    // bunker, and the warning belongs on the runner itself (call-audit)
     const bkChip=((lastTap&&lastTap.holeN===h.n&&lastTap.crossings)||[]).find(x=>x.kind==="bk");
-    if(bkChip){run.score-=30;sof.score+=10;sof.why.push(`${bkChip.name||"a bunker"} sits between you and the pin`);}
-    if(sit.wind==="into"&&sit.windstr===2){sof.score-=5;run.score+=4;run.why.push("strong wind hurts the high one");}
+    if(bkChip){const nm=bkChip.name||"a bunker";
+      S(run,-95,`${nm} is on the line, you cannot run it through sand`);
+      S(pit,-8);S(sof,12,`carrying ${nm}`);}
+    const waChip=((lastTap&&lastTap.holeN===h.n&&lastTap.crossings)||[]).find(x=>x.kind==="wa");
+    if(waChip){S(run,-95,"water on the line");S(sof,10,"you have to fly it");}
+    if(sit.wind==="into"&&sit.windstr===2){S(sof,-5);S(run,4,"strong wind hurts the high one");}
     let frac0=0;
     if(elevAdj>=3)frac0=.07;else if(elevAdj<=-3)frac0=-.07;
     const aim=Math.abs(glat)>=2?`Start it a step ${glat>0?"right":"left"}; the slope brings it back.`:"";
-    const cands=[run,pit,sof].filter(o=>o.club).sort((a,b)=>b.score-a.score);
+    const cands=[run,pit,sof].filter(o=>o&&o.club).sort((a,b)=>b.score-a.score);
+    if(!cands.length){$("#advice").innerHTML=`<div class='call'><p class='eyebrow'>The call</p><p class='albiesays'><span class='who'>ALBIE ▸</span> No clubs in play for a chip. Check some back in on the Bag tab.</p></div>`;return}
     const mnS=Math.min(...cands.map(o=>o.score));
     const totS=cands.reduce((a,o)=>a+(o.score-mnS+15),0);
     const pct=o=>Math.round((o.score-mnS+15)/totS*100);
@@ -1900,7 +1959,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
       (galong<-1.5?`<span class='cm'>runs away</span>`:galong>1.5?`<span class='cm'>into the slope</span>`:"")+
       (buried?`<span class='cm'>buried lie</span>`:roughy?`<span class='cm'>out of the grass</span>`:"")+`</div>`;
     approachOpts=`<div class='opts'>`+cands.slice(0,3).map((o,i)=>
-      `<div class='opt ${i===0?"rec":""}' data-pick='${escAttr(o.club.club+" "+o.name)}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="run"?"advance":o.id==="pitch"?"punch":"window"]}</span><div><span class='orank'>${String(i+1).padStart(2,"0")}${i===0?" · The play":""} · rec ${pct(o)}%</span><h4>${o.club.club}, ${o.name}</h4><p>${fmt(`Land it at ${land(o)}, the ground does the rest.${aim?" "+aim:""}`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p></div></div>`).join("")+
+      `<div class='opt ${i===0?"rec":""}' data-pick='${escAttr(o.club.club+" "+o.name)}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="run"?"advance":o.id==="pitch"?"punch":"window"]}</span><div style='flex:1'><span class='orank'><span class='oidx'>${String(i+1).padStart(2,"0")}</span>${i===0?"The play":""}<span class='opct'>rec ${pct(o)}%</span></span><h4>${o.club.club}, ${o.name}</h4><p>${fmt(`Land it at ${land(o)}, the ground does the rest.${aim?" "+aim:""}`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p></div></div>`).join("")+
       `<p class='small' style='margin:2px 0 0'>Tap the option you're playing. It goes in the log. Putting stays yours.</p></div>`;
     drawCallTarget(h,{id:"chip",club:cands[0].club,leave:D-land(cands[0])},sit);
   }
@@ -1997,7 +2056,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
       const totS=cands.reduce((a,o)=>a+(o.score-mnS+15),0);
       const pct=o=>Math.round((o.score-mnS+15)/totS*100);
       approachOpts=`<div class='opts'>`+cands.slice(0,3).map((o,i)=>
-        `<div class='opt ${i===0?"rec":""}' data-pick='${escAttr(o.title)}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="lay"?"punch":o.id==="cons"?"advance":"window"]}</span><div><span class='orank'>${String(i+1).padStart(2,"0")}${i===0?" · The play":""} · rec ${pct(o)}%</span><h4>${o.title}</h4><p>${fmt(o.body||`${sit.dist} plays ${eff}. Your ${o.club.club} carries ${o.club.carry}.`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p></div></div>`).join("")+
+        `<div class='opt ${i===0?"rec":""}' data-pick='${escAttr(o.title)}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="lay"?"punch":o.id==="cons"?"advance":"window"]}</span><div style='flex:1'><span class='orank'><span class='oidx'>${String(i+1).padStart(2,"0")}</span>${i===0?"The play":""}<span class='opct'>rec ${pct(o)}%</span></span><h4>${o.title}</h4><p>${fmt(o.body||`${sit.dist} plays ${eff}. Your ${o.club.club} carries ${o.club.carry}.`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p></div></div>`).join("")+
         `<p class='small' style='margin:2px 0 0'>Tap the option you're playing. It goes in the log.</p></div>`;
       drawCallTarget(h,win,sit);
     }}
@@ -2011,7 +2070,10 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
   // the club actually being hit for this distance
   let gateClub={club:"driver",carry:drC};
   if(distShot){const eff=windAdjust(sit.dist,sit.wind,sit.windstr);
-    const c=pickClub(p.bag.filter(b=>!b.out),eff,poolLie(h,sit));gateClub={club:c.club,carry:c.carry};}
+    // pickClub drops the driver off the tee, so a driver-only bag empties the
+    // pool and used to crash here (call-audit): fall back to the headline club
+    const c=pickClub(p.bag.filter(b=>!b.out),eff,poolLie(h,sit));
+    if(c&&c.club)gateClub={club:c.club,carry:c.carry};}
   const teeShort=p.tees&&p.tees!=="champ"&&sit.lie==="tee"&&!tyH;
   // carry gates are tee/approach furniture; a 25y chip has no gate to argue
   const gates=chipRange?"":applicableGates(h,sit).map(g=>{const need=Math.max(0,g.carry-teeDelta);
@@ -2025,12 +2087,14 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
   if(p.style==="aggressive"&&h.summary?.match(/birdie|scoring|drivable/i))persona.push("Scoring hole and you like to attack. This is the RIGHT place for it. Pick the aggressive option below.");
   if(p.style==="cautious")persona.push("Where a rule below offers two lines, take the safe one. That's your game and this course rewards it.");
   if(sit.lie==="tee"&&sit.dist===null){}
-  // crosswind must have a visible consequence even though it moves aim, not club
-  const crossNote=(sit.wind==="cross"&&distShot)?
-    noteRow("","the wind",`A ${sit.windstr===2?"strong ":""}crosswind moves everything toward the downwind side. Start your line on the windward edge of the target and let it ride back.`):"";
   const ruleRow=r=>{const warn=/never|dead|forbidden|NOT|no-go|danger|worst/i.test(r.advice);
     return `<div class='rule ${warn?"warn":""}'>${r.when&&r.when!=="always"?`<span class='when'>${r.when}</span>`:""}${fmt(r.advice)}<span class='src'>${r.src||""}</span></div>`};
   const noteRow=(cls,label,text)=>`<div class='rule ${cls}'><span class='when'>${label}</span>${text}</div>`;
+  // crosswind must have a visible consequence even though it moves aim, not
+  // club. NOTE: must sit AFTER noteRow - calling it earlier was a temporal
+  // dead zone crash that blanked every crosswind call (call-audit, 2026-08-05)
+  const crossNote=(sit.wind==="cross"&&distShot)?
+    noteRow("","the wind",`A ${sit.windstr===2?"strong ":""}crosswind moves everything toward the downwind side. Start your line on the windward edge of the target and let it ride back.`):"";
   const missNote=(sit.lie==="tee"&&h.par>3&&p.miss&&p.miss!=="—")?
     noteRow("warn","your miss",`A ${p.miss} under pressure. Set your aim so that miss finds the safe side. Typical driver window at your level: ±${dispDriver(p.hcp)}y.`):"";
   // compiled-caddie lookup: the pre-thought call for this exact situation
@@ -2081,7 +2145,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
     const sitText=rec?`${rec.what}.${rec.cost?` Usually costs ${rec.cost}.`:""}${rec.srcd===false?" (General read; not course-sourced yet.)":""}`
       :`In the trouble${side?` on the ${side}`:""}. No course-sourced recovery notes for this hole yet; standard rule applies: out first, score second.`;
     troubleHTML=`<div class='sitblock'><span class='who'>The situation${side?` · ${side} side`:""}${rec&&rec.src?` · ${rec.src}`:""}</span>${fmt(sitText)}</div>
-      <div class='opts'>${opts.map((o,i)=>`<div class='opt ${o.recc?"rec":""}' data-pick='${escAttr(o.title)}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.icon]}</span><div><span class='orank'>${o.rank}</span><h4>${o.title}</h4><p>${fmt(o.body)}</p></div></div>`).join("")}
+      <div class='opts'>${opts.map((o,i)=>`<div class='opt ${o.recc?"rec":""}' data-pick='${escAttr(o.title)}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.icon]}</span><div style='flex:1'><span class='orank'><span class='oidx'>${String(i+1).padStart(2,"0")}</span>${o.rank.replace(/^\d+\s*·?\s*/,"")}</span><h4>${o.title}</h4><p>${fmt(o.body)}</p></div></div>`).join("")}
       <p class='small' style='margin:2px 0 0'>Tap the option you're playing. It goes in the log.</p></div>`;
     clubLine="";
   }
