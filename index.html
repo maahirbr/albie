@@ -14,7 +14,13 @@
   --mono:'Fragment Mono',ui-monospace,Menlo,monospace;
   --disp:'General Sans',-apple-system,sans-serif;
   --body:'Switzer',-apple-system,sans-serif;
+  /* two-speed motion. --spring keeps the overshoot for SMALL tactile moves
+     you are touching (a chip toggling, a tick box flipping, the tab marker
+     travelling): the bounce reads as feedback there. --settle is a smooth
+     exponential ease-out for LARGE surfaces arriving (cards, sheets, panels),
+     where 1.56 overshoot reads as dated rather than physical. */
   --spring:cubic-bezier(.34,1.56,.64,1);
+  --settle:cubic-bezier(.16,1,.3,1);
 }
 *{box-sizing:border-box}
 html{background:#F1ECDA}
@@ -125,7 +131,9 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .rule.warn .when{color:var(--brick)}
 .rule .src{display:block;margin-top:3px;font:400 .62rem var(--mono);color:var(--dim);letter-spacing:.06em}
 .ratewrap{border-top:1px dashed var(--line);margin-top:14px;padding-top:10px}
-.sitblock{margin:8px 0 12px;padding:10px 12px;border:1px solid var(--line);border-left:3px solid var(--slate);
+/* left accent held at 2px across every callout type: the ledger convention
+   stays, the one 3px outlier that read as a colored card border does not */
+.sitblock{margin:8px 0 12px;padding:10px 12px;border:1px solid var(--line);border-left:2px solid var(--slate);
   border-radius:0 10px 10px 0;background:#5A71850F;font-size:.94rem;line-height:1.5}
 .sitblock .who{font:600 .6rem var(--mono);letter-spacing:.13em;color:var(--slate);display:block;margin-bottom:3px;text-transform:uppercase}
 /* options read as entries on a yardage-book page: hairline rules between
@@ -151,10 +159,15 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .opt .opct{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--dim)}
 /* the aim panel opens under the option you locked in */
 .aimpanel{margin-top:9px;padding:9px 11px;background:var(--paper);border:1px solid var(--line);
-  border-radius:8px;font-size:.9rem;line-height:1.5;animation:rise .35s var(--spring)}
+  border-radius:8px;font-size:.9rem;line-height:1.5;animation:rise .35s var(--settle)}
 .aimpanel .when{display:block;font:600 .58rem var(--mono);letter-spacing:.13em;
   text-transform:uppercase;color:var(--brick);margin-bottom:3px}
 .aimpanel .src{display:block;margin-top:4px;font:400 .6rem var(--mono);color:var(--dim);letter-spacing:.05em}
+/* the map, again, right where the advice is */
+.minimap-wrap{margin-top:8px}
+.minimap{display:block;width:100%;height:auto;background:var(--card);
+  border:1px solid var(--line);border-radius:7px}
+.mini-cap{padding:5px 2px 0;font-size:.54rem}
 .opt h4{font:600 .98rem var(--disp);margin:0 0 3px;letter-spacing:-.01em}
 .opt p{margin:0;font-size:.85rem;color:#4A4F3C;line-height:1.5}
 .opt .src{display:block;margin-top:4px;font:400 .62rem var(--mono);color:var(--dim);letter-spacing:.05em}
@@ -194,7 +207,7 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .orb{display:inline-block;width:13px;height:13px;border-radius:50%;vertical-align:-2px;
   margin-right:6px;position:relative;overflow:hidden;
   background:radial-gradient(circle at 34% 28%, #FFFFFF 0 26%, #EDEADF 55%, #C2BCA9 100%);
-  border:1px solid #A9A28C;animation:orbbob 1s var(--spring) infinite}
+  border:1px solid #A9A28C;animation:orbbob 1s var(--settle) infinite}
 .orb::after{content:"";position:absolute;inset:1.5px;border-radius:50%;opacity:.55;
   background-image:radial-gradient(#00000024 .8px, transparent 1.05px);
   background-size:4px 4px;animation:orbroll .8s linear infinite}
@@ -237,9 +250,9 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
   filter:drop-shadow(-1px 1px 1px #00000014)}
 /* motion: ranked options rise in with stagger; chosen pick pulses; zone-band
    markers snap on springs. All springs, all killed by reduced-motion. */
-.call{animation:rise .4s var(--spring)}
-.opt{opacity:0;animation:rise .45s var(--spring) forwards}
-.opt.chosen{opacity:1;animation:pick .35s var(--spring)}
+.call{animation:rise .4s var(--settle)}
+.opt{opacity:0;animation:rise .45s var(--settle) forwards}
+.opt.chosen{opacity:1;animation:pick .35s var(--settle)}
 @keyframes pick{from{transform:scale(.96)}to{transform:none}}
 .zone-band .me,.zone-band .melab{transition:left .35s var(--spring),opacity .2s}
 table{border-collapse:collapse;width:100%}
@@ -268,11 +281,11 @@ input[type=checkbox]{accent-color:#8A9A78;width:17px;height:17px}
 .dd-menu{position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:60;background:var(--card);
   border:1px solid var(--line);border-radius:14px;overflow:hidden;transform-origin:top center;
   max-height:min(62vh,430px);overflow-y:auto;overscroll-behavior:contain;
-  box-shadow:0 18px 44px #33362B29,0 2px 8px #33362B14;animation:ddpop .32s var(--spring)}
+  box-shadow:0 18px 44px #33362B29,0 2px 8px #33362B14;animation:ddpop .32s var(--settle)}
 @keyframes ddpop{from{opacity:0;transform:translateY(-7px) scale(.985)}to{opacity:1;transform:none}}
 .dd-menu button{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;
   text-align:left;padding:12px 14px;border:0;background:none;cursor:pointer;position:relative;
-  border-bottom:1px solid var(--line);opacity:0;animation:rise .4s var(--spring) forwards}
+  border-bottom:1px solid var(--line);opacity:0;animation:rise .4s var(--settle) forwards}
 .dd-menu button:last-child{border-bottom:0}
 .dd-search{padding:8px;border-bottom:1px solid var(--line)}
 .dd-search input{padding:8px 11px;font-size:.92rem;font-family:var(--body);font-weight:400}
@@ -294,7 +307,7 @@ input[type=checkbox]{accent-color:#8A9A78;width:17px;height:17px}
 .trust.open .trust-strip .dd-chev{transform:rotate(180deg)}
 .lv{font-weight:600}.lv.hi{color:var(--sage)}.lv.md{color:#9A8A5A}.lv.lo{color:var(--brick)}
 .trust-body{background:var(--card);border:1px solid var(--line);border-radius:12px;
-  padding:13px 14px;margin:8px 0 2px;animation:rise .4s var(--spring)}
+  padding:13px 14px;margin:8px 0 2px;animation:rise .4s var(--settle)}
 .trust-rank{font-family:var(--disp);font-weight:600;font-size:1.02rem;margin:0 0 2px}
 .trust-rank .src{font:400 .6rem var(--mono);color:var(--dim);letter-spacing:.06em;display:block;margin-top:2px;text-transform:uppercase}
 .trust-blurb{font-size:.92rem;margin:8px 0 10px;color:#4A4F3C}
@@ -320,7 +333,7 @@ input[type=checkbox]{accent-color:#8A9A78;width:17px;height:17px}
 .land-hero h1,.land-hero p{position:relative;z-index:1}
 .land-points{margin:22px 0 6px;display:flex;flex-direction:column;gap:14px}
 .lp{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 15px;
-  font-size:.95rem;line-height:1.5;opacity:0;animation:rise .5s var(--spring) forwards;
+  font-size:.95rem;line-height:1.5;opacity:0;animation:rise .5s var(--settle) forwards;
   display:flex;gap:13px;align-items:flex-start}
 /* 3D coins: the point icons turn slowly in real perspective, offset phases */
 .coin{flex:0 0 44px;height:44px;perspective:240px;margin-top:2px}
@@ -371,20 +384,43 @@ input::placeholder,textarea::placeholder{color:#A9A28C}
 #bagtable input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums;
   text-align:center;border-radius:6px;background:transparent;border-color:#DCD5C0}
 #bagtable input[type=number]:focus{background:var(--card)}
-/* checkbox = a scorecard tick box. Deliberately NOT a golf ball: the ball
-   glyph already means "rating" in this app, and one glyph should mean one
-   thing. Empty ruled square -> inked check when the club is in the bag. */
+/* checkbox = a split-flap tile, the airport information-board mechanism: the
+   card rotates on its X axis from blank to ticked, with a hairline seam across
+   the middle. Mechanical rather than glossy, which is the same language as the
+   ASCII data fields. Deliberately NOT a golf ball: the ball glyph already
+   means "rating" in this app, and one glyph should mean one thing. */
 input[type=checkbox]{appearance:none;-webkit-appearance:none;width:21px;height:21px;
-  border:1.3px solid #A9A28C;border-radius:4px;background:#33362B08;cursor:pointer;
-  position:relative;vertical-align:-4px;
-  transition:transform .3s var(--spring),background .2s,border-color .2s}
-input[type=checkbox]::after{content:"";position:absolute;left:6px;top:2px;width:6px;height:11px;
-  border:solid var(--sage);border-width:0 2.2px 2.2px 0;transform:rotate(42deg) scale(.4);
-  opacity:0;transition:opacity .18s,transform .34s var(--spring)}
-input[type=checkbox]:checked{border-color:var(--sage);background:#8A9A7814}
-input[type=checkbox]:checked::after{opacity:1;transform:rotate(42deg) scale(1)}
-input[type=checkbox]:active{transform:scale(.9)}
+  background:none;border:0;padding:0;cursor:pointer;position:relative;vertical-align:-4px;
+  transform-style:preserve-3d;
+  transition:transform .42s var(--spring)}
+/* the two faces of the flap. Both carry the seam, so it never breaks mid-turn */
+input[type=checkbox]::before,input[type=checkbox]::after{content:"";position:absolute;
+  inset:0;border:1.3px solid #A9A28C;border-radius:4px;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  background:linear-gradient(#33362B08 0 calc(50% - .5px),#33362B26 calc(50% - .5px) calc(50% + .5px),#33362B08 calc(50% + .5px) 100%)}
+/* the ticked face rides pre-flipped on the back, drawn with a real check */
+input[type=checkbox]::after{transform:rotateX(180deg);border-color:var(--sage);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='21' height='21'><path d='M5 11l4 4 7.5-9' fill='none' stroke='%238A9A78' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/></svg>"),
+    linear-gradient(#8A9A7814 0 calc(50% - .5px),#33362B26 calc(50% - .5px) calc(50% + .5px),#8A9A7814 calc(50% + .5px) 100%);
+  background-repeat:no-repeat;background-position:center;background-size:100% 100%,100% 100%}
+input[type=checkbox]:checked{transform:perspective(70px) rotateX(180deg)}
+input[type=checkbox]:active{transform:perspective(70px) scale(.9)}
+input[type=checkbox]:checked:active{transform:perspective(70px) rotateX(180deg) scale(.9)}
 input[type=checkbox]:focus-visible{outline:2px solid var(--brick);outline-offset:3px}
+/* reduced motion is handled globally further down (* transition/animation:none),
+   which lands the flap on its ticked face instantly. Nothing extra needed. */
+/* the club name is the swap control: tapping it offers the same group */
+.clubname{background:none;border:0;padding:2px 0;font:inherit;color:inherit;
+  cursor:pointer;text-align:left;border-bottom:1px dashed transparent;
+  transition:border-color .2s,color .2s}
+.clubname:hover,.clubname:focus-visible{border-bottom-color:var(--sage);color:var(--ink);outline:none}
+.bagx{width:40px;text-align:right}
+/* thumb-sized: the glyph is small, the target it sits in is not */
+.rmclub{background:none;border:0;cursor:pointer;color:var(--sand);color:#A9A28C;
+  font:400 1.1rem/1 var(--disp);padding:9px 10px;min-width:34px;
+  transition:color .2s,transform .3s var(--spring)}
+.rmclub:hover,.rmclub:focus-visible{color:var(--brick);outline:none}
+.rmclub:active{transform:scale(.86)}
 /* add-a-club picker: a ruled field, not browser chrome */
 .addclub{margin-top:10px}
 .addclub select{width:100%;font:600 .8rem var(--mono);letter-spacing:.08em;
@@ -397,6 +433,22 @@ input[type=checkbox]:focus-visible{outline:2px solid var(--brick);outline-offset
 .band.zone-band{height:48px;cursor:ew-resize;flex:1;margin:0}
 #wind-lab,#pin-lab{font-family:var(--mono);font-size:.72rem;letter-spacing:.03em}
 .askhead{font-family:var(--disp);font-weight:600;font-size:1.15rem;margin:0 0 4px}
+/* the Ask card collapses to one line. The map tap sets lie, distance and side
+   and live weather sets the wind, so most golfers never open it. */
+.sitline{display:flex;align-items:baseline;gap:8px;padding:3px 0 1px}
+#sit-summary{flex:1;font:400 .78rem var(--mono);letter-spacing:.02em;color:#4A4F3C;
+  line-height:1.45}
+.adjust{flex:0 0 auto;background:none;border:0;cursor:pointer;padding:10px 2px 10px 12px;
+  font:600 .62rem var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--slate)}
+.adjust i{font-style:normal;display:inline-block;transition:transform .34s var(--spring)}
+.adjust[aria-expanded=true] i{transform:rotate(180deg)}
+.grp{border-top:1px solid var(--line);margin-top:9px;padding-top:2px}
+.grp>summary{list-style:none;cursor:pointer;padding:11px 0 9px;
+  font:600 .6rem var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--slate)}
+.grp>summary::-webkit-details-marker{display:none}
+.grp>summary::after{content:"▾";float:right;color:var(--dim);
+  display:inline-block;transition:transform .34s var(--spring)}
+.grp[open]>summary::after{transform:rotate(180deg)}
 .parline{font-family:var(--disp);font-weight:600;font-size:1.5rem;margin:.15rem 0 .3rem}
 .parline .num{font-size:.95rem;color:var(--dim)}
 .holesummary{font-size:.95rem;margin:.2rem 0 .4rem;color:#4A4F3C}
@@ -417,7 +469,7 @@ select{appearance:none;-webkit-appearance:none;font-family:var(--disp);font-weig
   text-transform:uppercase;color:var(--slate);cursor:pointer;padding:8px 0 2px;display:block}
 #scoresheet{position:fixed;left:12px;right:12px;bottom:84px;background:var(--card);
   border:1px solid var(--sage);border-radius:14px;padding:10px 12px;z-index:1100;
-  box-shadow:0 12px 30px #33362B26;animation:rise .35s var(--spring);max-width:456px;margin:0 auto}
+  box-shadow:0 12px 30px #33362B26;animation:rise .35s var(--settle);max-width:456px;margin:0 auto}
 .ss-t{font:600 .62rem var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--slate);display:block;margin-bottom:6px;padding-right:26px}
 #ss-x{position:absolute;top:4px;right:6px;border:0;background:none;font:600 1.15rem/1 var(--disp);
   color:var(--dim);cursor:pointer;padding:6px 9px;transition:color .2s}
@@ -444,7 +496,10 @@ select{appearance:none;-webkit-appearance:none;font-family:var(--disp);font-weig
 .hm-shotline{stroke:var(--brick);stroke-width:1;stroke-dasharray:3 3;opacity:.75}
 /* the play zone: sized to the golfer's dispersion, not a fake bullseye */
 .hm-zone{fill:#8A9A781F;stroke:#5C6B4F70;stroke-width:1;stroke-dasharray:3 2.5}
-.hm-carry{font:7.5px var(--mono);fill:var(--brick)}
+/* same paper halo the body copy gets: map numbers stay legible over sand,
+   water and green outlines instead of fighting them */
+.hm-carry{font:7.5px var(--mono);fill:var(--brick);
+  paint-order:stroke;stroke:var(--paper);stroke-width:2.6px;stroke-linejoin:round}
 .hm-warn{font-style:normal;color:#9A8A5A;font-weight:600}
 .btn.ghost.danger{border-color:var(--brick);color:var(--brick)}
 .band{position:relative;height:56px;background:var(--sandbg);border:1px solid var(--line);
@@ -522,6 +577,10 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
   color:var(--paper);padding:9px 17px;border-radius:999px;font:500 .85rem var(--body);opacity:0;
   pointer-events:none;transition:opacity .25s,transform .35s var(--spring);z-index:1200;max-width:88vw;text-align:center}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* an undo has to be reachable, so it opts back into hit testing on its own */
+.toast-act{pointer-events:auto;margin-left:13px;background:none;border:0;
+  border-bottom:1.4px solid var(--paper);color:var(--paper);cursor:pointer;padding:0 0 1px;
+  font:600 .62rem var(--mono);letter-spacing:.12em;text-transform:uppercase}
 .copyout textarea{width:100%;min-height:64px;font:11px/1.4 var(--mono);padding:8px;border:1px solid var(--sage);
   border-radius:8px;background:var(--card);margin-top:8px;word-break:break-all;color:var(--ink)}
 
@@ -531,26 +590,31 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
 .ab-plate img{display:block;width:100%;height:auto;image-rendering:pixelated;mix-blend-mode:multiply}
 .ab-plate figcaption{font:400 .6rem var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);padding:6px 10px;border-top:1px solid var(--line)}
 /* motion: every view enters as a settled stack, not a static dump */
-.view:not(.hidden)>.card{animation:rise .45s var(--spring) backwards}
+.view:not(.hidden)>.card{animation:rise .45s var(--settle) backwards}
 .view:not(.hidden)>.card:nth-of-type(2){animation-delay:.05s}
 .view:not(.hidden)>.card:nth-of-type(3){animation-delay:.1s}
 .view:not(.hidden)>.card:nth-of-type(4){animation-delay:.15s}
 .view:not(.hidden)>.card:nth-of-type(5){animation-delay:.2s}
 .view:not(.hidden)>.card:nth-of-type(6){animation-delay:.25s}
-.how-step{animation:rise .5s var(--spring) backwards}
+.how-step{animation:rise .5s var(--settle) backwards}
 .how-step:nth-child(2){animation-delay:.06s}.how-step:nth-child(3){animation-delay:.12s}
 .how-step:nth-child(4){animation-delay:.18s}.how-step:nth-child(5){animation-delay:.24s}
-.ab-stats .stat{animation:rise .45s var(--spring) backwards}
+.ab-stats .stat{animation:rise .45s var(--settle) backwards}
 .ab-stats .stat:nth-child(2){animation-delay:.06s}
 .ab-stats .stat:nth-child(3){animation-delay:.12s}
 .ab-stats .stat:nth-child(4){animation-delay:.18s}
-#logentries .card{animation:rise .4s var(--spring) backwards}
+#logentries .card{animation:rise .4s var(--settle) backwards}
 #logentries .card:nth-child(2){animation-delay:.04s}
 #logentries .card:nth-child(3){animation-delay:.08s}
 #logentries .card:nth-child(4){animation-delay:.12s}
-.hole-n.on{animation:pick .3s var(--spring)}
+.hole-n.on{animation:pick .3s var(--settle)}
 @media (prefers-reduced-motion: no-preference){.view{animation:fade .18s ease}@keyframes fade{from{opacity:.4}to{opacity:1}}}
-@media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
+@media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}
+  /* nothing may DEPEND on an animation to become visible. These three start at
+     opacity:0 and are revealed by `rise`, so killing animation above used to
+     leave them blank forever: the ranked options (the whole call), the course
+     dropdown and the landing panels. */
+  .opt,.dd-menu button,.lp{opacity:1 !important;transform:none !important}}
 </style>
 
 <div id="bgart" aria-hidden="true"><div class="afw l"><pre class="af l" id="af-l"></pre></div><div class="afw r"><pre class="af r" id="af-r"></pre></div></div>
@@ -653,6 +717,12 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
     <div class="card" id="holecard"></div>
     <div class="card" id="askcard">
       <h2 class="askhead">Ask Albie</h2>
+      <div class="sitline">
+        <span id="sit-summary">On the tee</span>
+        <button class="adjust" id="sit-adjust" type="button" aria-expanded="false" aria-controls="askbody">Adjust <i>▾</i></button>
+      </div>
+      <div id="askbody" class="hidden">
+      <details class="grp" open><summary>Ball</summary>
       <label>Where's the ball?</label>
       <div class="chips" id="sit-lie" data-single>
         <div class="chip on" data-v="tee">Tee</div><div class="chip" data-v="fairway">Fairway</div>
@@ -693,6 +763,8 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <div class="row">
         <div><label>Distance to pin (yds)</label><input type="number" id="sit-dist" inputmode="numeric" placeholder="Type it, or slide the band above"></div>
       </div>
+      </details>
+      <details class="grp" open><summary>Wind</summary>
       <label>Wind. Slide it, or let live weather set it</label>
       <div class="ctlrow">
         <div class="band zone-band" id="windband" role="slider" aria-label="Wind, into to helping, with strength">
@@ -708,6 +780,8 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
         <span class="small" id="wind-lab">Calm</span>
         <div class="chip" id="wx-live">Live weather</div>
       </div>
+      </details>
+      <details class="grp" open><summary>Pin</summary>
       <label>Pin position. Tap the green where the flag is</label>
       <div class="greenbox">
         <svg id="greenview" viewBox="0 0 220 165" preserveAspectRatio="xMidYMid meet" aria-label="Top view of the green, tap the pin position"></svg>
@@ -715,7 +789,9 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       </div>
       <p class="small" id="pin-lab">Unknown. Albie plays the middle.</p>
       <p class="greensrc" id="green-src"></p>
+      </details>
       <button class="btn red" id="ask">Ask Albie</button>
+      </div>
     </div>
     <div id="advice"></div>
   </div>
@@ -850,7 +926,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <pre class="ab-field" id="beer-field" aria-hidden="true" style="margin:6px auto 2px"></pre>
       <p class="small">Coming soon. Albie stays free, for the love of golf.</p>
     </div>
-    <p class="small" style="text-align:center;opacity:.7">Build 2026-08-05 · made in Delhi</p>
+    <p class="small" style="text-align:center;opacity:.7">Albie v1.0 · build 2026-08-05 · made in Delhi</p>
   </div>
 
   <div class="tabbar">
@@ -880,10 +956,16 @@ function banner(){if(storageOk||$("#storagewarn"))return;
     This browser can't save between visits. Tap <b>Export</b> in Log before closing.</div>`);}
 /* in-app dialogs: the published artifact iframe blocks alert/confirm/prompt */
 let toastT;
-function toast(msg){let t=document.getElementById("toast");
+function toast(msg,action){let t=document.getElementById("toast");
   if(!t){document.body.insertAdjacentHTML("beforeend","<div id='toast'></div>");t=document.getElementById("toast");}
-  t.textContent=msg;t.classList.add("show");
-  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2800);}
+  t.textContent=msg;   // clears any button left over from the last toast
+  // an undoable action carries its own way back, and stays up long enough to use
+  if(action){const b=document.createElement("button");
+    b.className="toast-act";b.type="button";b.textContent=action.label;
+    b.addEventListener("click",()=>{t.classList.remove("show");action.fn();});
+    t.appendChild(b);}
+  t.classList.add("show");
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),action?5600:2800);}
 function copySheet(id,payload,label){const box=document.getElementById(id);
   box.classList.remove("hidden");
   box.innerHTML=`<textarea readonly rows='3'></textarea>`;
@@ -914,6 +996,39 @@ function syncSide(){const lie=chipVal("sit-lie");
   if(buriedChip){buriedChip.style.display=(lie==="bunker"||lie==="rough"||lie==="trouble")?"":"none";
     if(lie==="fairway"&&buriedChip.classList.contains("on")){
       $$("#sit-lieq .chip").forEach(c=>c.classList.toggle("on",c.dataset.v==="clean"));}}}
+/* ---------- the Ask card, compressed. Default state is ONE line of the
+   current situation: the map tap already sets lie, distance and side, and
+   live weather sets the wind, so the full control set is a detail most
+   golfers never open. Reading it should never feel like filling a form. */
+const LIELAB={tee:"On the tee",fairway:"Fairway",rough:"Rough",
+  bunker:"Bunker",trouble:"Trees or trouble"};
+function sitSummary(){
+  const el=document.getElementById("sit-summary");if(!el)return;
+  const lie=chipVal("sit-lie")||"tee",d=+$("#sit-dist").value||null;
+  const bits=[LIELAB[lie]||lie];
+  if(d)bits.push(d+" yds");
+  if(!$("#sidewrap").classList.contains("hidden")&&sideVal!=="centre")
+    bits.push(sideVal+" side");
+  const q=chipVal("sit-lieq");
+  if(q&&q!=="clean"&&lie!=="tee")bits.push(q==="buried"?"buried":"sitting down");
+  const w=windState;
+  bits.push(w.dir==="calm"?"calm"
+    :(w.str===2?"strong ":"")+(w.dir==="cross"?"across":w.dir==="down"?"downwind":"into"));
+  bits.push(pinKnown?pinVal()+" pin":"pin unknown");
+  el.textContent=bits.join(" · ");}
+/* the golfer's standing preference, remembered per device. A new hole
+   re-applies it, so for anyone who has not opted in the card folds itself
+   back up between shots. */
+function setAskOpen(open,persist){
+  const body=document.getElementById("askbody"),btn=document.getElementById("sit-adjust");
+  if(!body||!btn)return;
+  body.classList.toggle("hidden",!open);
+  btn.setAttribute("aria-expanded",open?"true":"false");
+  if(persist)kv.set("pc.askopen",open?"1":"0");}
+const askOpenPref=()=>kv.get("pc.askopen")==="1";
+document.getElementById("sit-adjust").addEventListener("click",()=>
+  setAskOpen(document.getElementById("askbody").classList.contains("hidden"),true));
+setAskOpen(askOpenPref());
 (function(){const b=document.getElementById("sideband");if(!b)return;
   function setSide(clientX){const r=b.getBoundingClientRect();
     const f=Math.min(1,Math.max(0,(clientX-r.left)/r.width));
@@ -927,7 +1042,7 @@ function syncSide(){const lie=chipVal("sit-lie");
   b.addEventListener("pointermove",e=>{if(down)setSide(e.clientX);});
   b.addEventListener("pointerup",()=>{down=false;if(typeof autoAsk==="function")autoAsk();});
 })();
-document.getElementById("sit-lie").addEventListener("click",()=>setTimeout(syncSide,0));
+document.getElementById("sit-lie").addEventListener("click",()=>setTimeout(()=>{syncSide();sitSummary()},0));
 const chipVal=id=>($("#"+id+" .chip.on")||{}).dataset?.v||null;
 const chipVals=id=>$$("#"+id+" .chip.on").map(c=>c.dataset.v);
 
@@ -988,47 +1103,60 @@ function greenPoly(h){
     const c=[f.p.reduce((a,p)=>a+p[0],0)/f.p.length,f.p.reduce((a,p)=>a+p[1],0)/f.p.length];
     return {p:f.p,c,d:Math.hypot(c[0]-end[0],c[1]-end[1])};})
     .sort((a,b)=>a.d-b.d)[0];}
-function renderGreen(h){
-  const svg=document.getElementById("greenview");if(!svg)return;
-  const W=220,H=165,PAD=22;
+/* the green view's frame. `include` widens it so extra points (the aim zone,
+   when this is the mini inside the advice) still land inside the box; the
+   green's OWN bounds stay separate so front/back and left/right never shift. */
+function greenFrame(h,W,H,PAD,include){
   const gp=greenPoly(h);
-  let pts,cx,cy,real=!!gp;
-  if(gp){pts=gp.p;}
+  let pts;
+  if(gp)pts=gp.p;
   else{ // honest fallback: a generic green, clearly labelled as a sketch
     pts=[];for(let a=0;a<24;a++){const t=a/24*Math.PI*2;
       pts.push([Math.cos(t)*17,Math.sin(t)*13]);}}
   const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
-  let mnX=Math.min(...xs),mxX=Math.max(...xs),mnY=Math.min(...ys),mxY=Math.max(...ys);
+  const mnX=Math.min(...xs),mxX=Math.max(...xs),mnY=Math.min(...ys),mxY=Math.max(...ys);
+  const fx=xs.concat((include||[]).map(p=>p[0])),fy=ys.concat((include||[]).map(p=>p[1]));
+  const cX=(Math.min(...fx)+Math.max(...fx))/2,cY=(Math.min(...fy)+Math.max(...fy))/2;
   // square-ish the frame so the green keeps its true proportions
-  const spanX=Math.max(mxX-mnX,12),spanY=Math.max(mxY-mnY,12);
+  const spanX=Math.max(Math.max(...fx)-Math.min(...fx),12),
+        spanY=Math.max(Math.max(...fy)-Math.min(...fy),12);
   const k=Math.min((W-PAD*2)/spanX,(H-PAD*2)/spanY);
   // screen: lateral -> x (left stays left), along -> y INVERTED so the back of
   // the green is at the top and the golfer approaches from the bottom edge
-  const SX=x=>W/2+(x-(mnX+mxX)/2)*k;
-  const SY=y=>H/2-(y-(mnY+mxY)/2)*k;
-  const P=poly=>poly.map(p=>`${SX(p[0]).toFixed(1)},${SY(p[1]).toFixed(1)}`).join(" ");
-  greenCtx={holeN:h.n,mnY,mxY,mnX,mxX,SX,SY,k,W,H,real,
-    inv:(sx,sy)=>[(sx-W/2)/k+(mnX+mxX)/2,-(sy-H/2)/k+(mnY+mxY)/2]};
+  const SX=x=>W/2+(x-cX)*k;
+  const SY=y=>H/2-(y-cY)*k;
+  return {gp,pts,real:!!gp,mnX,mxX,mnY,mxY,k,W,H,SX,SY,
+    P:poly=>poly.map(p=>`${SX(p[0]).toFixed(1)},${SY(p[1]).toFixed(1)}`).join(" "),
+    inv:(sx,sy)=>[(sx-W/2)/k+cX,-(sy-H/2)/k+cY]};}
+/* the green itself: sand, outline, inner ring, and optionally the SRTM fall
+   arrow and the YOU marker (the mini drops both, there is no room) */
+function greenBody(h,fr,o){
+  o=o||{};const P=fr.P,W=fr.W,H=fr.H;
   // greenside sand, from the same survey
   let sand="";
-  if(gp&&h.geo.bk)sand=h.geo.bk.filter(f=>{
+  if(fr.gp&&h.geo.bk)sand=h.geo.bk.filter(f=>{
       const c=[f.p.reduce((a,p)=>a+p[0],0)/f.p.length,f.p.reduce((a,p)=>a+p[1],0)/f.p.length];
-      return Math.hypot(c[0]-gp.c[0],c[1]-gp.c[1])<52;})
+      return Math.hypot(c[0]-fr.gp.c[0],c[1]-fr.gp.c[1])<52;})
     .map(f=>`<polygon points='${P(f.p)}' class='hm-bk'/>`).join("");
   // which way the land falls, straight from the SRTM probe
   const gs=h.geo&&h.geo.el&&h.geo.el.gs;let slope="";
-  if(gs&&Math.hypot(gs[0],gs[1])>=1.5&&Math.hypot(gs[0],gs[1])<=8){
+  if(o.slope&&gs&&Math.hypot(gs[0],gs[1])>=1.5&&Math.hypot(gs[0],gs[1])<=8){
     const m=Math.hypot(gs[0],gs[1]),ux=(gs[0]>0?-1:1)*Math.abs(gs[0])/m,uy=(gs[1]>0?1:-1)*Math.abs(gs[1])/m;
     const x0=W-34,y0=26,L=17;
     slope=`<g class='gv-slope'><line x1='${x0}' y1='${y0}' x2='${(x0+ux*L).toFixed(1)}' y2='${(y0+uy*L).toFixed(1)}'/>`+
       `<circle cx='${(x0+ux*L).toFixed(1)}' cy='${(y0+uy*L).toFixed(1)}' r='2.4'/></g>`+
       `<text x='${x0}' y='${y0-9}' text-anchor='middle' class='gv-lab'>FALL</text>`;}
-  svg.innerHTML=`${sand}<polygon points='${P(pts)}' class='gv-green ${real?"":"sketch"}'/>
-    <polygon points='${P(pts.map(p=>[(p[0]-(mnX+mxX)/2)*.45+(mnX+mxX)/2,(p[1]-(mnY+mxY)/2)*.45+(mnY+mxY)/2]))}' class='gv-ring'/>
+  const mx=(fr.mnX+fr.mxX)/2,my=(fr.mnY+fr.mxY)/2;
+  return `${sand}<polygon points='${P(fr.pts)}' class='gv-green ${fr.real?"":"sketch"}'/>
+    <polygon points='${P(fr.pts.map(p=>[(p[0]-mx)*.45+mx,(p[1]-my)*.45+my]))}' class='gv-ring'/>
     ${slope}
-    <path d='M${W/2-13} ${H-9} h26 M${W/2} ${H-15} l0 6 M${W/2-4} ${H-13} l4 4 4-4' class='gv-you'/>
-    <text x='${W/2}' y='${H-1}' text-anchor='middle' class='gv-lab'>YOU</text>
-    <g id='gv-pin'></g>`;
+    ${o.you?`<path d='M${W/2-13} ${H-9} h26 M${W/2} ${H-15} l0 6 M${W/2-4} ${H-13} l4 4 4-4' class='gv-you'/>
+    <text x='${W/2}' y='${H-1}' text-anchor='middle' class='gv-lab'>YOU</text>`:""}`;}
+function renderGreen(h){
+  const svg=document.getElementById("greenview");if(!svg)return;
+  const fr=greenFrame(h,220,165,22);
+  greenCtx=Object.assign({holeN:h.n},fr);
+  svg.innerHTML=greenBody(h,fr,{slope:1,you:1})+`<g id='gv-pin'></g>`;
   paintPin();}
 function paintPin(){
   const svg=document.getElementById("greenview"),g=document.getElementById("gv-pin");
@@ -1398,18 +1526,64 @@ function renderBag(){const p=store.p;if(!p)return;
   const inPlay=p.bag.filter(b=>!b.out).length;
   $("#bag-count").textContent=`${inPlay} of ${p.bag.length} clubs in play`;
   let lastG="";
-  $("#bagtable").innerHTML="<tr><th>In</th><th>Club</th><th class='bagnum'>Carry</th><th class='bagnum'>Total</th></tr>"+
-   p.bag.map((b,i)=>{const g=grp(i);const head=g!==lastG?`<tr class='ghead'><td colspan='4'><span style='display:inline-flex;align-items:center;gap:7px'>${CLUBICONS[g]||""}${g}</span></td></tr>`:"";lastG=g;
+  $("#bagtable").innerHTML="<tr><th>In</th><th>Club</th><th class='bagnum'>Carry</th><th class='bagnum'>Total</th><th></th></tr>"+
+   p.bag.map((b,i)=>{const g=grp(i);const head=g!==lastG?`<tr class='ghead'><td colspan='5'><span style='display:inline-flex;align-items:center;gap:7px'>${CLUBICONS[g]||""}${g}</span></td></tr>`:"";lastG=g;
    return head+`<tr class='${b.out?"clubout":""}'>
    <td><input type='checkbox' data-i='${i}' data-f='out' ${b.out?"":"checked"}></td>`
-   +`<td>${b.club}</td><td class='bagnum'><input class='num' data-i='${i}' data-f='carry' type='number' value='${b.carry}'></td>
-   <td class='bagnum'><input class='num' data-i='${i}' data-f='total' type='number' value='${b.total}'></td></tr>`}).join("");
-  $("#bagtable").addEventListener("change",e=>{const t=e.target;if(t.dataset.i===undefined)return;
-    const p=store.p;
-    if(t.dataset.f==="out"){p.bag[+t.dataset.i].out=!t.checked;}
-    else p.bag[+t.dataset.i][t.dataset.f]=+t.value;
-    store.p=p;renderBag();
-    if(typeof autoAsk==="function")autoAsk();});}   // carries changed: re-think
+   +`<td><button type='button' class='clubname' data-swap='${i}' title='Swap ${b.club}'>${b.club}</button></td><td class='bagnum'><input class='num' data-i='${i}' data-f='carry' type='number' value='${b.carry}'></td>
+   <td class='bagnum'><input class='num' data-i='${i}' data-f='total' type='number' value='${b.total}'></td>
+   <td class='bagx'><button type='button' class='rmclub' data-rm='${i}' aria-label='Remove ${b.club}'>×</button></td></tr>`}).join("");}
+/* ONE delegated listener for the table. Registering it inside renderBag()
+   stacked a fresh copy on every render, and every change re-renders. */
+$("#bagtable").addEventListener("change",e=>{const t=e.target;if(t.dataset.i===undefined)return;
+  const p=store.p;
+  if(t.dataset.f==="out"){p.bag[+t.dataset.i].out=!t.checked;}
+  else p.bag[+t.dataset.i][t.dataset.f]=+t.value;
+  store.p=p;renderBag();
+  if(typeof autoAsk==="function")autoAsk();});   // carries changed: re-think
+$("#bagtable").addEventListener("click",e=>{
+  const sw=e.target.closest("[data-swap]");if(sw){swapClub(+sw.dataset.swap);return}
+  const rm=e.target.closest("[data-rm]");if(rm)removeClub(+rm.dataset.rm);});
+/* real bags swap a sand wedge for a 60, and drop a club to make room. Both
+   changes push straight through to the caddie, and remove is undoable. */
+function removeClub(i){const p=store.p;if(!p||!p.bag[i])return;
+  const gone=p.bag[i];
+  p.bag.splice(i,1);store.p=p;renderBag();
+  if(typeof autoAsk==="function")autoAsk();
+  toast(`Removed ${gone.club}.`,{label:"Undo",fn:()=>{
+    const q=store.p;q.bag.splice(i,0,gone);store.p=q;renderBag();
+    if(typeof autoAsk==="function")autoAsk();
+    toast(`${gone.club} is back at ${gone.carry} carry.`);}});}
+function clubSheet(title,rows,onPick){
+  const ex=document.getElementById("scoresheet");if(ex)ex.remove();
+  document.body.insertAdjacentHTML("beforeend",
+   `<div id='scoresheet'><button id='ss-x' aria-label='Close'>×</button><span class='ss-t'>${title}</span>`+
+   (rows.length?`<div class='chips'>${rows.map(r=>`<div class='chip' data-v='${escAttr(r[1])}'>${r[0]}</div>`).join("")}</div>`
+     :`<p class='small' style='margin:0'>Nothing left in the library for this group.</p>`)+`</div>`);
+  document.getElementById("scoresheet").addEventListener("click",e=>{
+    if(e.target.id==="ss-x"){document.getElementById("scoresheet").remove();return}
+    const c=e.target.closest(".chip");if(!c)return;
+    document.getElementById("scoresheet").remove();
+    onPick(c.dataset.v);});}
+function swapClub(i){const p=store.p;if(!p||!p.bag[i])return;
+  const old=p.bag[i],grp=clubGroup(old.club);
+  const have=new Set(p.bag.map(b=>b.club));
+  clubSheet(`Swap ${old.club} · ${grp.toLowerCase()}`,
+    CLUB_LIB.filter(l=>clubGroup(l.club)===grp&&!have.has(l.club)).map(l=>[l.club,l.club]),
+    name=>{
+      const q=store.p,lib=CLUB_LIB.find(x=>x.club===name);if(!lib)return;
+      const drC=q.bag.find(b=>/driver/i.test(b.club))?.carry||q.drTotal-20;
+      const step=Math.max(9,Math.round(q.c7*0.072));
+      const est=Math.round(lib.est(drC,q.c7,step));
+      // the old club's number is real, measured data; the estimate is not.
+      // Ask rather than silently throwing away whichever one they wanted.
+      clubSheet(`${old.club} carried ${old.carry}. Keep that number for the ${name}?`,
+        [[`Keep ${old.carry}`,String(old.carry)],[`Re-estimate: ${est}`,String(est)]],
+        v=>{const carry=+v,r=store.p;
+          r.bag[i]={club:name,carry,total:carry+(/wood|hybrid|driver/i.test(name)?14:8),out:old.out};
+          sortBag(r.bag);store.p=r;renderBag();
+          toast(`${old.club} out, ${name} in at ${carry} carry.`);
+          if(typeof autoAsk==="function")autoAsk();});});}
 
 /* text hygiene: no em-dash cadence anywhere the caddie speaks */
 function fmt(s){if(!s)return s;
@@ -1504,7 +1678,8 @@ function resetSituation(){ // new hole: back to the tee, keep the wind (it doesn
   $$("#sit-lieq .chip").forEach(c=>c.classList.toggle("on",c.dataset.v==="clean"));
   $$("#sit-window .chip").forEach(c=>c.classList.toggle("on",c.dataset.v==="none"));
   $$("#sit-swing .chip").forEach(c=>c.classList.toggle("on",c.dataset.v==="full"));
-  $("#sit-dist").value="";syncSide();}
+  $("#sit-dist").value="";syncSide();
+  setAskOpen(askOpenPref());sitSummary();}
 function renderHoles(){const c=COURSES[cur.course];store.cur=cur;
   $("#hn-lab").textContent=`Hole ${cur.hole} of ${c.holes.length}`;
   $("#holestrip").innerHTML=c.holes.map(h=>`<div class='hole-n ${h.n===cur.hole?"on":""}' data-n='${h.n}'>${h.n}</div>`).join("");
@@ -1860,44 +2035,122 @@ function clPoint(g,along){let acc=0;
       return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];}
     acc+=L;}
   return g.cl[g.cl.length-1];}
-/* Albie's words land on the map: the winning option draws its target -
-   a lay-up ring at the leave number, the fat-side ring for centre-green,
-   a plain aim cross for the direct shot */
-function drawCallTarget(h,win,sit){
-  const g=h.geo,svg=document.querySelector("#holemap svg");
-  const old=svg&&svg.querySelector("#hm-target");if(old)old.remove();
-  if(!g||!g.cl||g.cl.length<2||!svg||!hmCtx||hmCtx.holeN!==h.n||!win||!sit.dist)return;
-  const cf=hmCtx.cf,pin=hmCtx.pin;
-  const SX=y=>+(y-hmCtx.mnA).toFixed(1),SY=x=>+(x-hmCtx.mnL).toFixed(1);
+/* the pin every map aims at: the centre of the green nearest the end of the
+   centreline, falling back to the centreline end when no green was surveyed */
+const greenCents=g=>(g.gn||[]).map(f=>
+  [f.p.reduce((a,p)=>a+p[0],0)/f.p.length,f.p.reduce((a,p)=>a+p[1],0)/f.p.length]);
+function holePin(g,cents){const end=g.cl[g.cl.length-1];
+  cents=cents||greenCents(g);
+  return cents.length?cents.reduce((a,b)=>
+    Math.hypot(b[0]-end[0],b[1]-end[1])<Math.hypot(a[0]-end[0],a[1]-end[1])?b:a):end;}
+/* Albie's words land on the map: the winning option's target, returned in
+   hole-local coords (x lateral, y along) so ANY frame can draw it - the big
+   survey up top and the mini that rides inside the advice.
+   A ZONE, not a pinpoint: nobody hits a 2-yard circle, so it is sized to this
+   golfer's own dispersion at this distance. */
+function callTarget(h,win,sit){
+  const g=h.geo;
+  if(!g||!g.cl||g.cl.length<2||!win||!sit.dist)return null;
+  const cf=mapCF(g),pin=holePin(g);
   const ball=(lastTap&&lastTap.holeN===h.n&&lastTap.ball)?lastTap.ball
     :clPoint(g,Math.max(0,g.len-sit.dist/cf));
-  /* a ZONE, not a pinpoint: nobody hits a 2-yard circle, so the target is
-     drawn at the size of this golfer's own dispersion at this distance.
-     Map is rotated (screen x = along the hole, screen y = lateral), so the
-     lateral spread becomes the vertical radius. */
   const pr=store.p,shot=sit.dist||150;
   const drC=(pr&&pr.bag&&pr.bag[0]&&pr.bag[0].carry)||220;
   const spread=Math.max(7,Math.round(dispDriver((pr&&pr.hcp)||18)*Math.min(1,shot/Math.max(130,drC))));
-  const zone=(px,py,lab,tight)=>{
-    const ry=tight?spread*0.72:spread,rx=(tight?spread*0.72:spread)*0.62;
-    return `<ellipse cx='${SX(py)}' cy='${SY(px)}' rx='${rx.toFixed(1)}' ry='${ry.toFixed(1)}' class='hm-zone'/>
-      <circle cx='${SX(py)}' cy='${SY(px)}' r='1.4' fill='#5C6B4F'/>
-      <text x='${SX(py)}' y='${(SY(px)-ry-4).toFixed(1)}' text-anchor='middle' class='hm-carry' style='fill:#5C6B4F'>${lab}</text>`;};
-  let el="";
+  // lab rides the big map, slab the mini: 200 units of crop cannot hold a
+  // sentence, and the panel text right above it already gives the instruction
+  let at,lab,slab,line=null,tight=false;
   if((win.id==="lay"||win.id==="chip")&&win.leave!=null){
     const L=Math.hypot(pin[0]-ball[0],pin[1]-ball[1])||1;
     const t=Math.max(.1,Math.min(.95,((sit.dist-win.leave)/cf)/L));
-    const px=ball[0]+(pin[0]-ball[0])*t,py=ball[1]+(pin[1]-ball[1])*t;
-    el=`<line x1='${SX(ball[1])}' y1='${SY(ball[0])}' x2='${SX(py)}' y2='${SY(px)}' stroke='#5C6B4F' stroke-width='1' stroke-dasharray='2 3'/>`+
-      zone(px,py,win.id==="chip"?"land it here":`play to here · ${win.leave} left`,win.id==="chip");
+    at=[ball[0]+(pin[0]-ball[0])*t,ball[1]+(pin[1]-ball[1])*t];
+    lab=win.id==="chip"?"land it here":`play to here · ${win.leave} left`;
+    slab=win.id==="chip"?"land it here":`${win.leave} left`;
+    tight=win.id==="chip";line=[ball,at];
   }else if(win.id==="cons"){
     // the fat side: pushed away from a tucked pin, toward the middle
     const off=sit.pin==="left"?spread*0.8:sit.pin==="right"?-spread*0.8:0;
-    el=zone(pin[0]+off,pin[1]-spread*0.3,"play this area");
-  }else{
-    el=zone(pin[0],pin[1],"at the flag");
-  }
+    at=[pin[0]+off,pin[1]-spread*0.3];lab=slab="play this area";
+  }else{at=[pin[0],pin[1]];lab=slab="at the flag";}
+  // lateral spread is the wide axis; distance control is the tighter one
+  const rl=tight?spread*0.72:spread;
+  return {id:win.id,ball,pin,at,lab,slab,line,cf,rl,ra:rl*0.62};}
+/* one zone drawing, shared: each frame passes its own axis order and scale.
+   `w` is the frame width, so a label near an edge slides back into view
+   instead of running off it (7.5px mono advances about 4.5 units per char). */
+function zoneSVG(cx,cy,rx,ry,lab,s,w){
+  let tx=cx;
+  if(w){const half=lab.length*2.25*s;
+    tx=half*2>w?w/2:Math.min(Math.max(cx,half+2),w-half-2);}
+  return `<ellipse cx='${cx.toFixed(1)}' cy='${cy.toFixed(1)}' rx='${rx.toFixed(1)}' ry='${ry.toFixed(1)}' class='hm-zone'/>
+    <circle cx='${cx.toFixed(1)}' cy='${cy.toFixed(1)}' r='${(1.4*s).toFixed(1)}' fill='#5C6B4F'/>
+    <text x='${tx.toFixed(1)}' y='${(cy-ry-4*s).toFixed(1)}' text-anchor='middle' class='hm-carry' style='fill:#5C6B4F'>${lab}</text>`;}
+function drawCallTarget(h,win,sit){
+  const svg=document.querySelector("#holemap svg");
+  const old=svg&&svg.querySelector("#hm-target");if(old)old.remove();
+  if(!svg||!hmCtx||hmCtx.holeN!==h.n)return;
+  const t=callTarget(h,win,sit);if(!t)return;
+  // the big map is rotated: along the hole -> screen x, lateral -> screen y
+  const X=p=>+(p[1]-hmCtx.mnA).toFixed(1),Y=p=>+(p[0]-hmCtx.mnL).toFixed(1);
+  const el=(t.line?`<line x1='${X(t.line[0])}' y1='${Y(t.line[0])}' x2='${X(t.line[1])}' y2='${Y(t.line[1])}' stroke='#5C6B4F' stroke-width='1' stroke-dasharray='2 3'/>`:"")
+    +zoneSVG(X(t.at),Y(t.at),t.ra,t.rl,t.lab,1,hmCtx.W);
   svg.insertAdjacentHTML("beforeend",`<g id='hm-target'>${el}</g>`);}
+/* ---------- the same map, inside the advice. The golfer should not have to
+   scroll back up to see where Albie is pointing, so the locked-in option
+   carries its own cropped view: the corridor for a layup, the green for
+   anything played at the green. Both minis project into a 200-unit box, which
+   is the scale the big map already renders at, so every shared class (stroke
+   weights, mono numerals, the play zone) reads identically. ---------- */
+function corridorMini(h,t){
+  const g=h.geo;
+  const pad=Math.max(26,t.rl*1.6);
+  const ac=(t.ball[1]+t.at[1])/2,lc=(t.ball[0]+t.at[0])/2;
+  const aSpan=Math.max(90,Math.abs(t.at[1]-t.ball[1])+pad*2);
+  let lSpan=Math.max(56,Math.abs(t.at[0]-t.ball[0])+pad*2);
+  lSpan=Math.min(Math.max(lSpan,aSpan/3.2),aSpan/1.4);   // stay near the survey's own proportions
+  const Hh=Math.round(200*lSpan/aSpan),s=200/aSpan;
+  const a0=ac-aSpan/2,l0=lc-lSpan/2;
+  const X=p=>+((p[1]-a0)*s).toFixed(1),Y=p=>+((p[0]-l0)*s).toFixed(1);
+  const P=poly=>poly.map(p=>`${X(p)},${Y(p)}`).join(" ");
+  const polys=(arr,cls)=>(arr||[]).map(f=>`<polygon points='${P(f.p)}' class='${cls}'/>`).join("");
+  const washL=g.cl.map(p=>[p[0]-44,p[1]]),washR=g.cl.map(p=>[p[0]+44,p[1]]);
+  // what the shot has to beat on the way, with the carry that beats it
+  const LL=Math.hypot(t.pin[0]-t.ball[0],t.pin[1]-t.ball[1])||1;
+  const reach=Math.hypot(t.at[0]-t.ball[0],t.at[1]-t.ball[1])+12;
+  const carries=((lastTap&&lastTap.holeN===h.n&&lastTap.crossings)||[]).slice(0,3)
+    .filter(c=>c.raw<reach)
+    .map(c=>{const f=Math.min(.95,c.raw/LL);
+      const q=[t.ball[0]+(t.pin[0]-t.ball[0])*f,t.ball[1]+(t.pin[1]-t.ball[1])*f];
+      return `<text x='${X(q)}' y='${(Y(q)-3).toFixed(1)}' text-anchor='middle' class='hm-carry'>${c.clear}</text>`;}).join("");
+  return `<svg class='minimap' viewBox='0 0 200 ${Hh}' preserveAspectRatio='xMidYMid meet' aria-hidden='true'>
+    <polygon points='${P(washL.concat([...washR].reverse()))}' class='hm-rough'/>
+    ${polys(g.tr,"hm-tr")}${polys(g.fw,"hm-fw")}${polys(g.wa,"hm-wa")}${polys(g.te,"hm-te")}${polys(g.bk,"hm-bk")}${polys(g.gn,"hm-gn")}
+    <polyline points='${P(g.cl)}' class='hm-cl'/>
+    ${t.line?`<line x1='${X(t.line[0])}' y1='${Y(t.line[0])}' x2='${X(t.line[1])}' y2='${Y(t.line[1])}' stroke='#5C6B4F' stroke-width='1' stroke-dasharray='2 3'/>`:""}
+    ${carries}
+    ${zoneSVG(X(t.at),Y(t.at),t.ra*s,t.rl*s,t.slab,1,200)}
+    <circle cx='${X(t.ball)}' cy='${Y(t.ball)}' r='2.6' class='hm-ball'/>
+   </svg>`;}
+function greenMini(h,t){
+  // the zone can land well off the green; widen the frame so it stays visible
+  const fr=greenFrame(h,200,125,16,
+    [[t.at[0]-t.rl,t.at[1]-t.ra],[t.at[0]+t.rl,t.at[1]+t.ra]]);
+  const pAt=(pinKnown&&pinXY)?pinXY:(fr.gp?fr.gp.c:t.pin);
+  const px=fr.SX(pAt[0]).toFixed(1),py=fr.SY(pAt[1]).toFixed(1);
+  return `<svg class='minimap' viewBox='0 0 200 125' preserveAspectRatio='xMidYMid meet' aria-hidden='true'>
+    ${greenBody(h,fr,{you:1})}
+    ${zoneSVG(fr.SX(t.at[0]),fr.SY(t.at[1]),t.rl*fr.k,t.ra*fr.k,t.slab,1,200)}
+    <g class='hm-pin' transform='translate(${px},${py})'><line x1='0' y1='0' x2='0' y2='-11'/><path d='M0 -11l7.5 2.8-7.5 2.8z'/></g>
+   </svg>`;}
+function miniMap(h,win,sit){
+  const g=h&&h.geo;
+  if(!g||g.sketch||!g.cl||g.cl.length<2)return "";
+  const t=callTarget(h,win,sit);if(!t)return "";
+  // a layup is about the ground between here and there; everything else is
+  // about the green, and only a surveyed green can honestly show it
+  const onGreen=t.id!=="lay"&&!!greenPoly(h);
+  return `<div class='minimap-wrap'>${onGreen?greenMini(h,t):corridorMini(h,t)}
+    <div class='hm-cap mini-cap'><span>${onGreen?"the green":"the corridor"}</span><span>${sit.dist} yds out</span></div></div>`;}
 /* card calibration factor, gated: a 2-point centerline is a straight line —
    if the card runs long over it (dogleg), scaling straight-line taps by the
    ratio fabricates distance (audit: St Andrews 14, DGC 17). Trust the tap. */
@@ -1921,12 +2174,7 @@ function renderHoleMap(h){
   const W=mxA-mnA,Hh=mxL-mnL;
   const SX=y=>y-mnA,SY=x=>x-mnL;
   const P=poly=>poly.map(p=>`${SX(p[1]).toFixed(1)},${SY(p[0]).toFixed(1)}`).join(" ");
-  const end=g.cl[g.cl.length-1];
-  let pin=end;
-  const cents=(g.gn||[]).map(f=>[f.p.reduce((a,p)=>a+p[0],0)/f.p.length,
-                                 f.p.reduce((a,p)=>a+p[1],0)/f.p.length]);
-  if(cents.length)pin=cents.reduce((a,b)=>
-    Math.hypot(b[0]-end[0],b[1]-end[1])<Math.hypot(a[0]-end[0],a[1]-end[1])?b:a);
+  const cents=greenCents(g),pin=holePin(g,cents);
   // rough wash under everything so the course never floats on bare paper
   const washL=g.cl.map(p=>[p[0]-44,p[1]]),washR=g.cl.map(p=>[p[0]+44,p[1]]);
   let corridor=`<polygon points='${P(washL.concat([...washR].reverse()))}' class='hm-rough'/>`;
@@ -1948,7 +2196,7 @@ function renderHoleMap(h){
   const cf=mapCF(g);
   const straightUnderCard=!!(g.card&&g.cl.length<=2&&g.card/g.len>1.1);
   const cardLen=straightUnderCard?g.len:(g.card||g.len);
-  hmCtx={holeN:h.n,pin,mnA,mnL,cf};
+  hmCtx={holeN:h.n,pin,mnA,mnL,cf,W};
   let ticks="";
   for(let y=50;y<cardLen;y+=50){const mx=SX(y/cf);
     ticks+=`<line x1='${mx.toFixed(0)}' y1='${Hh-5}' x2='${mx.toFixed(0)}' y2='${Hh}' class='hm-tick'/>`;
@@ -2059,6 +2307,7 @@ function renderBand(h){const band=$("#posband");band.innerHTML="";
   band.addEventListener("pointermove",e=>{if(pdown)setPos(e.clientX);});
   band.addEventListener("pointerup",()=>{pdown=false;autoAsk();});}
 function ask(){const p=store.p;if(!p){show("onboard");return}
+  sitSummary();   // the one-line situation can never disagree with the call below it
   chosenPick=null;
   // every club marked out: say so instead of crashing on an empty pool
   if(!p.bag||!p.bag.some(b=>!b.out)){
@@ -2455,7 +2704,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
    (tee, live wind, unknown pin) and re-thinks on every refinement - the
    inputs are optional sharpening, not a form to fill (tester feedback). */
 let autoAskT;
-function autoAsk(){if(!store.p)return;clearTimeout(autoAskT);autoAskT=setTimeout(ask,90);}
+function autoAsk(){sitSummary();if(!store.p)return;clearTimeout(autoAskT);autoAskT=setTimeout(ask,90);}
 $("#ask").addEventListener("click",ask);
 $("#sit-dist").addEventListener("input",autoAsk);
 ["sit-lieq","sit-window","sit-swing"].forEach(id=>
@@ -2476,7 +2725,7 @@ $("#advice").addEventListener("click",e=>{
       if(!o.querySelector(".aimpanel"))
         o.querySelector("div").insertAdjacentHTML("beforeend",
          `<div class='aimpanel'><span class='when'>where to aim</span>${fmt(pick.aim||"Middle of the target, take your medicine if you miss.")}
-          ${lastAsk.h.geo&&!lastAsk.h.geo.sketch?"<span class='src'>Marked on the hole map above</span>":"<span class='src'>No surveyed map for this hole, aim by feel</span>"}</div>`);}
+          ${miniMap(lastAsk.h,pick,lastAsk.sit)||(lastAsk.h.geo&&!lastAsk.h.geo.sketch?"<span class='src'>Marked on the hole map above</span>":"<span class='src'>No surveyed map for this hole, aim by feel</span>")}</div>`);}
     const c=COURSES[cur.course];
     const entry={t:new Date().toISOString(),type:"choice",course:c.slug,hole:cur.hole,
       pick:chosenPick,rec:o.classList.contains("rec")};
@@ -2601,7 +2850,7 @@ $("#save-round").addEventListener("click",()=>{const log=store.log;
     player:store.p});store.log=log;renderLog();
   $("#rs-notes").value="";$("#rs-score").value="";});
 $("#export").addEventListener("click",async()=>{
-  const payload=JSON.stringify({exported:new Date().toISOString(),build:"2026-08-05",
+  const payload=JSON.stringify({exported:new Date().toISOString(),version:"1.0",build:"2026-08-05",
     profile:store.p,log:store.log},null,1);
   const fname=`caddie-feedback-${(store.p?.name||"tester").toLowerCase()}-${new Date().toISOString().slice(0,10)}.json`;
   if(window.claude?.downloads?.save){try{await window.claude.downloads.save({filename:fname,data:payload});
