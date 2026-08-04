@@ -137,6 +137,12 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
   min-width:19px;height:19px;font:600 .64rem var(--mono);color:var(--dim);flex:0 0 auto}
 .opt.rec .oidx{border:1.3px solid var(--sage);border-radius:999px;color:#5C6B4F}
 .opt .opct{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--dim)}
+/* the aim panel opens under the option you locked in */
+.aimpanel{margin-top:9px;padding:9px 11px;background:var(--paper);border:1px solid var(--line);
+  border-radius:8px;font-size:.9rem;line-height:1.5;animation:rise .35s var(--spring)}
+.aimpanel .when{display:block;font:600 .58rem var(--mono);letter-spacing:.13em;
+  text-transform:uppercase;color:var(--brick);margin-bottom:3px}
+.aimpanel .src{display:block;margin-top:4px;font:400 .6rem var(--mono);color:var(--dim);letter-spacing:.05em}
 .opt h4{font:600 .98rem var(--disp);margin:0 0 3px;letter-spacing:-.01em}
 .opt p{margin:0;font-size:.85rem;color:#4A4F3C;line-height:1.5}
 .opt .src{display:block;margin-top:4px;font:400 .62rem var(--mono);color:var(--dim);letter-spacing:.05em}
@@ -326,6 +332,47 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;heigh
   background:var(--sage);border:2.5px solid var(--card);box-shadow:0 1px 4px #00000030;margin-top:-9px}
 input[type=range]::-moz-range-track{height:6px;border-radius:4px;background:var(--line)}
 input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--sage);border:2.5px solid var(--card)}
+/* the green, seen from where you stand: surveyed outline, greenside sand,
+   the fall arrow, and a tap target that gives depth AND side in one move */
+.greenbox{position:relative;background:var(--card);border:1px solid var(--line);
+  border-radius:12px;padding:6px 6px 2px;margin:4px 0 2px}
+#greenview{display:block;width:100%;height:auto;cursor:crosshair;touch-action:manipulation}
+.gv-green{fill:#F8F4E8;stroke:#33362B;stroke-width:1.2}
+.gv-green.sketch{stroke-dasharray:4 4;stroke:#33362B77}
+.gv-ring{fill:none;stroke:#33362B20;stroke-width:.9}
+.gv-slope line{stroke:var(--slate);stroke-width:1.3}
+.gv-slope circle{fill:var(--slate)}
+.gv-lab{font:7.5px var(--mono);fill:#8A8468;letter-spacing:.1em}
+.gv-you{fill:none;stroke:#33362B55;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
+.greenbox #pin-unk{position:absolute;top:8px;left:8px;padding:3px 10px;font-size:.66rem;
+  font-family:var(--mono);letter-spacing:.08em}
+.greensrc{font:400 .62rem var(--mono);letter-spacing:.04em;color:var(--dim);margin:3px 2px 0}
+/* ---- components: ruled fields and ball checkboxes, not default chrome ---- */
+input[type=text],input[type=number],input[type=email],textarea{
+  background:#33362B05;border:1px solid var(--line);border-radius:8px;
+  transition:border-color .22s,box-shadow .28s var(--spring),background .2s}
+input[type=text]:focus,input[type=number]:focus,input[type=email]:focus,textarea:focus{
+  outline:none;border-color:var(--sage);background:var(--card);
+  box-shadow:0 0 0 3px #8A9A7826}
+input::placeholder,textarea::placeholder{color:#A9A28C}
+/* the bag reads as a scorecard: mono tabular cells on a ruled sheet */
+#bagtable input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums;
+  text-align:center;border-radius:6px;background:transparent;border-color:#DCD5C0}
+#bagtable input[type=number]:focus{background:var(--card)}
+/* checkbox = a golf ball you mark in or out of the bag (same metric as the
+   rating balls, so the whole app speaks one visual language) */
+input[type=checkbox]{appearance:none;-webkit-appearance:none;width:23px;height:23px;
+  border-radius:50%;cursor:pointer;position:relative;vertical-align:-5px;
+  background:radial-gradient(circle at 32% 28%, #D9D5C8 0 30%, #C7C2B1 60%, #AFA995 100%);
+  border:1.5px solid #A9A28C;box-shadow:inset -2px -3px 5px #00000014;
+  transition:transform .35s var(--spring),background .25s,border-color .25s,box-shadow .25s}
+input[type=checkbox]::after{content:"";position:absolute;inset:4px;border-radius:50%;opacity:.42;
+  background-image:radial-gradient(#00000022 1px,transparent 1.2px);background-size:5px 5px}
+input[type=checkbox]:checked{border-color:var(--sage);transform:scale(1.06);
+  background:radial-gradient(circle at 32% 28%, #FFFFFF 0 30%, #F2EFE6 60%, #D5CFBE 100%);
+  box-shadow:inset -2px -3px 5px #00000014,0 0 0 2.5px #8A9A7855}
+input[type=checkbox]:active{transform:scale(.9)}
+input[type=checkbox]:focus-visible{outline:2px solid var(--brick);outline-offset:3px}
 .ctlrow{display:flex;align-items:center;gap:8px;margin:4px 0}
 .ctlrow .chip{padding:6px 12px;font-size:.8rem;flex:0 0 auto}
 .band.zone-band{height:48px;cursor:ew-resize;flex:1;margin:0}
@@ -640,17 +687,13 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
         <span class="small" id="wind-lab">Calm</span>
         <div class="chip" id="wx-live">Live weather</div>
       </div>
-      <label>Pin position. Slide it if you know it</label>
-      <div class="ctlrow">
-        <div class="band zone-band" id="pinband" role="slider" aria-label="Pin depth, front to back">
-          <div class="tick" style="left:33.3%"></div><div class="tick" style="left:66.6%"></div>
-          <div class="teelab" style="left:6px">FRONT</div><div class="pinlab" style="right:6px">BACK</div>
-          <div class="me" id="pin-me" style="display:none;left:50%"></div>
-          <div class="melab" id="pin-pill" style="display:block;left:calc(50% - 12px);opacity:.55">?</div>
-        </div>
-        <div class="chip" data-v="left" id="pin-left">Left</div><div class="chip" data-v="right" id="pin-right">Right</div>
+      <label>Pin position. Tap the green where the flag is</label>
+      <div class="greenbox">
+        <svg id="greenview" viewBox="0 0 220 165" preserveAspectRatio="xMidYMid meet" aria-label="Top view of the green, tap the pin position"></svg>
+        <button class="chip" id="pin-unk" type="button">Not sure</button>
       </div>
-      <p class="small" id="pin-lab" style="margin-top:2px">Unknown. Albie plays the middle.</p>
+      <p class="small" id="pin-lab">Unknown. Albie plays the middle.</p>
+      <p class="greensrc" id="green-src"></p>
       <button class="btn red" id="ask">Ask Albie</button>
     </div>
     <div id="advice"></div>
@@ -902,43 +945,111 @@ function setWindUI(){
 $("#wind-cross").addEventListener("click",()=>{wxOff();
   $("#wind-cross").classList.toggle("on");windFromV();});
 
-/* ---------- pin: band slider for depth; untouched = the "?" state;
-   left/right chips override. Resets to unknown every hole. ---------- */
-let pinKnown=false,pinDepth=1;
-const PLAB=["FRONT","MIDDLE","BACK"];
+/* ---------- pin: a TOP VIEW of the real green, drawn from the surveyed
+   polygon and rotated so the golfer is looking at it from the approach.
+   Tapping sets depth AND side at once, which is strictly more information
+   than the old three-zone band gave the engine. Honest when the shape is
+   not surveyed. Resets to unknown every hole. ---------- */
+let pinKnown=false,pinDepth=1,pinSide=null,pinXY=null,greenCtx=null;
 function pinVal(){
-  const side=$("#pin-left").classList.contains("on")?"left":
-    $("#pin-right").classList.contains("on")?"right":null;
-  if(side)return side;
   if(!pinKnown)return "mid";
+  if(pinSide)return pinSide;          // a tucked side pin dominates the call
   return ["front","mid","back"][pinDepth];}
-function paintPinBand(){
-  const me=$("#pin-me"),pill=$("#pin-pill");
-  if(!pinKnown){me.style.display="none";pill.textContent="?";
-    pill.style.opacity=".55";pill.style.left="calc(50% - 12px)";}
-  else{const f=(pinDepth+0.5)/3;
-    me.style.display="block";me.style.left=(f*100)+"%";
-    pill.style.opacity="1";pill.textContent=PLAB[pinDepth];
-    pill.style.left="min(calc(100% - 76px), max(4px, calc("+(f*100)+"% - 30px)))";}
+function greenPoly(h){
+  const g=h.geo;
+  if(!g||g.sketch||!g.gn||!g.gn.length)return null;
+  const end=g.cl[g.cl.length-1];
+  // the green nearest the end of the centerline is this hole's green
+  return g.gn.map(f=>{
+    const c=[f.p.reduce((a,p)=>a+p[0],0)/f.p.length,f.p.reduce((a,p)=>a+p[1],0)/f.p.length];
+    return {p:f.p,c,d:Math.hypot(c[0]-end[0],c[1]-end[1])};})
+    .sort((a,b)=>a.d-b.d)[0];}
+function renderGreen(h){
+  const svg=document.getElementById("greenview");if(!svg)return;
+  const W=220,H=165,PAD=22;
+  const gp=greenPoly(h);
+  let pts,cx,cy,real=!!gp;
+  if(gp){pts=gp.p;}
+  else{ // honest fallback: a generic green, clearly labelled as a sketch
+    pts=[];for(let a=0;a<24;a++){const t=a/24*Math.PI*2;
+      pts.push([Math.cos(t)*17,Math.sin(t)*13]);}}
+  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
+  let mnX=Math.min(...xs),mxX=Math.max(...xs),mnY=Math.min(...ys),mxY=Math.max(...ys);
+  // square-ish the frame so the green keeps its true proportions
+  const spanX=Math.max(mxX-mnX,12),spanY=Math.max(mxY-mnY,12);
+  const k=Math.min((W-PAD*2)/spanX,(H-PAD*2)/spanY);
+  // screen: lateral -> x (left stays left), along -> y INVERTED so the back of
+  // the green is at the top and the golfer approaches from the bottom edge
+  const SX=x=>W/2+(x-(mnX+mxX)/2)*k;
+  const SY=y=>H/2-(y-(mnY+mxY)/2)*k;
+  const P=poly=>poly.map(p=>`${SX(p[0]).toFixed(1)},${SY(p[1]).toFixed(1)}`).join(" ");
+  greenCtx={holeN:h.n,mnY,mxY,mnX,mxX,SX,SY,k,W,H,real,
+    inv:(sx,sy)=>[(sx-W/2)/k+(mnX+mxX)/2,-(sy-H/2)/k+(mnY+mxY)/2]};
+  // greenside sand, from the same survey
+  let sand="";
+  if(gp&&h.geo.bk)sand=h.geo.bk.filter(f=>{
+      const c=[f.p.reduce((a,p)=>a+p[0],0)/f.p.length,f.p.reduce((a,p)=>a+p[1],0)/f.p.length];
+      return Math.hypot(c[0]-gp.c[0],c[1]-gp.c[1])<52;})
+    .map(f=>`<polygon points='${P(f.p)}' class='hm-bk'/>`).join("");
+  // which way the land falls, straight from the SRTM probe
+  const gs=h.geo&&h.geo.el&&h.geo.el.gs;let slope="";
+  if(gs&&Math.hypot(gs[0],gs[1])>=1.5&&Math.hypot(gs[0],gs[1])<=8){
+    const m=Math.hypot(gs[0],gs[1]),ux=(gs[0]>0?-1:1)*Math.abs(gs[0])/m,uy=(gs[1]>0?1:-1)*Math.abs(gs[1])/m;
+    const x0=W-34,y0=26,L=17;
+    slope=`<g class='gv-slope'><line x1='${x0}' y1='${y0}' x2='${(x0+ux*L).toFixed(1)}' y2='${(y0+uy*L).toFixed(1)}'/>`+
+      `<circle cx='${(x0+ux*L).toFixed(1)}' cy='${(y0+uy*L).toFixed(1)}' r='2.4'/></g>`+
+      `<text x='${x0}' y='${y0-9}' text-anchor='middle' class='gv-lab'>FALL</text>`;}
+  svg.innerHTML=`${sand}<polygon points='${P(pts)}' class='gv-green ${real?"":"sketch"}'/>
+    <polygon points='${P(pts.map(p=>[(p[0]-(mnX+mxX)/2)*.45+(mnX+mxX)/2,(p[1]-(mnY+mxY)/2)*.45+(mnY+mxY)/2]))}' class='gv-ring'/>
+    ${slope}
+    <path d='M${W/2-13} ${H-9} h26 M${W/2} ${H-15} l0 6 M${W/2-4} ${H-13} l4 4 4-4' class='gv-you'/>
+    <text x='${W/2}' y='${H-1}' text-anchor='middle' class='gv-lab'>YOU</text>
+    <g id='gv-pin'></g>`;
+  paintPin();}
+function paintPin(){
+  const svg=document.getElementById("greenview"),g=document.getElementById("gv-pin");
+  if(!svg||!g||!greenCtx)return;
+  document.getElementById("pin-unk").classList.toggle("on",!pinKnown);
+  if(!pinKnown||!pinXY){g.innerHTML="";}
+  else{const x=greenCtx.SX(pinXY[0]),y=greenCtx.SY(pinXY[1]);
+    g.innerHTML=`<g class='hm-pin' transform='translate(${x.toFixed(1)},${y.toFixed(1)})'>
+      <line x1='0' y1='0' x2='0' y2='-13'/><path d='M0 -13l9 3.4-9 3.4z'/></g>
+      <circle cx='${x.toFixed(1)}' cy='${y.toFixed(1)}' r='2' fill='var(--brick)'/>`;}
   paintPinLab();}
+function paintPinBand(){renderGreen(COURSES[cur.course].holes.find(x=>x.n===cur.hole));}
 function paintPinLab(){
   const v=pinVal();
+  const depth=["a front","a middle","a back"][pinDepth];
   $("#pin-lab").textContent=
-    v==="left"?"Left pin. Albie protects the short side.":
-    v==="right"?"Right pin. Albie protects the short side.":
     !pinKnown?"Unknown. Albie plays the middle.":
-    v==="front"?"Front pin.":v==="back"?"Back pin.":"Middle pin.";}
-(function(){const b=$("#pinband");let d=false;
-  const set=x=>{pinDepth=Math.min(2,Math.floor(bandFrac(b,x)*3));pinKnown=true;
-    $("#pin-left").classList.remove("on");$("#pin-right").classList.remove("on");paintPinBand();
-    if(typeof autoAsk==="function")autoAsk();};
-  b.addEventListener("pointerdown",e=>{d=true;try{b.setPointerCapture(e.pointerId)}catch(_){}set(e.clientX);});
-  b.addEventListener("pointermove",e=>{if(d)set(e.clientX);});
-  b.addEventListener("pointerup",()=>d=false);})();
-[["#pin-left","#pin-right"],["#pin-right","#pin-left"]].forEach(([me,other])=>
-  $(me).addEventListener("click",()=>{$(me).classList.toggle("on");
-    $(other).classList.remove("on");paintPinBand();
-    if(typeof autoAsk==="function")autoAsk();}));
+    pinSide?`${depth[0].toUpperCase()+depth.slice(1)} pin, tucked ${pinSide}. Albie protects the short side.`
+    :`${depth[0].toUpperCase()+depth.slice(1)} pin, middle of the green.`;
+  // the disclaimer is part of the control, not a footnote
+  const h=COURSES[cur.course].holes.find(x=>x.n===cur.hole),src=$("#green-src");
+  if(!src)return;
+  const t=COURSES[cur.course].trust,lvl=t&&t.aspects&&t.aspects.greens.level;
+  const bits=[];
+  if(!greenCtx||!greenCtx.real)bits.push("No surveyed shape for this green. Sketch only, pick roughly");
+  else bits.push("Surveyed green outline, OpenStreetMap");
+  if(h.stale)bits.push("under renovation, treat the shape as provisional");
+  else if(lvl==="LOW")bits.push("green detail is thin for this course, low confidence");
+  src.textContent=bits.join(" · ")+".";}
+(function(){const svg=document.getElementById("greenview");if(!svg)return;
+  const setFromEvent=e=>{
+    if(!greenCtx)return;
+    const r=svg.getBoundingClientRect();if(!r.width||!r.height)return;
+    const sx=(e.clientX-r.left)/r.width*greenCtx.W,sy=(e.clientY-r.top)/r.height*greenCtx.H;
+    const [lx,ly]=greenCtx.inv(sx,sy);
+    pinXY=[lx,ly];pinKnown=true;
+    const dFrac=(ly-greenCtx.mnY)/Math.max(1,greenCtx.mxY-greenCtx.mnY);   // 0 front, 1 back
+    pinDepth=dFrac<0.34?0:dFrac>0.66?2:1;
+    const lFrac=(lx-(greenCtx.mnX+greenCtx.mxX)/2)/Math.max(1,(greenCtx.mxX-greenCtx.mnX)/2);
+    pinSide=lFrac<-0.34?"left":lFrac>0.34?"right":null;
+    paintPin();if(typeof autoAsk==="function")autoAsk();};
+  svg.addEventListener("click",setFromEvent);})();
+document.getElementById("pin-unk").addEventListener("click",()=>{
+  pinKnown=false;pinSide=null;pinDepth=1;pinXY=null;paintPin();
+  if(typeof autoAsk==="function")autoAsk();});
 
 /* ---------- live weather: open-meteo at the course's own coordinates.
    Per-hole into/down/cross computed from the geometry frame bearing.
@@ -1304,8 +1415,7 @@ function renderCourseSel(){
     const pr=store.p;if(pr){pr.tees=c.dataset.v;store.p=pr;}renderHoles();});}
 function resetSituation(){ // new hole: back to the tee, keep the wind (it doesn't reset between holes)
   $$("#sit-lie .chip").forEach(c=>c.classList.toggle("on",c.dataset.v==="tee"));
-  pinKnown=false;pinDepth=1;
-  $("#pin-left").classList.remove("on");$("#pin-right").classList.remove("on");paintPinBand();
+  pinKnown=false;pinDepth=1;pinSide=null;pinXY=null;
   sideVal="centre";
   const sm=document.getElementById("sideme"),sl=document.getElementById("sidelab");
   if(sm){sm.style.left="50%";sl.textContent="CENTRE";sl.style.left="calc(50% - 28px)";}
@@ -1341,6 +1451,7 @@ function renderHoles(){const c=COURSES[cur.course];store.cur=cur;
    ${fact?`<p class="facts">${fmt(clean(fact))}</p>`:""}
    ${h.stale?`<p class="teenote" style="color:var(--brick)">Renovation: ${fmt(h.stale)}</p>`:""}`;
   renderBand(h);
+  renderGreen(h);
   renderHoleMap(h);
   renderBgArt();
   renderTrust();
@@ -1958,8 +2069,11 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
       (elevAdj?`<span class='cm'>${elevAdj>0?"uphill chip":"downhill chip"}</span>`:"")+
       (galong<-1.5?`<span class='cm'>runs away</span>`:galong>1.5?`<span class='cm'>into the slope</span>`:"")+
       (buried?`<span class='cm'>buried lie</span>`:roughy?`<span class='cm'>out of the grass</span>`:"")+`</div>`;
+    lastAsk={h,sit};
+    lastOpts=cands.slice(0,3).map(o=>({id:"chip",club:o.club,leave:D-land(o),
+      aim:`Land it at ${land(o)}, ${Math.max(0,D-land(o))} of roll to the hole.${aim?" "+aim:""}`}));
     approachOpts=`<div class='opts'>`+cands.slice(0,3).map((o,i)=>
-      `<div class='opt ${i===0?"rec":""}' data-pick='${escAttr(o.club.club+" "+o.name)}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="run"?"advance":o.id==="pitch"?"punch":"window"]}</span><div style='flex:1'><span class='orank'><span class='oidx'>${String(i+1).padStart(2,"0")}</span>${i===0?"The play":""}<span class='opct'>rec ${pct(o)}%</span></span><h4>${o.club.club}, ${o.name}</h4><p>${fmt(`Land it at ${land(o)}, the ground does the rest.${aim?" "+aim:""}`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p></div></div>`).join("")+
+      `<div class='opt ${i===0?"rec":""}' data-i='${i}' data-pick='${escAttr(o.club.club+" "+o.name)}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="run"?"advance":o.id==="pitch"?"punch":"window"]}</span><div style='flex:1'><span class='orank'><span class='oidx'>${String(i+1).padStart(2,"0")}</span>${i===0?"The play":""}<span class='opct'>rec ${pct(o)}%</span></span><h4>${o.club.club}, ${o.name}</h4><p>${fmt(`Land it at ${land(o)}, the ground does the rest.${aim?" "+aim:""}`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p></div></div>`).join("")+
       `<p class='small' style='margin:2px 0 0'>Tap the option you're playing. It goes in the log. Putting stays yours.</p></div>`;
     drawCallTarget(h,{id:"chip",club:cands[0].club,leave:D-land(cands[0])},sit);
   }
@@ -2055,8 +2169,13 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
       const mnS=Math.min(...cands.map(o=>o.score));
       const totS=cands.reduce((a,o)=>a+(o.score-mnS+15),0);
       const pct=o=>Math.round((o.score-mnS+15)/totS*100);
+      lastAsk={h,sit};
+      lastOpts=cands.slice(0,3).map(o=>({id:o.id,club:o.club,leave:o.leave,
+        aim:o.id==="lay"?`Pick the ${o.leave}-yard number and commit to it. Anything past that brings the trouble back into play.`
+          :o.id==="cons"?`Aim the fat middle of the green, not the flag. A ${sit.pin!=="mid"?"long putt from the safe side":"two-putt par"} is the win here.`
+          :`Straight at it. Your ${o.club.club} carries ${o.club.carry}${eff>o.club.carry?", so this needs a good one":""}.`}));
       approachOpts=`<div class='opts'>`+cands.slice(0,3).map((o,i)=>
-        `<div class='opt ${i===0?"rec":""}' data-pick='${escAttr(o.title)}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="lay"?"punch":o.id==="cons"?"advance":"window"]}</span><div style='flex:1'><span class='orank'><span class='oidx'>${String(i+1).padStart(2,"0")}</span>${i===0?"The play":""}<span class='opct'>rec ${pct(o)}%</span></span><h4>${o.title}</h4><p>${fmt(o.body||`${sit.dist} plays ${eff}. Your ${o.club.club} carries ${o.club.carry}.`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p></div></div>`).join("")+
+        `<div class='opt ${i===0?"rec":""}' data-i='${i}' data-pick='${escAttr(o.title)}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="lay"?"punch":o.id==="cons"?"advance":"window"]}</span><div style='flex:1'><span class='orank'><span class='oidx'>${String(i+1).padStart(2,"0")}</span>${i===0?"The play":""}<span class='opct'>rec ${pct(o)}%</span></span><h4>${o.title}</h4><p>${fmt(o.body||`${sit.dist} plays ${eff}. Your ${o.club.club} carries ${o.club.carry}.`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p></div></div>`).join("")+
         `<p class='small' style='margin:2px 0 0'>Tap the option you're playing. It goes in the log.</p></div>`;
       drawCallTarget(h,win,sit);
     }}
@@ -2253,10 +2372,19 @@ $("#advice").addEventListener("click",e=>{
   if(e.target.id==="expand-call"){const m=$("#advice .call-more");
     m.classList.toggle("hidden");
     e.target.textContent=m.classList.contains("hidden")?"Full reasoning ▾":"Less ▴";return}
-  // selectable options: tapping a card locks the pick and logs it
+  // selectable options: tapping a card locks the pick, redraws the map for
+  // THAT option, and opens the aim panel for it
   const o=e.target.closest(".opt[data-pick]");
-  if(o){$$("#advice .opt").forEach(x=>x.classList.toggle("chosen",x===o));
+  if(o){$$("#advice .opt").forEach(x=>{x.classList.toggle("chosen",x===o);
+      const ap=x.querySelector(".aimpanel");if(ap&&x!==o)ap.remove();});
     chosenPick=o.dataset.pick;
+    const oi=+o.dataset.i,pick=lastOpts&&lastOpts[oi];
+    if(pick&&lastAsk){
+      drawCallTarget(lastAsk.h,pick,lastAsk.sit);
+      if(!o.querySelector(".aimpanel"))
+        o.querySelector("div").insertAdjacentHTML("beforeend",
+         `<div class='aimpanel'><span class='when'>where to aim</span>${fmt(pick.aim||"Middle of the target, take your medicine if you miss.")}
+          ${lastAsk.h.geo&&!lastAsk.h.geo.sketch?"<span class='src'>Marked on the hole map above</span>":"<span class='src'>No surveyed map for this hole, aim by feel</span>"}</div>`);}
     const c=COURSES[cur.course];
     const entry={t:new Date().toISOString(),type:"choice",course:c.slug,hole:cur.hole,
       pick:chosenPick,rec:o.classList.contains("rec")};
@@ -2265,7 +2393,7 @@ $("#advice").addEventListener("click",e=>{
       log[log.length-1]=entry;else log.push(entry);
     store.log=log;renderLog();
     toast("Locked in. Rate the call after the shot.");}});
-let chosenPick=null;
+let chosenPick=null,lastOpts=null,lastAsk=null;
 /* hole nav + score capture */
 function goHole(n){const c=COURSES[cur.course];if(n<1||n>c.holes.length)return;
   cur.hole=n;resetSituation();renderHoles();}
