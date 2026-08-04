@@ -1362,7 +1362,7 @@ let lastTap=null,hmCtx=null,hmPlaceFn=null,hmPlaceHole=0;
    built for exactly this: fix -> course-local (anchor equirectangular,
    same math as the extractor) -> hole-local -> the same placement path
    a map tap uses. Lie, side, crossings, elevation all come free. */
-let gpsWatch=null,gpsLastT=0;
+let gpsWatch=null,gpsLastT=0,gpsLastPt=null,gpsPend=null,gpsWasOn=false;
 const YPD=6371000*1.0936133;
 function gpsAvailable(){const c=COURSES[cur.course];
   return !!(navigator.geolocation&&c.anchor&&c.holes.some(x=>x.geo&&x.geo.frame));}
@@ -1374,10 +1374,14 @@ function paintGps(state,note){
   chip.classList.toggle("on",st==="on");
   chip.textContent=st==="locating"?"GPS…":st==="on"?("GPS"+(note?" "+note:"")):"GPS";}
 function gpsFix(pos){
-  const t=Date.now();if(t-gpsLastT<3500)return;gpsLastT=t;
+  // adaptive throttle: standing still (waiting on the tee) backs off to 10s
+  const t=Date.now();
   const c=COURSES[cur.course],a=c.anchor;if(!a)return;
   const cx=(pos.coords.longitude-a[1])*Math.PI/180*Math.cos(a[0]*Math.PI/180)*YPD,
         cy=(pos.coords.latitude-a[0])*Math.PI/180*YPD;
+  const moved=gpsLastPt?Math.hypot(cx-gpsLastPt[0],cy-gpsLastPt[1]):99;
+  if(t-gpsLastT<(moved<4?10000:3500))return;
+  gpsLastT=t;gpsLastPt=[cx,cy];
   const acc=Math.max(3,Math.round(pos.coords.accuracy*1.0936));
   // whose corridor holds the fix? sticky preference for the current hole
   let best=null;
@@ -1387,15 +1391,55 @@ function gpsFix(pos){
     if(hy<-45||hy>hh.geo.len+45||Math.abs(hx)>115)continue;
     const score=Math.abs(hx)+(hh.n===cur.hole?-45:0);
     if(!best||score<best.score)best={n:hh.n,ball:[hx,hy],score};}
-  if(!best){paintGps("on","· off the map");return}
+  if(!best){gpsPend=null;paintGps("on","· off the map");return}
   if(acc>40){paintGps("on",`±${acc}y, weak`);return}
-  if(best.n!==cur.hole)goHole(best.n);
+  // hole-advance hysteresis: two consecutive fixes in the new corridor
+  // before switching, so overlapping holes never flap the screen
+  if(best.n!==cur.hole){
+    if(gpsPend&&gpsPend.n===best.n)gpsPend.count++;
+    else gpsPend={n:best.n,count:1};
+    if(gpsPend.count<2){paintGps("on",`±${acc}y`);return}
+    gpsPend=null;goHole(best.n);}
+  else gpsPend=null;
   if(typeof hmPlaceFn==="function"&&hmPlaceHole===best.n)
     hmPlaceFn(best.ball,{src:"gps",acc});
   paintGps("on",`±${acc}y`);}
+/* battery: the watch releases while the phone is pocketed, resumes on wake */
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){
+    if(gpsWatch!==null&&gpsWatch!==-2){navigator.geolocation.clearWatch(gpsWatch);
+      gpsWatch=null;gpsWasOn=true;}}
+  else if(gpsWasOn){gpsWasOn=false;gpsToggle();}});
+/* replay harness (?gpssim): walks the mapped course through the REAL gpsFix
+   path with synthetic fixes. Field-test rehearsal + regression net. */
+function gpsSimStart(){
+  const c=COURSES[cur.course],a=c.anchor;
+  if(!a){toast("No coordinates for this course.");return}
+  const pts=[];
+  for(const h of c.holes){if(!h.geo||!h.geo.frame)continue;
+    const [ox,oy,ang]=h.geo.frame,ca=Math.cos(ang),sa=Math.sin(ang);
+    const inv=(hx,hy)=>[hx*ca+hy*sa+ox,-hx*sa+hy*ca+oy];
+    const cl=h.geo.cl;
+    pts.push(inv(cl[0][0],cl[0][1]));
+    for(let i=0;i<cl.length-1;i++){const A=cl[i],B=cl[i+1];
+      const L=Math.hypot(B[0]-A[0],B[1]-A[1]);
+      for(let d=70;d<L;d+=70){const tt=d/L;pts.push(inv(A[0]+(B[0]-A[0])*tt,A[1]+(B[1]-A[1])*tt));}
+      pts.push(inv(B[0],B[1]));}
+    if(pts.length>50)break;}
+  if(!pts.length){toast("No mapped holes to walk.");return}
+  let i=0;gpsWatch=-2;paintGps("on","sim");toast("GPS simulation: walking the course.");
+  const iv=setInterval(()=>{
+    if(i>=pts.length||gpsWatch!==-2){clearInterval(iv);
+      if(gpsWatch===-2){gpsWatch=null;paintGps("off");toast("Simulated walk done.");}return}
+    const [scx,scy]=pts[i++];gpsLastT=0;gpsLastPt=null;
+    gpsFix({coords:{
+      latitude:a[0]+scy/YPD*180/Math.PI,
+      longitude:a[1]+scx/(Math.cos(a[0]*Math.PI/180)*YPD)*180/Math.PI,
+      accuracy:5+Math.random()*5}});},2500);}
 function gpsToggle(){
-  if(gpsWatch!==null){navigator.geolocation.clearWatch(gpsWatch);gpsWatch=null;
-    paintGps("off");toast("GPS off.");return}
+  if(gpsWatch!==null){
+    if(gpsWatch!==-2)navigator.geolocation.clearWatch(gpsWatch);
+    gpsWatch=null;gpsPend=null;paintGps("off");toast("GPS off.");return}
   paintGps("locating");
   gpsWatch=navigator.geolocation.watchPosition(gpsFix,
     e=>{if(gpsWatch!==null)navigator.geolocation.clearWatch(gpsWatch);gpsWatch=null;paintGps("off");
@@ -2069,6 +2113,7 @@ renderCourseSel();renderHoles();renderLog();renderAbout();
    The user never sets temperature; wind pre-sets unless they slide it.
    Fails soft (artifact, offline): mild air, calm unless slid. */
 (async()=>{try{await fetchWx();wxAuto=true;$("#wx-live").classList.add("on");applyWx();}catch(e){}})();
+if(location.search.includes("gpssim"))setTimeout(()=>{show("caddie");gpsSimStart();},900);
 if(store.p)renderBag();
 const cta=document.getElementById("land-cta");
 if(store.p)cta.textContent="Open the caddie";
