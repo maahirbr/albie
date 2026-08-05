@@ -292,13 +292,19 @@ th{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:u
 /* the whole row already toggles, so this marker does not need to be a big
    target too: keep it narrow enough that "3-wood" stays on one line */
 .inout{width:34px}
+/* both states are stated: sage IN, brick OUT. IN is deliberately the quieter
+   of the two so the eye is pulled to the club that is NOT in the bag, which is
+   the unusual one. Dimming sits on the struck cells only, never on the marker,
+   or OUT would end up the faintest thing in its own row. */
 .inbtn{background:none;border:0;padding:10px 1px;min-width:32px;min-height:36px;cursor:pointer;
-  font:600 .55rem var(--mono);letter-spacing:.06em;color:var(--brick);text-align:left}
+  font:600 .55rem var(--mono);letter-spacing:.06em;text-align:left;
+  color:#5C6B4F;opacity:.55;transition:opacity .2s,color .2s}
+#bagtable tr:hover .inbtn{opacity:.85}
 .clubname{white-space:nowrap}
-.clubout{opacity:.5}
+.clubout .inbtn{color:var(--brick);opacity:1}
+.clubout .clubname,.clubout .bagnum,.clubout .rmclub{opacity:.5}
 .clubout .clubname{text-decoration:line-through;text-decoration-thickness:1.1px}
 .clubout .bagnum{text-decoration:line-through;text-decoration-thickness:1px}
-input[type=checkbox]{accent-color:#8A9A78;width:17px;height:17px}
 .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.66rem;font-weight:600;
   background:var(--sandbg);letter-spacing:.08em;text-transform:uppercase;font-family:var(--mono)}
 .dd{position:relative;margin:2px 0 4px;z-index:70}
@@ -1588,10 +1594,10 @@ function renderBag(){const p=store.p;if(!p)return;
   const inPlay=p.bag.filter(b=>!b.out).length;
   $("#bag-count").textContent=`${inPlay} of ${p.bag.length} clubs in play`;
   let lastG="";
-  $("#bagtable").innerHTML="<tr><th>In</th><th>Club</th><th class='bagnum'>Carry</th><th class='bagnum'>Total</th><th></th></tr>"+
+  $("#bagtable").innerHTML="<tr><th></th><th>Club</th><th class='bagnum'>Carry</th><th class='bagnum'>Total</th><th></th></tr>"+
    p.bag.map((b,i)=>{const g=grp(i);const head=g!==lastG?`<tr class='ghead'><td colspan='5'><span style='display:inline-flex;align-items:center;gap:7px'>${CLUBICONS[g]||""}${g}</span></td></tr>`:"";lastG=g;
    return head+`<tr class='${b.out?"clubout":""}' data-row='${i}'>
-   <td class='inout'><button type='button' class='inbtn' data-io='${i}' aria-pressed='${b.out?"false":"true"}' aria-label='${b.out?"Put the "+b.club+" back in the bag":"Take the "+b.club+" out of the bag"}'>${b.out?"OUT":""}</button></td>`
+   <td class='inout'><button type='button' class='inbtn' data-io='${i}' aria-pressed='${b.out?"false":"true"}' aria-label='${b.out?"Put the "+b.club+" back in the bag":"Take the "+b.club+" out of the bag"}'>${b.out?"OUT":"IN"}</button></td>`
    +`<td><button type='button' class='clubname' data-swap='${i}' title='Swap ${b.club}'>${b.club}</button></td><td class='bagnum'><input class='num' data-i='${i}' data-f='carry' type='number' value='${b.carry}'></td>
    <td class='bagnum'><input class='num' data-i='${i}' data-f='total' type='number' value='${b.total}'></td>
    <td class='bagx'><button type='button' class='rmclub' data-rm='${i}' aria-label='Remove ${b.club}'>×</button></td></tr>`}).join("");}
@@ -3057,6 +3063,8 @@ function countUpStats(){if(!motionOK)return;
       if(f<1)requestAnimationFrame(step)};
     requestAnimationFrame(step);});}
 function show(v){if(v==="onboard")prefillOnboard();
+  // a sheet belongs to the screen that opened it: leaving the tab dismisses it
+  const sheet=document.getElementById("scoresheet");if(sheet)sheet.remove();
   $$(".view").forEach(x=>x.classList.add("hidden"));$("#view-"+v).classList.remove("hidden");
   $$(".tab").forEach(t=>t.classList.toggle("on",t.dataset.view===v));
   moveTabInd();
