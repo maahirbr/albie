@@ -1,0 +1,15 @@
+# Albie
+
+> An open source AI caddie for courses you have never played. Albie reads a course's hole guides, tour coverage, caddie video and member knowledge, compiles it into situational rules, and gives one call for the shot in front of you.
+
+Every fact carries a source and a date. Where sources disagree the conflict is shown rather than merged, and where a course is thinly sourced the app says so instead of guessing.
+
+## Pages
+
+- [index.html](https://maahirbr.github.io/albie/): The caddie itself. Pick a course and a hole, describe the shot, get one call.
+- [story.html](https://maahirbr.github.io/albie/story.html): How Albie is built, and what it does with a course.
+- [checklist.html](https://maahirbr.github.io/albie/checklist.html): Round and app testing checklist.
+
+## Source
+
+- [GitHub](https://github.com/maahirbr/albie)
