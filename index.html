@@ -1016,6 +1016,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
     <div class="card">
       <p class="eyebrow">Open source, soon</p>
       <p class="small" style="font-size:.9rem">The app is free, and the code is going open source: the app, then the ingestion pipeline as the data licensing sweep finishes. Build courses with us. Map data © OpenStreetMap contributors.</p>
+      <a class="btn2" data-verb="Read" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="story.html">The field guide, how Albie knows this</a>
       <a class="btn2" data-verb="Open" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="https://github.com/maahirbr/albie" target="_blank" rel="noopener">Albie on GitHub</a>
     </div>
     <div class="card" style="text-align:center">
@@ -1757,6 +1758,143 @@ function wireSteppers(){
       inp.dispatchEvent(new Event("input",{bubbles:true}));
       inp.dispatchEvent(new Event("change",{bubbles:true}));});});}
 wireSteppers();
+/* ---------- share the call ----------
+   Golfers already screenshot their rounds. This gives them the thing worth
+   screenshotting: the survey map, the club, and the reasoning, on Albie's own
+   paper. Drawn on a canvas rather than captured from the DOM so it is a real
+   1080x1350 image, not a phone-sized crop of a web page. ---------- */
+/* the map's styling lives in document CSS classes, which do not travel when an
+   SVG is serialised on its own. Inline what actually paints, then it does. */
+const PAINT=["fill","stroke","stroke-width","stroke-dasharray","stroke-linecap",
+  "stroke-linejoin","opacity","font-size","font-family","text-anchor","paint-order"];
+function inlineSvgStyles(src){
+  const clone=src.cloneNode(true);
+  const a=src.querySelectorAll("*"),b=clone.querySelectorAll("*");
+  for(let i=0;i<a.length;i++){
+    const cs=getComputedStyle(a[i]);
+    let css="";
+    for(const p of PAINT){const v=cs.getPropertyValue(p);
+      if(!v)continue;
+      /* fill:none and stroke:none are MEANINGFUL, not absent. Skipping them
+         let the centreline, the shot line and the play-zone ellipse fall back
+         to the SVG default of solid black, so the card rendered a big black
+         wedge across the hole where the dispersion zone should have been. */
+      if(p==="fill"||p==="stroke"||(v!=="none"&&v!=="normal"&&v!=="auto"))
+        css+=`${p}:${v};`;}
+    b[i].setAttribute("style",css);
+    b[i].removeAttribute("class");}
+  clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
+  return clone;}
+function svgToImage(svg){
+  return new Promise((res,rej)=>{
+    const s=new XMLSerializer().serializeToString(svg);
+    const img=new Image();
+    img.onload=()=>res(img);img.onerror=rej;
+    img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(s);});}
+/* wrap text the way a caddie book would: by width, never mid-word */
+function wrapText(ctx,text,x,y,maxW,lh,max){
+  const words=(text||"").split(/\s+/).filter(Boolean);let line="",n=0;
+  for(const w of words){
+    const t=line?line+" "+w:w;
+    if(ctx.measureText(t).width>maxW&&line){
+      ctx.fillText(line,x,y);y+=lh;line=w;
+      if(++n>=(max||99)-1){break}}
+    else line=t;}
+  if(line)ctx.fillText(line,x,y);
+  return y+lh;}
+async function shareCall(){
+  const c=COURSES[cur.course],h=c.holes.find(x=>x.n===cur.hole);
+  const club=(document.querySelector("#advice .club")||{}).textContent||"";
+  const opt=document.querySelector("#advice .opt.rec")||document.querySelector("#advice .opt");
+  const play=opt?(opt.querySelector("h4")||{}).textContent||"":"";
+  /* the option's <p> holds the advice AND a .src span of the reasons. Taking
+     textContent glued them together mid-sentence ("...long club.wedges are
+     your strength"), so read the text nodes and leave the sources out. */
+  let body="";
+  if(opt){const pEl=opt.querySelector("p");
+    if(pEl)body=[...pEl.childNodes].filter(n=>n.nodeType===3||!n.classList?.contains("src"))
+      .map(n=>n.textContent).join("").trim();}
+  /* the confidence chips and the call math are both .callmath. Only the call
+     math belongs on a share card; confidence is an internal honesty signal. */
+  const mathBox=[...document.querySelectorAll("#advice .callmath")]
+    .find(b=>/to the pin|land it at/.test(b.textContent));
+  const math=mathBox?[...mathBox.querySelectorAll(".cm")].map(x=>x.textContent.trim()):[];
+  const W=1080,H=1350,P=76;
+  const cv=document.createElement("canvas");cv.width=W;cv.height=H;
+  const x=cv.getContext("2d");
+  try{await document.fonts.ready}catch(e){}
+  x.fillStyle="#F4EFE1";x.fillRect(0,0,W,H);
+  // the paper: faint linen tick, same idea as the app's texture
+  x.strokeStyle="#33362B08";x.lineWidth=1;
+  for(let i=0;i<H;i+=6){x.beginPath();x.moveTo(0,i);x.lineTo(W,i);x.stroke();}
+  x.fillStyle="#33362B";x.font="600 46px 'General Sans',sans-serif";
+  x.fillText("Albie",P,P+40);
+  const wm=x.measureText("Albie").width;
+  x.fillStyle="#A4472F";x.beginPath();x.arc(P+wm+13,P+40,8,0,7);x.fill();
+  x.fillStyle="#5A7185";x.font="600 20px 'Fragment Mono',monospace";
+  x.fillText("A CADDIE FOR COURSES YOU HAVE NEVER PLAYED",P,P+82);
+  x.strokeStyle="#DCD5C0";x.lineWidth=2;
+  x.beginPath();x.moveTo(P,P+112);x.lineTo(W-P,P+112);x.stroke();
+  // the course name wraps rather than truncating: "Carnoustie Golf Links ·
+  // Champions…" told a reader nothing and looked like a bug
+  let y=P+160;
+  x.fillStyle="#33362B";x.font="600 38px 'General Sans',sans-serif";
+  y=wrapText(x,c.course,P,y,W-P*2,46,2);
+  x.fillStyle="#7C7660";x.font="400 23px 'Fragment Mono',monospace";
+  const ty=(h.ty&&h.ty[(store.p&&store.p.tees)||"member"])||h.yards;
+  x.fillText(`HOLE ${h.n}${h.name?" · "+h.name.toUpperCase():""} · PAR ${h.par}${ty?" · "+ty+" YDS":""}`,P,y+8);
+  y+=44;
+  // the survey map, straight off the screen
+  const svg=document.querySelector("#holemap svg");
+  if(svg){try{
+    const img=await svgToImage(inlineSvgStyles(svg));
+    const vb=svg.viewBox.baseVal, ar=(vb&&vb.height)?vb.width/vb.height:3;
+    const mw=W-P*2, mh=Math.max(240,Math.min(430,mw/ar));
+    x.fillStyle="#F8F4E8";x.strokeStyle="#DCD5C0";x.lineWidth=2;
+    x.fillRect(P,y,mw,mh);x.strokeRect(P,y,mw,mh);
+    x.drawImage(img,P,y,mw,mh);
+    y+=mh;
+  }catch(e){}}
+  y+=54;
+  x.strokeStyle="#DCD5C0";x.lineWidth=2;
+  x.beginPath();x.moveTo(P,y);x.lineTo(W-P,y);x.stroke();
+  y+=104;
+  x.fillStyle="#33362B";x.font="600 112px 'General Sans',sans-serif";
+  x.fillText(club||play.slice(0,18),P,y);
+  y+=48;
+  x.fillStyle="#565B3F";x.font="500 25px 'Fragment Mono',monospace";
+  y=wrapText(x,math.join("  ·  "),P,y,W-P*2,38,3);
+  y+=26;
+  x.fillStyle="#33362B";x.font="600 42px 'General Sans',sans-serif";
+  y=wrapText(x,play,P,y,W-P*2,52,2);
+  y+=14;
+  x.fillStyle="#4A4F3C";x.font="400 30px 'Switzer',sans-serif";
+  y=wrapText(x,body,P,y,W-P*2,42,4);
+  /* the reasons, which is the whole point: anyone can name a club, Albie can
+     say which sourced rule put it there. Stripped out of the body above so it
+     would stop gluing itself mid-sentence; it earns its own line here. */
+  const why=opt?[...opt.querySelectorAll(".src")].map(s=>s.textContent.trim()).filter(Boolean):[];
+  if(why.length){
+    y+=30;
+    x.fillStyle="#8A9A78";x.font="600 20px 'Fragment Mono',monospace";
+    x.fillText("WHY",P,y);y+=32;
+    x.fillStyle="#565B3F";x.font="400 25px 'Fragment Mono',monospace";
+    wrapText(x,why.join("  ·  "),P,y,W-P*2,36,4);}
+  x.strokeStyle="#DCD5C0";x.lineWidth=2;
+  x.beginPath();x.moveTo(P,H-P-46);x.lineTo(W-P,H-P-46);x.stroke();
+  x.fillStyle="#7C7660";x.font="400 23px 'Fragment Mono',monospace";
+  x.fillText("MAAHIRBR.GITHUB.IO/ALBIE",P,H-P);
+  const blob=await new Promise(r=>cv.toBlob(r,"image/png"));
+  const fname=`albie-${c.slug||"course"}-hole-${h.n}.png`;
+  const file=new File([blob],fname,{type:"image/png"});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],
+      title:`${c.course} hole ${h.n}`,
+      text:`${club?club+". ":""}${play}`});return}catch(e){if(e.name==="AbortError")return}}
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download=fname;a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+  toast("Call card saved.");}
 /* ---------- keep your setup ----------
    Everything a golfer builds lives in this browser's localStorage. Clear it,
    switch phones, or use private mode and the bag, the calibration and the log
@@ -2903,6 +3041,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
      ${sit.lie==="trouble"?troubleHTML:`${clubLine?`<div class='club'>${clubLine}</div>`:""}${callMath}${approachOpts}`}
      ${albieSays?`<p class='albiesays'><span class='who'>ALBIE ▸</span> ${fmt(albieSays)}</p>`:""}
      ${(h.grn&&sit.lie!=="tee")||runoutNote?`<div class='rules' style='margin:8px 0 2px'>${h.grn&&sit.lie!=="tee"?noteRow("","the green",`${fmt(h.grn.note)} <span class='src'>${h.grn.src||""}</span>`):""}${runoutNote}</div>`:""}
+     <button class='expand' id='share-call'>Share this call ▸</button>
      <button class='expand' id='expand-call'>Full reasoning ▾</button>
      <div class='call-more hidden'>
      <p class='small' style='margin:2px 0 8px'>Confidence is computed, not claimed: ${confWhy.length?confWhy.join("; ")+".":"thin data for this exact spot; Albie is going on general golf sense."}</p>
@@ -2957,6 +3096,11 @@ $("#sit-dist").addEventListener("input",autoAsk);
 ["sit-lieq","sit-window","sit-swing"].forEach(id=>
   document.getElementById(id).addEventListener("click",autoAsk));
 $("#advice").addEventListener("click",e=>{
+  if(e.target.id==="share-call"){const b=e.target;
+    b.textContent="Making the card…";b.disabled=true;
+    shareCall().catch(err=>toast("Could not build the card. "+(err.message||"")))
+      .finally(()=>{b.textContent="Share this call ▸";b.disabled=false;});
+    return}
   if(e.target.id==="expand-call"){const m=$("#advice .call-more");
     m.classList.toggle("hidden");
     e.target.textContent=m.classList.contains("hidden")?"Full reasoning ▾":"Less ▴";return}
