@@ -507,6 +507,9 @@ input::placeholder,textarea::placeholder{color:#8D866E}
 .grp>summary::after{content:"▾";float:right;color:var(--dim);
   display:inline-block;transition:transform .34s var(--spring)}
 .grp[open]>summary::after{transform:rotate(180deg)}
+/* the pin block is a group without a disclosure: always open, never a toggle */
+.pingrp{padding-top:9px}
+.pingrp>label{margin-top:0}
 .parline{font-family:var(--disp);font-weight:600;font-size:1.5rem;margin:.15rem 0 .3rem}
 .parline .num{font-size:.95rem;color:var(--dim)}
 .holesummary{font-size:.95rem;margin:.2rem 0 .4rem;color:#4A4F3C}
@@ -839,19 +842,43 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
         <div class="chip" id="wx-live">Live weather</div>
       </div>
       </details>
-      <details class="grp" open><summary>Pin</summary>
-      <label>Pin position. Tap the green where the flag is</label>
-      <div class="greenbox">
-        <svg id="greenview" viewBox="0 0 220 165" preserveAspectRatio="xMidYMid meet" aria-label="Top view of the green, tap the pin position"></svg>
-        <button class="chip" id="pin-unk" type="button">Not sure</button>
-      </div>
-      <p class="small" id="pin-lab">Unknown. Albie plays the middle.</p>
-      <p class="greensrc" id="green-src"></p>
-      </details>
       <button class="btn red" id="ask">Ask Albie</button>
+      </div>
+      <!-- The pin lives OUTSIDE Adjust on purpose. It is the one input that
+           changes the call most and that a golfer can actually see from where
+           they stand, so hiding it behind a toggle buried the best thing here.
+           The fine detail (lie quality, side, wind strength) stays folded. -->
+      <div class="grp pingrp">
+        <label>Pin position. Tap the green where the flag is</label>
+        <div class="greenbox">
+          <svg id="greenview" viewBox="0 0 220 165" preserveAspectRatio="xMidYMid meet" aria-label="Top view of the green, tap the pin position"></svg>
+          <button class="chip" id="pin-unk" type="button">Not sure</button>
+        </div>
+        <p class="small" id="pin-lab">Unknown. Albie plays the middle.</p>
+        <p class="greensrc" id="green-src"></p>
       </div>
     </div>
     <div id="advice"></div>
+    <!-- Shown once, only after the golfer has actually built something worth
+         losing. Their bag and log live in this browser and nowhere else. -->
+    <div class="card hidden" id="keepcard">
+      <p class="eyebrow">Keep your setup</p>
+      <p class="small" style="margin:2px 0 8px">Your bag, calibration and log live on this phone only. Clear your browser or switch phones and they are gone. Your profile code puts them back.</p>
+      <button data-verb="Copy" class="btn2" id="keep-copy">My profile code</button>
+      <div class="copyout hidden" id="keep-copyout"></div>
+      <form id="keep-form" style="margin-top:6px">
+        <label for="keep-email">Email me when new courses land (optional)</label>
+        <input type="email" id="keep-email" autocomplete="email" placeholder="you@example.com">
+        <div class="chips" id="keep-share" data-single style="margin:8px 0 2px">
+          <div class="chip on" data-v="yes">Send my setup too</div>
+          <div class="chip" data-v="no">Email only</div>
+        </div>
+        <p class="small" style="margin:2px 0 0;font-size:.78rem">Your setup means handicap, tees and carry numbers. It tunes the calls. No name, no location, no round scores.</p>
+        <button data-verb="Send" class="btn2 sage" type="submit" id="keep-submit">This to Albie</button>
+      </form>
+      <p class="small hidden" id="keep-done">Got it. Your code is yours to keep, wherever you saved it.</p>
+      <button class="expand" id="keep-dismiss" type="button">Not now</button>
+    </div>
   </div>
 
   <div id="view-bag" class="view hidden"><div class="sil bag" aria-hidden="true"></div>
@@ -1069,9 +1096,13 @@ function sitSummary(){
     bits.push(sideVal+" side");
   const q=chipVal("sit-lieq");
   if(q&&q!=="clean"&&lie!=="tee")bits.push(q==="buried"?"buried":"sitting down");
-  const w=windState;
-  bits.push(w.dir==="calm"?"calm"
-    :(w.str===2?"strong ":"")+(w.dir==="cross"?"across":w.dir==="down"?"downwind":"into"));
+  // every bit of the line has to say what it IS. "calm" on its own could be
+  // the lie, the greens, anything; "no wind" can only be one thing.
+  const w=windState,hard=w.str===2?"strong ":"";
+  bits.push(w.dir==="calm"?"no wind"
+    :w.dir==="cross"?hard+"crosswind"
+    :w.dir==="down"?hard+"downwind"
+    :hard?"strong into the wind":"into the wind");
   bits.push(pinKnown?pinVal()+" pin":"pin unknown");
   el.textContent=bits.join(" · ");}
 /* the golfer's standing preference, remembered per device. A new hole
@@ -1714,6 +1745,56 @@ function wireSteppers(){
       inp.dispatchEvent(new Event("input",{bubbles:true}));
       inp.dispatchEvent(new Event("change",{bubbles:true}));});});}
 wireSteppers();
+/* ---------- keep your setup ----------
+   Everything a golfer builds lives in this browser's localStorage. Clear it,
+   switch phones, or use private mode and the bag, the calibration and the log
+   are gone, with nothing anywhere telling them the profile code exists. This
+   asks once, and only after they have built something worth losing. */
+const KEEP_AFTER=3;   // logged holes or locked calls before it is worth asking
+function keepEligible(){
+  if(kv.get("pc.keep")==="done"||kv.get("pc.keep")==="no")return false;
+  if(!store.p)return false;
+  return store.log.filter(e=>e.type==="hole"||e.type==="choice").length>=KEEP_AFTER;}
+function renderKeep(){
+  const c=document.getElementById("keepcard");if(!c)return;
+  c.classList.toggle("hidden",!keepEligible());}
+/* what "send my setup too" actually sends. The profile code is the whole thing
+   in one field and it is the app's own portable format, so it round-trips; the
+   readable fields exist so the notification email is legible without decoding. */
+function setupPayload(){
+  const p=store.p;if(!p)return {};
+  return {handicap:p.hcp,tees:p.tees||"member",shape:p.shape,miss:p.miss,style:p.style,
+    strengths:(p.strengths||[]).join(", ")||"none",
+    weaknesses:(p.weaknesses||[]).join(", ")||"none",
+    driver_total:p.drTotal,seven_iron:p.c7,
+    bag:(p.bag||[]).map(b=>`${b.club} ${b.carry}${b.out?" (out)":""}`).join(", "),
+    profile_code:encodeProfile(p)};}
+document.getElementById("keep-copy").addEventListener("click",async()=>{
+  const code=encodeProfile(store.p);
+  try{await navigator.clipboard.writeText(code);
+    toast("Copied. Paste it somewhere you will still have next month.");
+    copySheet("keep-copyout",code,"Copied. It is also in the box below.");}
+  catch(e){copySheet("keep-copyout",code,"Copy the code from the box below.")}});
+document.getElementById("keep-dismiss").addEventListener("click",()=>{
+  kv.set("pc.keep","no");renderKeep();toast("Fine. It is on the Bag tab whenever you want it.");});
+document.getElementById("keep-form").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const em=$("#keep-email").value.trim();
+  if(!em){toast("Add an email, or tap Not now.");return}
+  const share=chipVal("keep-share")!=="no";
+  const body=Object.assign({email:em,source:"albie-keep"},share?setupPayload():{});
+  const done=()=>{kv.set("pc.keep","done");
+    $("#keep-form").classList.add("hidden");$("#keep-done").classList.remove("hidden");
+    $("#keep-dismiss").classList.add("hidden");};
+  if(UPDATES_ENDPOINT){
+    try{const r=await fetch(UPDATES_ENDPOINT,{method:"POST",
+      headers:{"Accept":"application/json","Content-Type":"application/json"},
+      body:JSON.stringify(body)});
+      if(r.ok){done();toast("Sent. Thanks for helping tune it.");return}}catch(err){}}
+  // offline or blocked: bank it so the next feedback export carries it
+  const log=store.log;log.push(Object.assign({t:new Date().toISOString(),type:"signup"},body));
+  store.log=log;done();
+  toast("Saved. It reaches Albie with your next feedback export.");});
 /* text hygiene: no em-dash cadence anywhere the caddie speaks */
 function fmt(s){if(!s)return s;
   return s.replace(/\s*[\u2013\u2014]\s*/g,". ").replace(/\.\s+([a-z])/g,(m,c)=>". "+c.toUpperCase())
@@ -1841,6 +1922,7 @@ function renderHoles(){const c=COURSES[cur.course];store.cur=cur;
   renderHoleMap(h);
   renderBgArt();
   renderTrust();
+  renderKeep();
   // live weather follows the golfer around the course: re-read per-hole bearing,
   // refetch when the course (and its coordinates) changed
   if(wxAuto){if(wx&&wx.slug===c.slug)applyWx();
@@ -2961,7 +3043,7 @@ function renderScorecard(){
       if(score===null)return;
       saveHoleScore(c.slug,n,par,score);
       toast(`Hole ${n}: ${label} saved.`);});};}
-function renderLog(){renderScorecard();const log=store.log;
+function renderLog(){renderScorecard();renderKeep();const log=store.log;
   const today=new Date().toISOString().slice(0,10);
   const hs=log.filter(e=>e.type==="hole"&&(e.t||"").slice(0,10)===today);
   const dp=hs.reduce((a,e)=>a+(e.score-e.par),0);
