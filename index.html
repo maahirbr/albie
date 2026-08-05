@@ -1531,7 +1531,7 @@ $("#paste-profile").addEventListener("change",e=>{
 /* ---------- bag view ---------- */
 /* thin-line club heads for the bag groups: wood crown, iron blade, wedge */
 const CLUBICONS={
- "Woods & hybrid":`<svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M11.5 1.5v5"/><path d="M11.5 6.5c0 3-1.6 5.6-4.6 5.6S2.2 10 2.2 8.2c0-1.6 1.6-2.4 4-2.2 2.6.2 4-.4 5.3.5z"/></svg>`,
+ "Woods & hybrids":`<svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M11.5 1.5v5"/><path d="M11.5 6.5c0 3-1.6 5.6-4.6 5.6S2.2 10 2.2 8.2c0-1.6 1.6-2.4 4-2.2 2.6.2 4-.4 5.3.5z"/></svg>`,
  "Irons":`<svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 1.5v6.2"/><path d="M11 7.7L4 9.6c-1.2.3-1.8 1.2-1.4 2.2.4 1 1.4 1.4 2.6 1L11 11z"/></svg>`,
  "Wedges":`<svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.6 1.5v5.8"/><path d="M10.6 7.3L4.4 8.9c-1.5.4-2.2 1.8-1.3 3 .7 1 2 1.3 3.3.7l4.8-2.2c.6-.3.9-1 .6-1.9z"/></svg>`};
 /* the club library: what a real bag can actually hold. Carries are estimated
@@ -2574,7 +2574,15 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
     const waterX=xs.find(c=>c.kind==="wa"),treeX=xs.find(c=>c.kind==="tr"),
           bunkX=xs.find(c=>c.kind==="bk"&&c.clear>Math.max(25,eff-45));
     const direct={id:"direct",club,why:[],score:70,title:`${club.club} at it`};
-    if(club.carry-eff<6&&club.carry>=180){direct.score-=22;direct.why.push("maxed out, zero margin");}
+    /* "maxed out" means the club only just covers the number. A club that is
+       80 yards SHORT also satisfies carry-eff<6, so the old test captioned an
+       unreachable shot as a tight-but-sufficient one: the words contradicted
+       the arithmetic right next to them (preflight, St Andrews 1 from 270).
+       Short of the number is a different, more honest thing to say. */
+    const margin=club.carry-eff;
+    if(margin<-12){direct.score-=30;
+      direct.why.push(`this does not reach, ${Math.round(-margin)} short of the number`);}
+    else if(margin<6&&club.carry>=180){direct.score-=22;direct.why.push("maxed out, zero margin");}
     if(layRule){direct.score-=25;direct.why.push("local rule says lay back");}
     if(famWeak(club.club)){direct.score-=18;direct.why.push("long clubs are your listed weakness");}
     else if(famStrong(club.club)){direct.score+=8;direct.why.push("your strength club");}
@@ -2808,9 +2816,9 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
     // the hole advance second - never pushes you off the hole (tester bug)
     if(!$("#nexthole"))$("#advice .call").insertAdjacentHTML("beforeend",
       `<div class='row' style='margin-top:12px'>
-        <button class='btn2' id='nextshot'>Next shot, same hole</button>
-        ${h.n<c.holes.length?`<button class='btn2 sage' id='nexthole'>Hole ${h.n+1} →</button>`
-        :`<button class='btn2 sage' id='nexthole'>Round done →</button>`}
+        <button data-verb='Next' class='btn2' id='nextshot'>Shot, same hole</button>
+        ${h.n<c.holes.length?`<button data-verb='Go to' class='btn2 sage' id='nexthole'>Hole ${h.n+1}</button>`
+        :`<button data-verb='Finish' class='btn2 sage' id='nexthole'>Round done</button>`}
       </div>`);
     $("#nextshot").onclick=()=>{
       // the ball moved: clear position and the old call, keep hole/wind/pin
