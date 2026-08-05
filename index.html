@@ -143,6 +143,15 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
   padding:20px 16px 14px;margin:18px 0 12px;background:var(--card)}
 .call>.eyebrow{position:absolute;top:-9px;left:12px;background:var(--card);
   padding:0 9px;color:var(--brick);font-weight:600}
+/* ONE rhythm inside the call. The children had carried margins of 2, 6, 8, 10,
+   12 and 14px in no particular order, so adjacent margins collapsed
+   unpredictably and the card read as badly spaced. Two steps only: 12px
+   between blocks, 6px where a line belongs to the thing above it. */
+.call>*{margin-top:0;margin-bottom:0}
+.call>*+*{margin-top:12px}
+.call>.callmath+.club,.call>.club+.callmath{margin-top:6px}
+.call>.expand+.expand{margin-top:2px}
+.call>.call-more{margin-top:0}
 .call .club{font-family:var(--disp);font-weight:600;font-size:2.2rem;letter-spacing:-.02em;line-height:1.1;margin:2px 0 6px}
 /* flex-wrap, not inline: the spans carry no whitespace between them, so
    only flex gives them a break opportunity (they clipped off-screen before) */
@@ -802,12 +811,6 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
          the inputs-then-output shape. -->
     <div class="card" id="holecard"></div>
     <div class="holemap hidden" id="holemap"></div>
-    <!-- The call still sits directly under the map and ABOVE the Ask card.
-         Inputs-then-output is the form model this app exists to reject, and
-         with the pin picker always visible the call had been pushed 1,215px
-         down: a golfer scrolled past a full screen of controls to reach the
-         answer they opened the app for. -->
-    <div id="advice"></div>
     <div class="card" id="askcard">
       <h2 class="askhead">Ask Albie</h2>
       <div class="sitline">
@@ -890,6 +893,14 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
         <p class="greensrc" id="green-src"></p>
       </div>
     </div>
+    <!-- THE CALL SITS LAST, after everything that shapes it (Maahir, from a
+         real round). It used to sit above the Ask card so it could not be
+         pushed off screen, but that put the answer ABOVE the pin picker and
+         the adjust controls: change the pin at the bottom, scroll back up to
+         read the result. Reading order now matches the order you actually
+         work in. Placement is the tradeoff we accept; autoAsk still scrolls
+         the fresh call to the thumb after a deliberate tap. -->
+    <div id="advice"></div>
     <!-- Shown once, only after the golfer has actually built something worth
          losing. Their bag and log live in this browser and nowhere else. -->
     <div class="card hidden" id="keepcard">
