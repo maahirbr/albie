@@ -49,7 +49,11 @@ select,input[type=text],input[type=number],input[type=email],textarea{width:100%
   border-radius:9px;background:var(--card);color:var(--ink);font-size:1rem;font-family:var(--body)}
 label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-family:var(--mono);
   text-transform:uppercase;letter-spacing:.1em;font-size:.66rem}
-.row{display:flex;gap:8px}.row>*{flex:1}
+/* side-by-side fields sit on ONE baseline even when a label wraps to two
+   lines: with ruled fields a half-line of drift is immediately visible */
+.row{display:flex;gap:8px;align-items:flex-end}
+.row>*{flex:1;display:flex;flex-direction:column;justify-content:flex-end}
+.row>* label{flex:1;display:flex;align-items:flex-end}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0;align-items:flex-start;align-content:flex-start}
 .chips.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .chips.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
@@ -73,26 +77,41 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 /* SECONDARY = a ruled plate, the same survey language as the call card and
    the yardage book. Filled ink is reserved for the one true primary action
    on a screen (Export), and brick for destructive confirmation. */
-.btn2{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;
-  padding:11px 15px;border:1.3px solid var(--ink);border-radius:5px;
+/* The plate button. Its VERB notches into the top rule the way the call
+   card's eyebrow sets into its border - the most distinctive detail in the
+   app, which until now lived in exactly one place - and the OBJECT it acts on
+   sits in the body. That split also kills the two-line label wrap that made
+   "Export data for feedback & calibration" look broken. */
+.btn2{position:relative;display:flex;align-items:center;justify-content:center;
+  width:100%;min-height:54px;padding:16px 16px 14px;
+  border:1.2px solid #33362B4A;border-radius:3px;
   background:var(--card);color:var(--ink);
-  font:600 .74rem var(--mono);letter-spacing:.14em;text-transform:uppercase;
-  cursor:pointer;margin:10px 0;
-  transition:transform .3s var(--spring),background .2s,color .2s,box-shadow .25s}
-.btn2:hover{background:#33362B0A;box-shadow:0 2px 0 var(--line)}
-.btn2.solid{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.btn2.solid:hover{background:#282A21}
-.btn2:active{transform:scale(.97)}
-.btn2.sage{background:var(--sage);color:var(--paper);border-color:var(--sage)}
-.btn2.sage:hover{background:#7D8D6C}
-.btn2.danger{background:var(--card);color:var(--brick);border-color:var(--brick)}
-.btn2.danger:hover{background:#A4472F12}
-.btn2.danger.armed{background:var(--brick);color:var(--paper)}
+  font:500 .95rem var(--body);letter-spacing:0;text-transform:none;text-align:center;
+  cursor:pointer;margin:17px 0 10px;
+  box-shadow:0 1.5px 0 #33362B22;
+  transition:transform .13s var(--settle),background .2s,color .2s,border-color .2s,box-shadow .13s}
+.btn2::before{content:attr(data-verb);position:absolute;top:-8px;left:13px;
+  background:var(--card);padding:0 8px;
+  font:600 .58rem var(--mono);letter-spacing:.15em;text-transform:uppercase;color:var(--brick)}
+.btn2:hover{background:#33362B08}
+/* pressed like a key: the plate travels down onto its own lip */
+.btn2:active{transform:translateY(1.5px);box-shadow:0 0 0 #33362B22}
+/* Weight, not fill, carries emphasis now. A solid dark plate put the notched
+   verb on top of its own fill, which read as a sticker stuck to the corner;
+   the primary action instead gets a heavier ink frame over tinted paper, and
+   the rule it breaks stays visible. Same reason the armed state is a brick
+   wash rather than a brick block. */
+.btn2.solid{border-width:1.7px;border-color:var(--ink);background:#33362B0D;font-weight:600}
+.btn2.solid::before{color:var(--ink)}
+.btn2.solid:hover{background:#33362B16}
+.btn2.sage{border-color:var(--sage)}
+.btn2.sage::before{color:#5C6B4F}
+.btn2.sage:hover{background:#8A9A7814}
+.btn2.danger{color:var(--brick);border-color:var(--brick)}
+.btn2.danger:hover{background:#A4472F0E}
+.btn2.danger.armed{border-width:1.7px;background:#A4472F1C;font-weight:600}
 /* buttons answer the hand: an arrow slides in on hover/press */
-.btn2{position:relative}
-.btn2::after{content:"→";position:absolute;right:15px;top:50%;transform:translate(-6px,-50%);
-  opacity:0;transition:opacity .22s,transform .35s var(--spring)}
-.btn2:hover::after,.btn2:focus-visible::after,.btn2:active::after{opacity:.9;transform:translate(0,-50%)}
+/* the notched verb is the affordance now; a hover arrow on top of it was noise */
 .btn:hover{transform:translateY(-1.5px)}
 /* typing caret for the About headline */
 .typing::after{content:"▌";color:var(--sage);animation:blink .8s steps(1) infinite;font-weight:400}
@@ -373,13 +392,33 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
   font-family:var(--mono);letter-spacing:.08em}
 .greensrc{font:400 .62rem var(--mono);letter-spacing:.04em;color:var(--dim);margin:3px 2px 0}
 /* ---- components: ruled fields and ball checkboxes, not default chrome ---- */
+/* Fields are scorecard cells, not form boxes. No walls: one ink baseline, and
+   the value written ON the rule the way a score is written on the card.
+   (Selects keep their box - a dropdown is a different kind of control.) */
 input[type=text],input[type=number],input[type=email],textarea{
-  background:#33362B05;border:1px solid var(--line);border-radius:8px;
-  transition:border-color .22s,box-shadow .28s var(--spring),background .2s}
+  background:transparent;border:0;border-bottom:1.3px solid var(--line);border-radius:0;
+  padding:8px 2px 6px;
+  transition:border-color .2s,box-shadow .2s,background-color .2s}
 input[type=text]:focus,input[type=number]:focus,input[type=email]:focus,textarea:focus{
-  outline:none;border-color:var(--sage);background:var(--card);
-  box-shadow:0 0 0 3px #8A9A7826}
+  outline:none;border-bottom-color:var(--sage);box-shadow:0 1.3px 0 var(--sage);
+  background-color:#8A9A780A}
+/* numbers are card figures: mono, tabular, so columns line up */
+input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+/* the notes field is ruled paper: a line under every line of writing, and the
+   rules scroll with the text rather than sitting behind it */
+textarea{border-bottom:0;padding:0 2px;line-height:27px;min-height:81px;resize:vertical;
+  background-image:repeating-linear-gradient(transparent 0 26px,var(--line) 26px 27px);
+  background-attachment:local}
+textarea:focus{box-shadow:none}
 input::placeholder,textarea::placeholder{color:#A9A28C}
+/* two exceptions that are already the right idiom and stay boxed: the bag's
+   tabular cells (a scorecard grid IS ruled boxes) and the profile-code box */
+#bagtable input[type=number]{border:1px solid #DCD5C0;border-radius:6px;padding:8px 6px}
+/* a rule should be as long as the thing written on it: a 2-digit score does
+   not need a full-width line under it */
+#rs-score{max-width:118px;font-size:1.15rem}
+.copyout textarea{border:1px solid var(--sage);border-radius:8px;padding:8px;
+  line-height:1.4;background-image:none;min-height:64px}
 /* the bag reads as a scorecard: mono tabular cells on a ruled sheet */
 #bagtable input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums;
   text-align:center;border-radius:6px;background:transparent;border-color:#DCD5C0}
@@ -637,7 +676,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <div class="lp"><span class="coin" aria-hidden="true"><span class="coin-in"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.6"/><path d="M11 11l3.4-3.4"/><path d="M11 1.8v2.4M11 17.8v2.4M1.8 11h2.4M17.8 11h2.4" opacity=".55"/></svg></span></span><div><span class="lp-n">03</span><b>Tuned to your game.</b> Your carries and misses decide every number. No launch monitor needed.</div></div>
     </div>
     <button class="btn" id="land-cta">Meet Albie</button>
-    <button class="btn2" id="a2hs" style="max-width:300px;margin:0 auto 8px">Add to home screen</button>
+    <button data-verb="Add" class="btn2" id="a2hs" style="max-width:300px;margin:0 auto 8px">Albie to your home screen</button>
     <p class="small num" id="land-stats" style="text-align:center;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)"></p>
     <p class="small" style="text-align:center">Two-minute setup. Everything stays on your phone.</p>
   </div>
@@ -808,13 +847,13 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
     <div class="card">
       <p class="eyebrow">Keep your profile safe</p>
       <p class="small">Storage can be wiped by the browser. Copy your profile code somewhere safe (notes, WhatsApp). Pasting it back restores everything, on any phone.</p>
-      <button class="btn2" id="copy-profile">Copy my profile code</button>
+      <button data-verb="Copy" class="btn2" id="copy-profile">My profile code</button>
       <div class="copyout hidden" id="profile-copyout"></div>
       <label>Paste a code to restore</label>
       <input type="text" id="paste-profile" placeholder="ALB2...">
     </div>
-    <button class="btn2 sage" id="rebuild-bag">Rebuild bag from my driver &amp; 7-iron</button>
-    <button class="btn2" id="redo-onboard">Redo setup questionnaire</button>
+    <button data-verb="Rebuild" class="btn2 sage" id="rebuild-bag">Bag from my driver and 7-iron</button>
+    <button data-verb="Redo" class="btn2" id="redo-onboard">Setup questionnaire</button>
     <figure class="ab-plate"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA8AAAAEECAIAAABoUspHAAAZwElEQVR42u3dP+hk53XG8Xdv7KiyC0GqhKQRpDDChcHNFoJdgkDItapYjaukCKRPpU4QYlyo2iYqDEprI9gigS2EcDphosoY1LmSwRbEilSkGBgN8/t358697z3nvJ8H8/D4FGL3N7+978xzv3Puoz998buvv/qytdZa+9a3X5JlWZZlWZZl+Z786Ivff9aIiIiIiGiepuN76uNIlmVZlmVZluW7sgaaiIiIiOgCTT5DyLIsy7Isy/L8rIEmIiIiImoYaFmWZVmWZVluGGgiIiIiohaCgT710/fX5ubm5ub95zyX+701Nx9troEmIiIiIsJAy7Isy7Isy3LDQBMRERERtXh7oHEt5ubm5nhljsM2Nze/a66BJiIiIiLCQMuyLMuyLMtyw0ATEREREbV4e6A555xzzjnnd7kGmoiIiIgIAy3Lcubsu952g9hZYW5ee94w0EREREREDQPNOeecc845x0ATEREREWGgZVluuGccM8dVm5s3PDQGmoiIiIioYaA555xzzjnHQBMR0Qb61rdf+vqrL82zzIloxAYal2Nubt5wvZH866++NE8055y3Mb5XoIEmIiIiIsJAc84555xzjoEmImr4ZnOcNBGF2gON1zQ3N8c945vNcdKc457vn2ugiYiIiIgw0JxzzjnnnGOgiajhgwPPZXmLjCM3930ADTTnnJflg2V5i4wjN/d9AA00ERHZ46EnIyINNOeccz29noxzjoEmItKn4p5lnLS5ufs8GmjOuT4V9yzjpM3N3efRQBMR6ePN9WdEpIHmnHN9vLn+7EFf/AmNc35VA60/MDc3xw3LckvLPa91r0OWcfwz55P+wNzcHDcsy7nyivLzlHH8C+YYaCJqOGN9vJyoV8vy74KoYaA557zhjPXx8t692qbvm5v92Zwv28KB1zQ3N9e/yjfzqfecyz37XT9nGQ89cz7hMs3NzfWv8oP51HvO5S2454aHlvHQ180x0ETUcM96dzl432YfuTk1DDTnnDfcsyzvzT1346HNG7689h7oqryLLMsynnhkz8tzR+ieZVluNxnoEXgXWZZlPPHI3nLy3DvKv1NZvidjoKkmV0c4SF2abP+GHlrGhWOgOQ4VHzY0N+x+lDxgjvDu2WthrwUufB8GWi8ly7KMb8ZJ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" alt="A bunker, dithered in the Albie palette">
       <figcaption>Plate 02 · the bunker</figcaption></figure>
   </div>
@@ -836,14 +875,14 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <span class="ratecount" id="rs-count">Tap a ball</span></div>
       <label>Best call · worst call · what was missing?</label>
       <textarea id="rs-notes" rows="3" placeholder="Best: 12th club call. Worst: ... Missing: green speeds"></textarea>
-      <button class="btn2 sage" id="save-round">Save round summary</button>
+      <button data-verb="Save" class="btn2 sage" id="save-round">Round summary</button>
     </div>
-    <button class="btn2 solid" id="export">Export data for feedback &amp; calibration</button>
+    <button data-verb="Export" class="btn2 solid" id="export">Data for feedback and calibration</button>
     <p class="small">Saves a small file (or copies it to your clipboard). Send it in with your feedback. It becomes ground truth in the next caddie update.</p>
     <div class="copyout hidden" id="export-copyout"></div>
     <div id="logentries"></div>
-    <button class="btn2 danger" id="resetround">Reset today's round</button>
-    <button class="btn2 danger" id="clearlog">Clear log history</button>
+    <button data-verb="Reset" class="btn2 danger" id="resetround">Today's round</button>
+    <button data-verb="Clear" class="btn2 danger" id="clearlog">Log history</button>
     <figure class="ab-plate"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA8AAAAEECAIAAABoUspHAAAZf0lEQVR42u3dv8ts53XF8ecO0R8QUthFSGcMceHC4CaQViKtQorrIiDVQVz3qi63UROCIZ1UCOMiWG2IWsMtVKoJ+D9QiuBGhSApUowzHs28P87MOed59t7PZyG+WdmFrHfed+acs2adfdrLV2+++/ab4z88z/M8z/M8zz/tX3z37TeNiIiIiIiW6XD8Px98/OlpxPM8z/M8z/P8Y14CTURERER0gw6uIXie53me53l+uZdAExERERE1HWie53me53mebzrQRERERERNB5rn+ZT+nObm5uY95zzfdKCJiIiIiJoONM/zPM/zPM/rQBMRERERNR1o1xM8r69sbm5u3vSneV4HmoiIiIio6UDzPM/zPM/zfNOBJiIiIiJqaTrQelHm5jHniIg4lo5H5tdzCTQRERERkQ40z/M8z/M8zzcdaCIiIiKiFm8PtF6Lubm+MiIi6kmbPzaXQBMRERER6UDzPM/zPM/zfNOBJiIiIiJq8fZAIyIiIiLiY5RAExERERHdm0A391qam5ubm5ubm5ubPzmXQBMRERER6UAjIiIiIupAExERERHF2gOt12Jubm5ubm5ubm7+9FwCTURERESkA42IiIiIqANNRERERCSBRkRERESUQBMRERERSaAREREREVECTURERES05x5oREREREQJNBERERER6UAjIiIiIs6cQH/w8aefvf7QfKr5b99/d+Gfx99/8aXXzdy85zyL9/syNzfffv7y1Zvvvv0GMRR//e5Pv/ryk/vo1UNERMRdqQNNgbQ8b74pkyYiIiJqOtBYjF+//fy377/7o1/+orW2FY//Tq8tIiIi2sKhf1Nq/nf/+W8d/mAu0mivv3nTV+b1qs3Nze+ea7Fg0q6zbjQiIiLqQFNTd+4cRRMRERE1HWhM0Xhu23Wdb6JWNCIiIq5kO2XR1/9EnvN5/a/f/enwf/wueJ7neZ6/2+tAY1d2azw/S78LRERE1IEmvWd9aGr2/JibL5wTkQ406j3rQ+Nm/Oz1h+bm5eeIuKoDnaX3rA+d2keoPl//4/fC8zzP87wONM6+79l+aERERNSBJtVnZWjSbzY315Mm0oHGaRiq9/wg/Y70m83NzX0+IN6/B5rnt/Uxq88PlqH9vnie53me14FG7WdNaERERNyY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" alt="Dusk on the closing holes, dithered">
       <figcaption>Plate 03 · dusk on the closing holes</figcaption></figure>
   </div>
@@ -902,7 +941,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <form id="updates-form">
         <label for="upd-email">Your email</label>
         <input type="email" id="upd-email" autocomplete="email" placeholder="you@example.com" required>
-        <button class="btn2 sage" type="submit" id="upd-submit">Join the list</button>
+        <button data-verb="Join" class="btn2 sage" type="submit" id="upd-submit">The updates list</button>
       </form>
       <p class="small hidden" id="upd-done">You're on the list. See you out there.</p>
     </div>
@@ -912,14 +951,14 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <form id="course-req">
         <label for="cr-name">Course name</label>
         <input type="text" id="cr-name" placeholder="e.g. Royal County Down" required>
-        <button class="btn2" type="submit">Send it to Albie</button>
+        <button data-verb="Send" class="btn2" type="submit">This course request</button>
       </form>
       <p class="small hidden" id="cr-done">Noted. It goes on the ingest list.</p>
     </div>
     <div class="card">
       <p class="eyebrow">Open source, soon</p>
       <p class="small" style="font-size:.9rem">The app is free, and the code is going open source: the app, then the ingestion pipeline as the data licensing sweep finishes. Build courses with us. Map data © OpenStreetMap contributors.</p>
-      <a class="btn2" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="https://github.com/maahirbr/albie" target="_blank" rel="noopener">Albie on GitHub</a>
+      <a class="btn2" data-verb="Open" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="https://github.com/maahirbr/albie" target="_blank" rel="noopener">Albie on GitHub</a>
     </div>
     <div class="card" style="text-align:center">
       <p class="eyebrow">Buy Albie a beer</p>
@@ -2865,17 +2904,17 @@ $("#resetround").addEventListener("click",()=>{
   if(!n){toast("No hole scores logged today.");return}
   if(Date.now()-resetArmed<4000){
     store.log=store.log.filter(e=>!isToday(e));renderLog();resetArmed=0;
-    b.textContent="Reset today's round";b.classList.remove("armed");
+    b.textContent="Today's round";b.classList.remove("armed");
     toast(`Round reset. ${n} hole score${n>1?"s":""} removed.`);return}
   resetArmed=Date.now();b.textContent=`Tap again to drop today's ${n} hole score${n>1?"s":""}`;b.classList.add("armed");
-  setTimeout(()=>{if(Date.now()-resetArmed>=3900){b.textContent="Reset today's round";b.classList.remove("armed");}},4200);});
+  setTimeout(()=>{if(Date.now()-resetArmed>=3900){b.textContent="Today's round";b.classList.remove("armed");}},4200);});
 let clearArmed=0;
 $("#clearlog").addEventListener("click",()=>{
   const b=$("#clearlog");
   if(Date.now()-clearArmed<4000){store.log=[];renderLog();clearArmed=0;
-    b.textContent="Clear log history";b.classList.remove("armed");toast("Log cleared.");return}
+    b.textContent="Log history";b.classList.remove("armed");toast("Log cleared.");return}
   clearArmed=Date.now();b.textContent="Tap again to clear everything";b.classList.add("armed");
-  setTimeout(()=>{if(Date.now()-clearArmed>=3900){b.textContent="Clear log history";b.classList.remove("armed");}},4200);});
+  setTimeout(()=>{if(Date.now()-clearArmed>=3900){b.textContent="Log history";b.classList.remove("armed");}},4200);});
 
 /* ---------- about ---------- */
 function renderAbout(){
