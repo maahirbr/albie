@@ -507,9 +507,16 @@ input::placeholder,textarea::placeholder{color:#8D866E}
 .grp>summary::after{content:"▾";float:right;color:var(--dim);
   display:inline-block;transition:transform .34s var(--spring)}
 .grp[open]>summary::after{transform:rotate(180deg)}
-/* the pin block is a group without a disclosure: always open, never a toggle */
+/* the pin block is a group without a disclosure: always open, never a toggle.
+   Sized deliberately: at full card width the green diagram ran 257px tall and
+   pushed the actual call 443px past the end of the first screen, so a golfer
+   scrolled through a picture to reach the answer. Advice-first is the whole
+   thesis; the picker earns its place by being visible, not by being big. */
 .pingrp{padding-top:9px}
 .pingrp>label{margin-top:0}
+.pingrp .greenbox{max-width:216px;margin:4px auto 2px}
+.pingrp #pin-lab{text-align:center;margin:4px 0 0}
+.pingrp .greensrc{text-align:center;font-size:.58rem;line-height:1.35;margin:3px 0 0}
 .parline{font-family:var(--disp);font-weight:600;font-size:1.5rem;margin:.15rem 0 .3rem}
 .parline .num{font-size:.95rem;color:var(--dim)}
 .holesummary{font-size:.95rem;margin:.2rem 0 .4rem;color:#4A4F3C}
@@ -775,6 +782,12 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
     <div class="holestrip" id="holestrip"></div>
     <div class="holenav"><button id="prevhole" aria-label="Previous hole">←</button><span id="hn-lab"></span><button id="nextholenav" aria-label="Next hole">→</button><button class="chip" id="walk-chip" style="padding:6px 12px;font-size:.72rem">Walk</button></div>
     <div class="holemap hidden" id="holemap"></div>
+    <!-- The call sits directly under the map, ABOVE the hole description and
+         the Ask card. Inputs-then-output is the form model this app exists to
+         reject, and with the pin picker now always visible the call had been
+         pushed 1,215px down: a golfer scrolled past a full screen of controls
+         to reach the answer they opened the app for. -->
+    <div id="advice"></div>
     <div class="card" id="holecard"></div>
     <div class="card" id="askcard">
       <h2 class="askhead">Ask Albie</h2>
@@ -858,7 +871,6 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
         <p class="greensrc" id="green-src"></p>
       </div>
     </div>
-    <div id="advice"></div>
     <!-- Shown once, only after the golfer has actually built something worth
          losing. Their bag and log live in this browser and nowhere else. -->
     <div class="card hidden" id="keepcard">
@@ -2635,8 +2647,16 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
     if(sit.lieq==="sitting")eff+=5;
     const bias=clubBiasYards(rules);
     eff+=bias;
-    const pool=p.bag.filter(b=>!b.out&&!(sit.lieq!=="clean"&&/wood|hybrid/i.test(b.club))
+    /* Both exclusions below are PREFERENCES, not rules: no woods out of a bad
+       lie, no driver off the deck. Applying them here meant pickClub received
+       an already-empty array, so its own "hand back the driver rather than
+       undefined" fallback could never fire, and a driver-only bag on a fairway
+       rendered "— at it. 280 plays 302. Your . Carries 0." (preflight).
+       If a preference empties the bag, drop the preference and say why. */
+    let pool=p.bag.filter(b=>!b.out&&!(sit.lieq!=="clean"&&/wood|hybrid/i.test(b.club))
       &&!(sit.lie!=="tee"&&/driver/i.test(b.club)));
+    const onlyChoice=!pool.length;
+    if(onlyChoice)pool=p.bag.filter(b=>!b.out);
     const club=pickClub(pool,eff,poolLie(h,sit));
     clubLine=club.club;
     const windLab=sit.wind==="into"?"into the wind":sit.wind==="down"?"downwind":sit.wind==="cross"?"crosswind":null;
@@ -2656,6 +2676,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
     const waterX=xs.find(c=>c.kind==="wa"),treeX=xs.find(c=>c.kind==="tr"),
           bunkX=xs.find(c=>c.kind==="bk"&&c.clear>Math.max(25,eff-45));
     const direct={id:"direct",club,why:[],score:70,title:`${club.club} at it`};
+    if(onlyChoice)direct.why.push(`the only club you have in play from this lie`);
     /* "maxed out" means the club only just covers the number. A club that is
        80 yards SHORT also satisfies carry-eff<6, so the old test captioned an
        unreachable shot as a tight-but-sufficient one: the words contradicted
