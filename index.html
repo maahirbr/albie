@@ -923,7 +923,8 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <button data-verb="Copy" class="btn2" id="copy-profile">My profile code</button>
       <div class="copyout hidden" id="profile-copyout"></div>
       <label>Paste a code to restore</label>
-      <input type="text" id="paste-profile" placeholder="ALB2...">
+      <input type="text" id="paste-profile" placeholder="Paste a code, ALB3..."
+             autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false">
     </div>
     <button data-verb="Rebuild" class="btn2 sage" id="rebuild-bag">Bag from my driver and 7-iron</button>
     <button data-verb="Redo" class="btn2" id="redo-onboard">Setup questionnaire</button>
@@ -1583,6 +1584,11 @@ function decodeProfile(v){
   if(!v.startsWith("ALB2")&&!v.startsWith("ALB3"))throw new Error("not an Albie code");
   const v2=v.startsWith("ALB2");
   const f=unb64u(v.slice(4)).split("|");
+  // A half-copied code used to decode happily: the missing fields fell back to
+  // defaults, so a truncated paste silently replaced a real profile with a
+  // 230y driver and a stock bag. Both formats carry 12 fields; anything less
+  // is a broken copy, not a profile.
+  if(f.length<12||!(+f[2]>0)||!(+f[3]>0))throw new Error("truncated code");
   const unbits=n=>PENUM.fam.filter((_,i)=>n&(1<<i));
   const p={name:f[0]||"Player",hcp:+f[1]||0,drTotal:+f[2]||230,c7:+f[3]||145,
     shape:PENUM.shape[+f[4]]||"straight",miss:PENUM.miss[+f[5]]||"—",
@@ -1615,12 +1621,24 @@ $("#copy-profile").addEventListener("click",async()=>{
     toast("Profile code copied. Save it somewhere safe.");
     copySheet("profile-copyout",code,"Profile code copied. It is also in the box below.");}
   catch(e){copySheet("profile-copyout",code,"Copy the code from the box below.")}});
-$("#paste-profile").addEventListener("change",e=>{
-  const v=e.target.value.trim();
-  if(!v.startsWith("ALB1")&&!v.startsWith("ALB2")){toast("That doesn't look like an Albie profile code.");return}
-  try{store.p=decodeProfile(v);renderBag();e.target.value="";
-    toast("Profile restored.");show("caddie");renderHoles();}
-  catch(err){toast("Couldn't read that code. Check it copied fully.")}});
+/* Restore on paste as well as on change: on a phone "change" only fires when
+   the field loses focus, so pasting a code and tapping the app read as broken.
+   Every code version this app has ever emitted is accepted. */
+const PROFILE_CODE=/^ALB[123]/;
+function restoreProfileCode(input){
+  const v=(input.value||"").trim();
+  if(!v)return;
+  if(!PROFILE_CODE.test(v)){toast("That doesn't look like an Albie profile code.");return}
+  let p;
+  try{p=decodeProfile(v)}
+  catch(err){toast("Couldn't read that code. Check it copied fully.");return}
+  if(!p||!p.bag||!p.bag.length){toast("That code has no bag in it.");return}
+  store.p=p;renderBag();input.value="";
+  toast(`Profile restored. ${p.name||"Player"}, ${p.bag.length} clubs.`);
+  show("caddie");renderHoles();}
+$("#paste-profile").addEventListener("change",e=>restoreProfileCode(e.target));
+$("#paste-profile").addEventListener("paste",e=>
+  setTimeout(()=>restoreProfileCode(e.target),0));
 
 /* ---------- bag view ---------- */
 /* thin-line club heads for the bag groups: wood crown, iron blade, wedge */
