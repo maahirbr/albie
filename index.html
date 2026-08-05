@@ -1557,12 +1557,22 @@ if (typeof module !== "undefined") {
 
 /* ---------- onboarding ---------- */
 const escAttr=s=>String(s).replace(/'/g,"&#39;");
+/* SECURITY. A profile code is a string strangers hand each other, and it
+   carries the player's name, their trust club and any custom club names.
+   Those land in innerHTML in a dozen places, so an unescaped one turned a
+   pasted code into script execution on the victim's phone. These are free-text
+   labels with no legitimate need for markup, so the characters are stripped at
+   the boundary: nothing dangerous ever enters the profile, whatever the render
+   site does with it later. */
+const safeText=(s,max=48)=>String(s==null?"":s)
+  .replace(/[<>&"'`\\]/g," ").replace(/[\u0000-\u001F\u007F]/g,"")
+  .slice(0,max).trim();
 function saveOnboard(){
-  const p={name:$("#ob-name").value||"Player",hcp:Math.min(54,Math.max(0,+$("#ob-hcp").value||14)),
+  const p={name:safeText($("#ob-name").value)||"Player",hcp:Math.min(54,Math.max(0,+$("#ob-hcp").value||14)),
     drTotal:+$("#ob-dr").value||230,c7:+$("#ob-7i").value||145,
     shape:chipVal("ob-shape")||"straight",miss:chipVal("ob-miss")||"—",
     strengths:chipVals("ob-str"),weaknesses:chipVals("ob-weak"),
-    trust:$("#ob-trust").value||"",style:chipVal("ob-style")||"balanced",
+    trust:safeText($("#ob-trust").value),style:chipVal("ob-style")||"balanced",
     tees:(store.p&&store.p.tees)||"member"};
   p.bag=buildBag(p.drTotal,p.c7,p.hcp);
   store.p=p; renderBag(); show("caddie");
@@ -1640,17 +1650,17 @@ function decodeProfile(v){
   // is a broken copy, not a profile.
   if(f.length<12||!(+f[2]>0)||!(+f[3]>0))throw new Error("truncated code");
   const unbits=n=>PENUM.fam.filter((_,i)=>n&(1<<i));
-  const p={name:f[0]||"Player",hcp:+f[1]||0,drTotal:+f[2]||230,c7:+f[3]||145,
+  const p={name:safeText(f[0])||"Player",hcp:+f[1]||0,drTotal:+f[2]||230,c7:+f[3]||145,
     shape:PENUM.shape[+f[4]]||"straight",miss:PENUM.miss[+f[5]]||"—",
     style:PENUM.style[+f[6]]||"balanced",tees:PENUM.tees[+f[7]]||"member",
-    strengths:unbits(+f[8]||0),weaknesses:unbits(+f[9]||0),trust:f[10]||""};
+    strengths:unbits(+f[8]||0),weaknesses:unbits(+f[9]||0),trust:safeText(f[10])};
   const base=buildBag(p.drTotal,p.c7,p.hcp);
   p.bag=base;
   const bagd=f[11]||"";
   if(v2){  // ALB2: full dump after "*", index:carry:total:out otherwise
     if(bagd.startsWith("*")){
       p.bag=bagd.slice(1).split(",").filter(Boolean).map(s=>{const [club,c,t,o]=s.split("~");
-        return {club,carry:+c,total:+t,out:o==="1"};});}
+        return {club:safeText(club,24)||"Club",carry:+c,total:+t,out:o==="1"};});}
     else bagd.split(",").filter(Boolean).forEach(s=>{const [i,c,t,o]=s.split(":");
       if(p.bag[+i]){p.bag[+i].carry=+c;p.bag[+i].total=+t;if(o==="1")p.bag[+i].out=true;}});
     return p;}
@@ -1660,7 +1670,7 @@ function decodeProfile(v){
     const q=s.split("~"), head=q[0];
     const custom=head.startsWith("'");
     const d=custom?null:base[parseInt(head,36)];
-    const club=custom?head.slice(1):(d?d.club:"Club");
+    const club=custom?(safeText(head.slice(1),24)||"Club"):(d?d.club:"Club");
     if(q.length===1&&d)return {club,carry:d.carry,total:d.total};
     return {club,carry:+q[1],total:+q[2],out:q[3]==="1"};});
   return p;}
@@ -1822,7 +1832,7 @@ function customClubSheet(){
   sheet.addEventListener("click",e=>{
     if(e.target.id==="ss-x"){sheet.remove();return}
     if(e.target.id!=="cc-go"&&!e.target.closest("#cc-go"))return;
-    const name=document.getElementById("cc-name").value.replace(/[~,|]/g,"").trim();
+    const name=safeText(document.getElementById("cc-name").value.replace(/[~,|]/g,""),24);
     const carry=+document.getElementById("cc-carry").value;
     if(!name){toast("Give the club a name first.");return}
     const p=store.p;
