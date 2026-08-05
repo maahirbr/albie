@@ -286,8 +286,18 @@ th{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:u
 .ghead td{font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;
   color:var(--slate);padding-top:14px;border-bottom:0}
 #bagtable input[type=number]{padding:8px 6px;font-size:1rem}
-.clubout{opacity:.4}
-.clubout td{text-decoration:line-through}
+/* crossed off the card: strike the club, dim the line, stamp OUT in the
+   margin. The whole row is the tap target. */
+#bagtable tr[data-row]{cursor:pointer}
+/* the whole row already toggles, so this marker does not need to be a big
+   target too: keep it narrow enough that "3-wood" stays on one line */
+.inout{width:34px}
+.inbtn{background:none;border:0;padding:10px 1px;min-width:32px;min-height:36px;cursor:pointer;
+  font:600 .55rem var(--mono);letter-spacing:.06em;color:var(--brick);text-align:left}
+.clubname{white-space:nowrap}
+.clubout{opacity:.5}
+.clubout .clubname{text-decoration:line-through;text-decoration-thickness:1.1px}
+.clubout .bagnum{text-decoration:line-through;text-decoration-thickness:1px}
 input[type=checkbox]{accent-color:#8A9A78;width:17px;height:17px}
 .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.66rem;font-weight:600;
   background:var(--sandbg);letter-spacing:.08em;text-transform:uppercase;font-family:var(--mono)}
@@ -407,8 +417,27 @@ input[type=text],input[type=number],input[type=email],textarea{
 input[type=text]:focus,input[type=number]:focus,input[type=email]:focus,textarea:focus{
   outline:none;border-bottom-color:var(--sage);box-shadow:0 1.3px 0 var(--sage);
   background-color:#8A9A780A}
-/* numbers are card figures: mono, tabular, so columns line up */
-input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+/* numbers are card figures: mono, tabular, so columns line up. The browser's
+   own spinner arrows were the last piece of unstyled chrome in the app. */
+input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums;
+  appearance:textfield;-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+/* the stepper that replaces them: thin ink, the app's own line-work. The rule
+   runs under the whole field, stepper included, so it reads as one control. */
+.numfield{display:flex;align-items:center;gap:6px;
+  border-bottom:1.3px solid var(--line);transition:border-color .2s,box-shadow .2s}
+.numfield.narrow{max-width:184px}
+.numfield input[type=number]{flex:1;min-width:0;border-bottom:0}
+.numfield input[type=number]:focus{box-shadow:none;background-color:transparent}
+.numfield:focus-within{border-bottom-color:var(--sage);box-shadow:0 1.3px 0 var(--sage)}
+.numstep{display:flex;gap:4px;flex:0 0 auto;padding:3px 0}
+.numstep button{width:32px;height:32px;border:1px solid var(--line);border-radius:4px;
+  background:transparent;color:var(--dim);font:400 1.05rem/1 var(--mono);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color .2s,color .2s,transform .13s var(--settle)}
+.numstep button:hover{border-color:var(--sage);color:var(--ink)}
+.numstep button:active{transform:translateY(1px)}
 /* the notes field is ruled paper: a line under every line of writing, and the
    rules scroll with the text rather than sitting behind it */
 textarea{border-bottom:0;padding:0 2px;line-height:27px;min-height:81px;resize:vertical;
@@ -421,40 +450,17 @@ input::placeholder,textarea::placeholder{color:#8D866E}
 /* two exceptions that are already the right idiom and stay boxed: the bag's
    tabular cells (a scorecard grid IS ruled boxes) and the profile-code box */
 #bagtable input[type=number]{border:1px solid #DCD5C0;border-radius:6px;padding:8px 6px}
-/* a rule should be as long as the thing written on it: a 2-digit score does
-   not need a full-width line under it */
-#rs-score{max-width:118px;font-size:1.15rem}
+#rs-score{font-size:1.15rem}
 .copyout textarea{border:1px solid var(--sage);border-radius:8px;padding:8px;
   line-height:1.4;background-image:none;min-height:64px}
 /* the bag reads as a scorecard: mono tabular cells on a ruled sheet */
 #bagtable input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums;
   text-align:center;border-radius:6px;background:transparent;border-color:#DCD5C0}
 #bagtable input[type=number]:focus{background:var(--card)}
-/* checkbox = a split-flap tile, the airport information-board mechanism: the
-   card rotates on its X axis from blank to ticked, with a hairline seam across
-   the middle. Mechanical rather than glossy, which is the same language as the
-   ASCII data fields. Deliberately NOT a golf ball: the ball glyph already
-   means "rating" in this app, and one glyph should mean one thing. */
-input[type=checkbox]{appearance:none;-webkit-appearance:none;width:21px;height:21px;
-  background:none;border:0;padding:0;cursor:pointer;position:relative;vertical-align:-4px;
-  transform-style:preserve-3d;
-  transition:transform .42s var(--spring)}
-/* the two faces of the flap. Both carry the seam, so it never breaks mid-turn */
-input[type=checkbox]::before,input[type=checkbox]::after{content:"";position:absolute;
-  inset:0;border:1.3px solid #A9A28C;border-radius:4px;
-  backface-visibility:hidden;-webkit-backface-visibility:hidden;
-  background:linear-gradient(#33362B08 0 calc(50% - .5px),#33362B26 calc(50% - .5px) calc(50% + .5px),#33362B08 calc(50% + .5px) 100%)}
-/* the ticked face rides pre-flipped on the back, drawn with a real check */
-input[type=checkbox]::after{transform:rotateX(180deg);border-color:var(--sage);
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='21' height='21'><path d='M5 11l4 4 7.5-9' fill='none' stroke='%238A9A78' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/></svg>"),
-    linear-gradient(#8A9A7814 0 calc(50% - .5px),#33362B26 calc(50% - .5px) calc(50% + .5px),#8A9A7814 calc(50% + .5px) 100%);
-  background-repeat:no-repeat;background-position:center;background-size:100% 100%,100% 100%}
-input[type=checkbox]:checked{transform:perspective(70px) rotateX(180deg)}
-input[type=checkbox]:active{transform:perspective(70px) scale(.9)}
-input[type=checkbox]:checked:active{transform:perspective(70px) rotateX(180deg) scale(.9)}
-input[type=checkbox]:focus-visible{outline:2px solid var(--brick);outline-offset:3px}
-/* reduced motion is handled globally further down (* transition/animation:none),
-   which lands the flap on its ticked face instantly. Nothing extra needed. */
+/* No checkbox anywhere in the app any more. The one place that had one (a club
+   in or out of the bag) crosses the club off the card instead: golf's own
+   notation beats a widget, and the row is a far bigger tap target than a box.
+   The split-flap tile that lived here went with it. */
 /* the club name is the swap control: tapping it offers the same group */
 .clubname{background:none;border:0;padding:2px 0;font:inherit;color:inherit;
   cursor:pointer;text-align:left;border-bottom:1px dashed transparent;
@@ -700,8 +706,8 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       </div>
       <p class="small" style="margin-top:2px">Slide it, or type the exact number. A guess is fine.</p>
       <div class="row">
-        <div><label>Driver total, flat (yds)</label><input type="number" id="ob-dr" inputmode="numeric" placeholder="e.g. 240"></div>
-        <div><label>7-iron carry (yds)</label><input type="number" id="ob-7i" inputmode="numeric" placeholder="e.g. 150"></div>
+        <div><label>Driver total, flat (yds)</label><input type="number" id="ob-dr" inputmode="numeric" placeholder="e.g. 240" data-step="5"></div>
+        <div><label>7-iron carry (yds)</label><input type="number" id="ob-7i" inputmode="numeric" placeholder="e.g. 150" data-step="5"></div>
       </div>
       <label>Usual ball flight</label>
       <div class="chips grid3" id="ob-shape" data-single>
@@ -807,7 +813,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <label>Your position. Slide it, or tap the hole</label>
       <div class="band" id="posband"></div>
       <div class="row">
-        <div><label>Distance to pin (yds)</label><input type="number" id="sit-dist" inputmode="numeric" placeholder="Type it, or slide above"></div>
+        <div><label>Distance to pin (yds)</label><input type="number" id="sit-dist" inputmode="numeric" placeholder="Type it, or slide above" data-step="5"></div>
       </div>
       </details>
       <details class="grp" open><summary>Wind</summary>
@@ -876,7 +882,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
     </div>
     <div class="card">
       <p class="eyebrow">End of round</p>
-      <label>Score today</label><input type="number" id="rs-score" inputmode="numeric" placeholder="e.g. 82">
+      <label>Score today</label><input type="number" id="rs-score" inputmode="numeric" placeholder="e.g. 82" data-narrow data-step="1">
       <label>Caddie overall</label>
       <div class="raterow"><div class="stars" id="rs-stars"><span></span><span></span><span></span><span></span><span></span></div>
       <span class="ratecount" id="rs-count">Tap a ball</span></div>
@@ -1453,7 +1459,8 @@ $("#ob-hcp-slide").addEventListener("input",e=>$("#ob-hcp").value=e.target.value
 $("#ob-hcp").addEventListener("input",e=>$("#ob-hcp-slide").value=Math.min(36,+e.target.value||0));
 $("#redo-onboard").addEventListener("click",()=>show("onboard"));
 $("#addclub").addEventListener("change",e=>{
-  if(e.target.value)addClub(e.target.value);e.target.value="";});
+  const v=e.target.value;e.target.value="";
+  if(v==="__other")customClubSheet();else if(v)addClub(v);});
 $("#rebuild-bag").addEventListener("click",()=>{const p=store.p;
   if(!p){toast("Set up your profile first.");return}
   p.bag=buildBag(p.drTotal,p.c7,p.hcp);store.p=p;renderBag();
@@ -1526,12 +1533,18 @@ const CLUBICONS={
    number. Sorted into the bag by carry, so a 5-wood lands where it belongs. */
 const CLUB_LIB=[
   {club:"2-wood",  est:(d,c,s)=>d*0.955},
+  {club:"4-wood",  est:(d,c,s)=>d*0.905},
   {club:"5-wood",  est:(d,c,s)=>d*0.89},
   {club:"7-wood",  est:(d,c,s)=>d*0.855},
+  {club:"9-wood",  est:(d,c,s)=>d*0.825},
+  {club:"11-wood", est:(d,c,s)=>d*0.80},
   {club:"2-hybrid",est:(d,c,s)=>d*0.865},
   {club:"3-hybrid",est:(d,c,s)=>d*0.825},
   {club:"4-hybrid",est:(d,c,s)=>d*0.79},
   {club:"5-hybrid",est:(d,c,s)=>d*0.755},
+  {club:"6-hybrid",est:(d,c,s)=>d*0.725},
+  {club:"7-hybrid",est:(d,c,s)=>d*0.70},
+  {club:"Driving iron",est:(d,c,s)=>c+5*s},
   {club:"1i",      est:(d,c,s)=>c+6*s},
   {club:"2i",      est:(d,c,s)=>c+5*s},
   {club:"3i",      est:(d,c,s)=>c+4*s},
@@ -1542,7 +1555,9 @@ const CLUB_LIB=[
   {club:"56°",     est:(d,c,s)=>c-3*s-24},
   {club:"58°",     est:(d,c,s)=>c-3*s-29},
   {club:"60°",     est:(d,c,s)=>c-3*s-34},
-  {club:"64°",     est:(d,c,s)=>c-3*s-42}];
+  {club:"62°",     est:(d,c,s)=>c-3*s-38},
+  {club:"64°",     est:(d,c,s)=>c-3*s-42},
+  {club:"Chipper", est:(d,c,s)=>Math.max(20,c-3*s-30)}];
 const clubGroup=n=>/driver|wood|hybrid/i.test(n)?"Woods & hybrids"
   :/^\d+i$|iron/i.test(n)?"Irons":"Wedges";
 const GRP_ORDER={"Woods & hybrids":0,"Irons":1,"Wedges":2};
@@ -1568,14 +1583,15 @@ function renderBag(){const p=store.p;if(!p)return;
   if(sel){const have=new Set(p.bag.map(b=>b.club));
     sel.innerHTML="<option value=''>Add a club…</option>"+
       CLUB_LIB.filter(l=>!have.has(l.club))
-        .map(l=>`<option value='${l.club}'>${l.club}</option>`).join("");}
+        .map(l=>`<option value='${l.club}'>${l.club}</option>`).join("")+
+      "<option value='__other'>Something else…</option>";}
   const inPlay=p.bag.filter(b=>!b.out).length;
   $("#bag-count").textContent=`${inPlay} of ${p.bag.length} clubs in play`;
   let lastG="";
   $("#bagtable").innerHTML="<tr><th>In</th><th>Club</th><th class='bagnum'>Carry</th><th class='bagnum'>Total</th><th></th></tr>"+
    p.bag.map((b,i)=>{const g=grp(i);const head=g!==lastG?`<tr class='ghead'><td colspan='5'><span style='display:inline-flex;align-items:center;gap:7px'>${CLUBICONS[g]||""}${g}</span></td></tr>`:"";lastG=g;
-   return head+`<tr class='${b.out?"clubout":""}'>
-   <td><input type='checkbox' data-i='${i}' data-f='out' ${b.out?"":"checked"}></td>`
+   return head+`<tr class='${b.out?"clubout":""}' data-row='${i}'>
+   <td class='inout'><button type='button' class='inbtn' data-io='${i}' aria-pressed='${b.out?"false":"true"}' aria-label='${b.out?"Put the "+b.club+" back in the bag":"Take the "+b.club+" out of the bag"}'>${b.out?"OUT":""}</button></td>`
    +`<td><button type='button' class='clubname' data-swap='${i}' title='Swap ${b.club}'>${b.club}</button></td><td class='bagnum'><input class='num' data-i='${i}' data-f='carry' type='number' value='${b.carry}'></td>
    <td class='bagnum'><input class='num' data-i='${i}' data-f='total' type='number' value='${b.total}'></td>
    <td class='bagx'><button type='button' class='rmclub' data-rm='${i}' aria-label='Remove ${b.club}'>×</button></td></tr>`}).join("");}
@@ -1583,13 +1599,21 @@ function renderBag(){const p=store.p;if(!p)return;
    stacked a fresh copy on every render, and every change re-renders. */
 $("#bagtable").addEventListener("change",e=>{const t=e.target;if(t.dataset.i===undefined)return;
   const p=store.p;
-  if(t.dataset.f==="out"){p.bag[+t.dataset.i].out=!t.checked;}
-  else p.bag[+t.dataset.i][t.dataset.f]=+t.value;
+  p.bag[+t.dataset.i][t.dataset.f]=+t.value;
   store.p=p;renderBag();
   if(typeof autoAsk==="function")autoAsk();});   // carries changed: re-think
+/* a club is crossed off the card, not unticked in a box: the whole ROW is the
+   control, which is also the biggest tap target in the app. The number cells
+   and the swap/remove buttons keep their own jobs. */
+function toggleClub(i){const p=store.p;if(!p||!p.bag[i])return;
+  p.bag[i].out=!p.bag[i].out;store.p=p;renderBag();
+  if(typeof autoAsk==="function")autoAsk();}
 $("#bagtable").addEventListener("click",e=>{
   const sw=e.target.closest("[data-swap]");if(sw){swapClub(+sw.dataset.swap);return}
-  const rm=e.target.closest("[data-rm]");if(rm)removeClub(+rm.dataset.rm);});
+  const rm=e.target.closest("[data-rm]");if(rm){removeClub(+rm.dataset.rm);return}
+  const io=e.target.closest("[data-io]");if(io){toggleClub(+io.dataset.io);return}
+  if(e.target.closest("input"))return;   // editing a carry is not a toggle
+  const tr=e.target.closest("tr[data-row]");if(tr)toggleClub(+tr.dataset.row);});
 /* real bags swap a sand wedge for a 60, and drop a club to make room. Both
    changes push straight through to the caddie, and remove is undoable. */
 function removeClub(i){const p=store.p;if(!p||!p.bag[i])return;
@@ -1611,6 +1635,36 @@ function clubSheet(title,rows,onPick){
     const c=e.target.closest(".chip");if(!c)return;
     document.getElementById("scoresheet").remove();
     onPick(c.dataset.v);});}
+/* no library covers every bag: a second 3-wood, a 2-iron, a 9-wood, whatever
+   is actually in there. Name it and give it a carry and the engine treats it
+   like any other club. Separators are stripped so the profile code survives. */
+function customClubSheet(){
+  const ex=document.getElementById("scoresheet");if(ex)ex.remove();
+  document.body.insertAdjacentHTML("beforeend",
+   `<div id='scoresheet'><button id='ss-x' aria-label='Close'>×</button>
+    <span class='ss-t'>A club that is not on the list</span>
+    <label for='cc-name'>What is it</label>
+    <input type='text' id='cc-name' maxlength='14' placeholder="e.g. 2-iron, 9-wood, chipper">
+    <label for='cc-carry'>Carry (yds)</label>
+    <input type='number' id='cc-carry' inputmode='numeric' placeholder='e.g. 205' data-narrow data-step='5'>
+    <button class='btn2 sage' data-verb='Add' id='cc-go'>This club to the bag</button></div>`);
+  wireSteppers();
+  const sheet=document.getElementById("scoresheet");
+  document.getElementById("cc-name").focus();
+  sheet.addEventListener("click",e=>{
+    if(e.target.id==="ss-x"){sheet.remove();return}
+    if(e.target.id!=="cc-go"&&!e.target.closest("#cc-go"))return;
+    const name=document.getElementById("cc-name").value.replace(/[~,|]/g,"").trim();
+    const carry=+document.getElementById("cc-carry").value;
+    if(!name){toast("Give the club a name first.");return}
+    const p=store.p;
+    if(p.bag.some(b=>b.club.toLowerCase()===name.toLowerCase())){
+      toast(name+" is already in the bag.");return}
+    if(!carry||carry<10||carry>400){toast("Give it a carry between 10 and 400 yards.");return}
+    p.bag.push({club:name,carry,total:carry+(/wood|hybrid|driver/i.test(name)?14:8)});
+    sortBag(p.bag);store.p=p;renderBag();sheet.remove();
+    toast(`${name} added at ${carry} carry.`);
+    if(typeof autoAsk==="function")autoAsk();});}
 function swapClub(i){const p=store.p;if(!p||!p.bag[i])return;
   const old=p.bag[i],grp=clubGroup(old.club);
   const have=new Set(p.bag.map(b=>b.club));
@@ -1631,6 +1685,29 @@ function swapClub(i){const p=store.p;if(!p||!p.bag[i])return;
           toast(`${old.club} out, ${name} in at ${carry} carry.`);
           if(typeof autoAsk==="function")autoAsk();});});}
 
+/* Standalone number fields get the app's own stepper. Nudging a carry by a
+   yard with a phone keyboard is miserable. The bag's tabular cells are left
+   alone (26 pairs of controls on one screen is furniture, not help), and so is
+   the handicap field, which already has a slider beside it. */
+function wireSteppers(){
+  document.querySelectorAll("input[type=number]").forEach(inp=>{
+    if(inp.dataset.stepped||inp.closest("#bagtable")||inp.closest(".hcp-row"))return;
+    inp.dataset.stepped="1";
+    const wrap=document.createElement("div");
+    wrap.className="numfield"+(inp.dataset.narrow!==undefined?" narrow":"");
+    inp.parentNode.insertBefore(wrap,inp);wrap.appendChild(inp);
+    wrap.insertAdjacentHTML("beforeend",
+      `<span class='numstep'><button type='button' tabindex='-1' data-d='-1' aria-label='Less'>&minus;</button><button type='button' tabindex='-1' data-d='1' aria-label='More'>+</button></span>`);
+    wrap.querySelector(".numstep").addEventListener("click",e=>{
+      const b=e.target.closest("button");if(!b)return;
+      const st=+inp.dataset.step||1;
+      let v=(+inp.value||0)+(+b.dataset.d)*st;
+      if(inp.min!=="")v=Math.max(+inp.min,v);
+      if(inp.max!=="")v=Math.min(+inp.max,v);
+      inp.value=v;
+      inp.dispatchEvent(new Event("input",{bubbles:true}));
+      inp.dispatchEvent(new Event("change",{bubbles:true}));});});}
+wireSteppers();
 /* text hygiene: no em-dash cadence anywhere the caddie speaks */
 function fmt(s){if(!s)return s;
   return s.replace(/\s*[\u2013\u2014]\s*/g,". ").replace(/\.\s+([a-z])/g,(m,c)=>". "+c.toUpperCase())
