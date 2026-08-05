@@ -92,7 +92,7 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
   transition:transform .13s var(--settle),background .2s,color .2s,border-color .2s,box-shadow .13s}
 .btn2::before{content:attr(data-verb);position:absolute;top:-8px;left:13px;
   background:var(--card);padding:0 8px;
-  font:600 .58rem var(--mono);letter-spacing:.15em;text-transform:uppercase;color:var(--brick)}
+  font:600 .58rem var(--mono);letter-spacing:.15em;text-transform:uppercase;color:var(--slate)}
 .btn2:hover{background:#33362B08}
 /* pressed like a key: the plate travels down onto its own lip */
 .btn2:active{transform:translateY(1.5px);box-shadow:0 0 0 #33362B22}
@@ -107,7 +107,12 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .btn2.sage{border-color:var(--sage)}
 .btn2.sage::before{color:#5C6B4F}
 .btn2.sage:hover{background:#8A9A7814}
+/* brick means STOP and nothing else. A brick verb on Copy, Redo, Send and
+   Open sat one shade away from Reset and Clear and blunted the only colour
+   the app uses to say "this destroys something". Default verbs are slate,
+   the same microtype colour every other section label uses. */
 .btn2.danger{color:var(--brick);border-color:var(--brick)}
+.btn2.danger::before{color:var(--brick)}
 .btn2.danger:hover{background:#A4472F0E}
 .btn2.danger.armed{border-width:1.7px;background:#A4472F1C;font-weight:600}
 /* buttons answer the hand: an arrow slides in on hover/press */
@@ -410,7 +415,9 @@ textarea{border-bottom:0;padding:0 2px;line-height:27px;min-height:81px;resize:v
   background-image:repeating-linear-gradient(transparent 0 26px,var(--line) 26px 27px);
   background-attachment:local}
 textarea:focus{box-shadow:none}
-input::placeholder,textarea::placeholder{color:#A9A28C}
+/* a field with no walls leans on its placeholder to read as a field at all,
+   so the hint has to clear the 3:1 floor. #A9A28C measured 2.3:1 on card. */
+input::placeholder,textarea::placeholder{color:#8D866E}
 /* two exceptions that are already the right idiom and stay boxed: the bag's
    tabular cells (a scorecard grid IS ruled boxes) and the profile-code box */
 #bagtable input[type=number]{border:1px solid #DCD5C0;border-radius:6px;padding:8px 6px}
@@ -800,7 +807,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <label>Your position. Slide it, or tap the hole</label>
       <div class="band" id="posband"></div>
       <div class="row">
-        <div><label>Distance to pin (yds)</label><input type="number" id="sit-dist" inputmode="numeric" placeholder="Type it, or slide the band above"></div>
+        <div><label>Distance to pin (yds)</label><input type="number" id="sit-dist" inputmode="numeric" placeholder="Type it, or slide above"></div>
       </div>
       </details>
       <details class="grp" open><summary>Wind</summary>
@@ -869,7 +876,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
     </div>
     <div class="card">
       <p class="eyebrow">End of round</p>
-      <label>Score today</label><input type="number" id="rs-score" inputmode="numeric">
+      <label>Score today</label><input type="number" id="rs-score" inputmode="numeric" placeholder="e.g. 82">
       <label>Caddie overall</label>
       <div class="raterow"><div class="stars" id="rs-stars"><span></span><span></span><span></span><span></span><span></span></div>
       <span class="ratecount" id="rs-count">Tap a ball</span></div>
@@ -951,7 +958,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <form id="course-req">
         <label for="cr-name">Course name</label>
         <input type="text" id="cr-name" placeholder="e.g. Royal County Down" required>
-        <button data-verb="Send" class="btn2" type="submit">This course request</button>
+        <button data-verb="Send" class="btn2" type="submit">Course request</button>
       </form>
       <p class="small hidden" id="cr-done">Noted. It goes on the ingest list.</p>
     </div>
