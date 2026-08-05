@@ -237,6 +237,10 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .stars span.on{background:radial-gradient(circle at 32% 28%, #FFFFFF 0 30%, #F2EFE6 60%, #D5CFBE 100%);
   border-color:var(--sage);box-shadow:inset -2px -3px 5px #00000014, 0 0 0 2px #8A9A7855;transform:scale(1.08)}
 .small{font-size:.82rem;color:var(--dim)}
+/* inline link in body copy: ink on a sage rule, never browser blue */
+.inl{color:var(--ink);text-decoration:none;border-bottom:1.5px solid var(--sage);
+  padding-bottom:1px}
+.inl:hover{border-bottom-color:var(--brick)}
 /* thinking orb: a rolling golf ball for real async waits (weather, GPS, 3D).
    Never shown for instant computation - a fake spinner is a cosmetic lie. */
 .orb{display:inline-block;width:13px;height:13px;border-radius:50%;vertical-align:-2px;
@@ -1039,6 +1043,30 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <p class="eyebrow">Buy Albie a beer</p>
       <pre class="ab-field" id="beer-field" aria-hidden="true" style="margin:6px auto 2px"></pre>
       <p class="small">Coming soon. Albie stays free, for the love of golf.</p>
+    </div>
+    <!-- Privacy, written from what the code actually does. If any of this stops
+         being true, change the code or change this text, not neither. -->
+    <div class="card" id="privacy">
+      <p class="eyebrow">Privacy</p>
+      <p class="small" style="font-size:.9rem">Albie has no accounts, no analytics,
+        no trackers and no cookies. Nobody is measuring you.</p>
+      <p class="small" style="font-size:.9rem"><b>Stays on your phone.</b> Your
+        profile, bag, round log and preferences are saved in this browser and never
+        uploaded. Your profile code is also kept in the address bar after the # sign,
+        which browsers never send to a server. Clearing your browser data erases all
+        of it, and nobody else has a copy, so keep your profile code somewhere safe.</p>
+      <p class="small" style="font-size:.9rem"><b>Leaves your phone only here.</b>
+        Live weather sends the course's coordinates, never yours, to open-meteo.com.
+        The 3D view downloads a graphics library from unpkg.com when you open it.
+        If you submit your email or request a course, that goes to Formspree, which
+        forwards it to Maahir, and it is used to reply to you and nothing else.
+        The site is hosted on GitHub Pages, so GitHub records ordinary web request
+        logs the way every website does.</p>
+      <p class="small" style="font-size:.9rem"><b>GPS.</b> Only runs when you turn it
+        on. Your position is used in the browser to place your ball and is never sent
+        anywhere or stored.</p>
+      <p class="small" style="font-size:.9rem">Questions, or want your email removed:
+        <a class="inl" href="mailto:maahirbharatram@gmail.com">maahirbharatram@gmail.com</a>.</p>
     </div>
     <p class="small" style="text-align:center;opacity:.7">Albie v1.0 · build 2026-08-05 · made in Delhi</p>
   </div>
