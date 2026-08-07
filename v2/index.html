@@ -1079,7 +1079,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <p class="small" style="font-size:.9rem">Questions, or want your email removed:
         <a class="inl" href="mailto:maahirbharatram@gmail.com">maahirbharatram@gmail.com</a>.</p>
     </div>
-    <p class="small" style="text-align:center;opacity:.7">Albie v1.0-v2 · build 2026-08-06 · made in Delhi</p>
+    <p class="small" style="text-align:center;opacity:.7">Albie v1.0-v2 · build 2026-08-07 · made in Delhi</p>
   </div>
 
   <div class="tabbar">
@@ -3492,7 +3492,7 @@ $("#save-round").addEventListener("click",()=>{const log=store.log;
     player:store.p});store.log=log;renderLog();
   $("#rs-notes").value="";$("#rs-score").value="";});
 $("#export").addEventListener("click",async()=>{
-  const payload=JSON.stringify({exported:new Date().toISOString(),version:"1.0-v2",build:"2026-08-06",
+  const payload=JSON.stringify({exported:new Date().toISOString(),version:"1.0-v2",build:"2026-08-07",
     profile:store.p,log:store.log},null,1);
   const fname=`caddie-feedback-${(store.p?.name||"tester").toLowerCase()}-${new Date().toISOString().slice(0,10)}.json`;
   if(window.claude?.downloads?.save){try{await window.claude.downloads.save({filename:fname,data:payload});

@@ -263,11 +263,25 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 @keyframes orbbob{50%{transform:translateY(-1.5px)}}
 /* scorecard notation: golf's own symbol vocabulary (circle under par, square
    over par, doubled ring for two+) — Fried Egg tagging pattern */
-.sym{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;
+.sym{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;
   padding:0 4px;border:1.2px solid currentColor;font-family:var(--mono);color:var(--ink)}
 .sym.circ{border-radius:999px}
 .sym.sq{border-radius:3px}
 .sym.dbl{box-shadow:0 0 0 2px var(--card),0 0 0 3.2px currentColor}
+/* the score-ink moment: a freshly logged symbol draws itself like a pencil
+   circling the number. The SVG stroke replaces the border for that one render;
+   its final frame is identical to the static border, so with animations off
+   (reduced motion) or on any later render the symbol looks exactly the same.
+   An eagle's double ring draws second, which is the flourish it earned. */
+.sym.fresh{border-color:transparent}
+.sym.fresh.dbl{box-shadow:0 0 0 2px var(--card)}
+.sym-ink{position:absolute;inset:-1.2px;width:auto;height:auto;overflow:visible;pointer-events:none}
+.sym-ink rect{fill:none;stroke:currentColor;stroke-width:1.4;vector-effect:non-scaling-stroke;
+  stroke-dasharray:100 100;stroke-dashoffset:0}
+@keyframes symdraw{from{stroke-dashoffset:100}}
+@media (prefers-reduced-motion: no-preference){
+  .sym.fresh .sym-ink rect{animation:symdraw .55s var(--settle) backwards}
+  .sym.fresh .sym-ink rect.r2{animation-delay:.3s}}
 .scard{border-collapse:collapse;min-width:340px}
 .scard td{padding:4px 3px;text-align:center;font-size:.8rem;border-bottom:1px solid var(--line)}
 .scard .ghead td{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;color:var(--slate);text-transform:uppercase;padding-top:9px;border-bottom:0}
@@ -582,6 +596,7 @@ select{appearance:none;-webkit-appearance:none;font-family:var(--disp);font-weig
 .hm-pin line{stroke:var(--brick);stroke-width:1.6}.hm-pin path{fill:var(--brick)}
 .hm-ball{fill:#FFFFFF;stroke:var(--ink);stroke-width:1.3}
 .hm-tick{stroke:#33362B1E;stroke-width:1}
+.hm-el{fill:none;stroke:#33362B55;stroke-width:.9;stroke-linejoin:round}
 .hm-lab{font:8px var(--mono);fill:#8A8468;letter-spacing:.06em}
 .hm-rough{fill:#8A9A780C;stroke:none}
 .hm-tr{fill:#5C6B4F22;stroke:#5C6B4F44;stroke-width:.8}
@@ -1079,7 +1094,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <p class="small" style="font-size:.9rem">Questions, or want your email removed:
         <a class="inl" href="mailto:maahirbharatram@gmail.com">maahirbharatram@gmail.com</a>.</p>
     </div>
-    <p class="small" style="text-align:center;opacity:.7">Albie v1.0 · build 2026-08-06 · made in Delhi</p>
+    <p class="small" style="text-align:center;opacity:.7">Albie v1.0 · build 2026-08-07 · made in Delhi</p>
   </div>
 
   <div class="tabbar">
@@ -2725,6 +2740,35 @@ function renderHoleMap(h){
   for(let y=50;y<cardLen;y+=50){const mx=SX(y/cf);
     ticks+=`<line x1='${mx.toFixed(0)}' y1='${Hh-5}' x2='${mx.toFixed(0)}' y2='${Hh}' class='hm-tick'/>`;
     if(y%100===0)ticks+=`<text x='${mx.toFixed(0)}' y='${Hh-8}' text-anchor='middle' class='hm-lab'>${y}</text>`;}
+  /* slope chevrons: the SRTM profile drawn as survey marks along the line,
+     apex pointing uphill. The data already ships (el.p, 9 stations); until now
+     the map said nothing the "uphill +4" chip claimed. One chevron where a
+     station-to-station rise is real (>=2y), doubled where it is steep (>=4y),
+     so density reads as steepness the way contour spacing does on a topo. */
+  if(g.el&&g.el.p&&g.el.p.length>1&&g.cl.length>1){
+    const cl=g.cl,segs=[];let Ltot=0;
+    for(let i=0;i<cl.length-1;i++){const d=Math.hypot(cl[i+1][0]-cl[i][0],cl[i+1][1]-cl[i][1]);segs.push(d);Ltot+=d;}
+    const at=s=>{let acc=0;
+      for(let i=0;i<segs.length;i++){
+        if(acc+segs[i]>=s||i===segs.length-1){const t=segs[i]?(s-acc)/segs[i]:0;
+          return {p:[cl[i][0]+(cl[i+1][0]-cl[i][0])*t,cl[i][1]+(cl[i+1][1]-cl[i][1])*t],
+                  t:[cl[i+1][0]-cl[i][0],cl[i+1][1]-cl[i][1]]};}
+        acc+=segs[i];}
+    };
+    const pE=g.el.p,nSeg=pE.length-1;
+    for(let i=0;i<nSeg;i++){const dz=pE[i+1]-pE[i];
+      if(Math.abs(dz)<2)continue;
+      const {p,t}=at(Ltot*(i+0.5)/nSeg);
+      // to screen space: X = along (local y), Y = lateral (local x)
+      const px=SX(p[1]),py=SY(p[0]);
+      let tx=t[1],ty=t[0];const tl=Math.hypot(tx,ty)||1;tx/=tl;ty/=tl;
+      if(dz<0){tx=-tx;ty=-ty;}          // apex faces the higher ground
+      const nx=-ty,ny=tx;
+      const chev=(ox,oy)=>{const ax=px+tx*3.2+ox,ay=py+ty*3.2+oy;
+        return `<path d='M${(ax-tx*5.5+nx*3.8).toFixed(1)} ${(ay-ty*5.5+ny*3.8).toFixed(1)} L${ax.toFixed(1)} ${ay.toFixed(1)} L${(ax-tx*5.5-nx*3.8).toFixed(1)} ${(ay-ty*5.5-ny*3.8).toFixed(1)}' class='hm-el'/>`;};
+      ticks+=chev(0,0);
+      if(Math.abs(dz)>=4)ticks+=chev(-tx*5,-ty*5);}
+  }
   const partial=!(g.fw&&g.fw.length)||!(g.gn&&g.gn.length);
   const calNote=straightUnderCard?` <em class='hm-warn'>· straight-line map, card ${g.card}y</em>`
     :Math.abs(cf-1)>0.03?` <em class='hm-warn'>· ×${cf.toFixed(2)} card-calibrated</em>`:"";
@@ -3376,20 +3420,34 @@ $("#trust-toggle").addEventListener("click",()=>{const tc=$("#trustcard");
 /* ---------- log ---------- */
 /* the scorecard: today's round on the current course, every hole tappable
    to add or correct a score, scorecard notation throughout */
+/* One builder for every scorecard-notation symbol. fresh = this score was
+   logged moments ago and has not been re-rendered since, so the notation
+   draws itself once (see .sym-ink). Level scores carry no symbol, as ever. */
+function scoreSym(score,par,fresh){
+  const rel=score-par;
+  if(rel===0)return String(score);
+  const circ=rel<0,dbl=Math.abs(rel)>=2;
+  const ink=(fresh&&String(score).length===1)
+    ?`<svg class='sym-ink' viewBox='0 0 22 22' preserveAspectRatio='none' aria-hidden='true'>`+
+      (dbl?`<rect class='r2' x='-1.8' y='-1.8' width='25.6' height='25.6' rx='${circ?13:5}' pathLength='100'/>`:"")+
+      `<rect x='.7' y='.7' width='20.6' height='20.6' rx='${circ?10.5:3.5}' pathLength='100'/></svg>`:"";
+  return `<span class='sym ${circ?"circ":"sq"}${dbl?" dbl":""}${ink?" fresh":""}'>${ink}${score}</span>`;}
+function scoreFresh(e){
+  return !e.edited&&e.t&&(Date.now()-Date.parse(e.t))<90000;}
+
 function renderScorecard(){
   const el=document.getElementById("scorecard");if(!el)return;
   const c=COURSES[cur.course];
   const today=new Date().toISOString().slice(0,10);
   const scores={};
   store.log.forEach(e=>{if(e.type==="hole"&&e.course===c.slug
-    &&(e.t||"").slice(0,10)===today)scores[e.hole]=e.score;});
-  const cell=h=>{const s=scores[h.n],rel=s!=null?s-h.par:null;
-    return `<td data-sc='${h.n}' data-par='${h.par}' class='scc'>${s!=null
-      ?(rel===0?s:`<span class='sym ${rel<0?"circ":"sq"} ${Math.abs(rel)>=2?"dbl":""}'>${s}</span>`)
-      :"·"}</td>`;};
+    &&(e.t||"").slice(0,10)===today)scores[e.hole]={s:e.score,fresh:scoreFresh(e)};});
+  const cell=h=>{const sc=scores[h.n];
+    return `<td data-sc='${h.n}' data-par='${h.par}' class='scc'>${sc!=null
+      ?scoreSym(sc.s,h.par,sc.fresh):"·"}</td>`;};
   const half=(hs,label)=>{
     const played=hs.filter(h=>scores[h.n]!=null);
-    const tot=played.reduce((a,h)=>a+scores[h.n],0);
+    const tot=played.reduce((a,h)=>a+scores[h.n].s,0);
     return `<tr class='ghead'><td>${label}</td>${hs.map(h=>`<td>${h.n}</td>`).join("")}<td>Σ</td></tr>
      <tr><td class='small'>Par</td>${hs.map(h=>`<td class='small'>${h.par}</td>`).join("")}<td class='small num'>${hs.reduce((a,h)=>a+h.par,0)}</td></tr>
      <tr><td class='small'>You</td>${hs.map(cell).join("")}<td class='num'><b>${played.length?tot:"·"}</b></td></tr>`;};
@@ -3413,7 +3471,7 @@ function renderLog(){renderScorecard();renderKeep();const log=store.log;
    .map(({e,idx})=>`<div class='card' style='padding:9px 12px'>
     <span class='pill'>${e.type==="round"?"ROUND":e.type==="signup"?"LIST":e.type==="course-request"?"ASK":"H"+e.hole}</span>
     <span class='small'> ${e.type==="round"?`score ${e.score||"?"} · ${safeText(e.notes,240)}`
-      :e.type==="hole"?`scored ${e.score===e.par?e.score:`<span class='sym ${e.score<e.par?"circ":"sq"} ${Math.abs(e.score-e.par)>=2?"dbl":""}'>${e.score}</span>`} par ${e.par}`
+      :e.type==="hole"?`scored ${scoreSym(e.score,e.par,scoreFresh(e))} par ${e.par}`
       :e.type==="signup"?`updates signup pending export`
       :e.type==="choice"?`picked: ${e.pick}${e.rec?"":", against the recommendation"}`
       :e.type==="course-request"?`asked for ${safeText(e.course,80)}`
@@ -3435,7 +3493,7 @@ $("#save-round").addEventListener("click",()=>{const log=store.log;
     player:store.p});store.log=log;renderLog();
   $("#rs-notes").value="";$("#rs-score").value="";});
 $("#export").addEventListener("click",async()=>{
-  const payload=JSON.stringify({exported:new Date().toISOString(),version:"1.0",build:"2026-08-06",
+  const payload=JSON.stringify({exported:new Date().toISOString(),version:"1.0",build:"2026-08-07",
     profile:store.p,log:store.log},null,1);
   const fname=`caddie-feedback-${(store.p?.name||"tester").toLowerCase()}-${new Date().toISOString().slice(0,10)}.json`;
   if(window.claude?.downloads?.save){try{await window.claude.downloads.save({filename:fname,data:payload});
