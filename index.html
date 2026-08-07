@@ -1420,6 +1420,36 @@ async function fetchWx(){
   wx={t:Date.now(),spd:Math.round(cu.wind_speed_10m),dirDeg:cu.wind_direction_10m,
     temp:Math.round(cu.temperature_2m),slug:c.slug};
   kv.set("pc.wx",JSON.stringify(wx));return wx;}
+/* ---------- solar paper (Tier B taste gate, dappled-light rule) ----------
+   The cream breathes with the sun at the COURSE, not the phone: planning
+   St Andrews from Delhi at midnight feels like a Scottish morning. Neutral
+   (the locked #F4EFE1) through the playing day, warming toward the horizon,
+   cooling slightly at night. Max shift is ~3% of a channel, both paper and
+   card move together so their relationship never changes, and with no
+   coordinates or no JS the locked cream stands untouched.
+   REVERT: delete this block and its two call sites plus the interval. */
+function sunElev(lat,lon,t){
+  const d=t/86400000+2440587.5-2451545;
+  const g=(357.529+0.98560028*d)*Math.PI/180,q=(280.459+0.98564736*d)%360;
+  const L=(q+1.915*Math.sin(g)+0.02*Math.sin(2*g))*Math.PI/180,ob=23.439*Math.PI/180;
+  const dec=Math.asin(Math.sin(ob)*Math.sin(L));
+  const ra=Math.atan2(Math.cos(ob)*Math.sin(L),Math.cos(L));
+  const ha=((280.46061837+360.98564736629*d+lon)%360)*Math.PI/180-ra;
+  const la=lat*Math.PI/180;
+  return Math.asin(Math.sin(la)*Math.sin(dec)+Math.cos(la)*Math.cos(dec)*Math.cos(ha))*180/Math.PI;}
+function applySolarPaper(){
+  const c=COURSES[cur.course];
+  if(!c||!c.anchor)return;
+  const e=sunElev(c.anchor[0],c.anchor[1],Date.now());
+  const w=e>=30?0:e>=0?(30-e)/30:e>=-4?1:e>=-10?1-(-e-4)/3:-1;
+  const mix=(base,warm,cool)=>base.map((b,i)=>Math.round(b+(w>0?(warm[i]-b)*w:(cool[i]-b)*-w)));
+  const P=mix([244,239,225],[247,238,217],[240,238,228]);
+  const C=mix([248,244,232],[251,243,224],[244,243,235]);
+  const r=document.documentElement.style;
+  r.setProperty("--paper",`rgb(${P.join(",")})`);
+  r.setProperty("--card",`rgb(${C.join(",")})`);}
+setInterval(applySolarPaper,300000);
+
 /* the arrival moment: needle settles onto the true bearing, numbers count up.
    Counts only when a NEW reading lands (wx.t changes), so switching holes with
    the same reading repaints statically instead of re-performing. */
@@ -2219,6 +2249,7 @@ function resetSituation(){ // new hole: back to the tee, keep the wind (it doesn
   $("#sit-dist").value="";syncSide();
   setAskOpen(askOpenPref());sitSummary();}
 function renderHoles(){const c=COURSES[cur.course];store.cur=cur;
+  applySolarPaper();
   $("#hn-lab").textContent=`Hole ${cur.hole} of ${c.holes.length}`;
   $("#holestrip").innerHTML=c.holes.map(h=>`<div class='hole-n ${h.n===cur.hole?"on":""}' data-n='${h.n}'>${h.n}</div>`).join("");
   $$("#holestrip .hole-n").forEach(el=>el.addEventListener("click",()=>{cur.hole=+el.dataset.n;resetSituation();renderHoles();}));
@@ -3631,7 +3662,8 @@ renderCourseSel();renderHoles();renderLog();renderAbout();
 /* weather runs itself: silent fetch at the course's coordinates on open.
    The user never sets temperature; wind pre-sets unless they slide it.
    Fails soft (artifact, offline): mild air, calm unless slid. */
-(async()=>{try{await fetchWx();wxAuto=true;$("#wx-live").classList.add("on");applyWx();}catch(e){}})();
+(async()=>{applySolarPaper();
+  try{await fetchWx();wxAuto=true;$("#wx-live").classList.add("on");applyWx();}catch(e){}})();
 if(location.search.includes("gpssim"))setTimeout(()=>{show("caddie");gpsSimStart();},900);
 if(store.p)renderBag();
 const cta=document.getElementById("land-cta");
