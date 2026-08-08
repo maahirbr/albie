@@ -475,13 +475,18 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .numfield input[type=number]{flex:1;min-width:0;border-bottom:0}
 .numfield input[type=number]:focus{box-shadow:none;background-color:transparent}
 .numfield:focus-within{border-bottom-color:var(--sage);box-shadow:0 1.3px 0 var(--sage)}
-.numstep{display:flex;gap:4px;flex:0 0 auto;padding:3px 0}
-.numstep button{width:32px;height:32px;border:1px solid var(--line);border-radius:4px;
-  background:transparent;color:var(--dim);font:400 1.05rem/1 var(--mono);cursor:pointer;
+/* steppers read as ONE fitting in the chip geometry (pill ends, shared
+   hairline), not two floating default-UI squares. The last pre-plate holdout
+   named in the 2026-08-05 release note; the rest of that note is resolved. */
+.numstep{display:flex;gap:0;flex:0 0 auto;padding:3px 0}
+.numstep button{width:34px;height:30px;border:1px solid var(--line);border-radius:0;
+  background:var(--card);color:var(--dim);font:400 1.05rem/1 var(--mono);cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  transition:border-color .2s,color .2s,transform .13s var(--settle)}
+  transition:border-color .2s,color .2s,transform .3s var(--spring)}
+.numstep button:first-child{border-radius:999px 0 0 999px;border-right-width:0}
+.numstep button:last-child{border-radius:0 999px 999px 0}
 .numstep button:hover{border-color:var(--sage);color:var(--ink)}
-.numstep button:active{transform:translateY(1px)}
+.numstep button:active{transform:scale(.93)}
 /* the notes field is ruled paper: a line under every line of writing, and the
    rules scroll with the text rather than sitting behind it */
 textarea{border-bottom:0;padding:0 2px;line-height:27px;min-height:81px;resize:vertical;
@@ -1103,7 +1108,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <p class="small" style="font-size:.9rem">Questions, or want your email removed:
         <a class="inl" href="mailto:maahirbharatram@gmail.com">maahirbharatram@gmail.com</a>.</p>
     </div>
-    <p class="small" style="text-align:center;opacity:.7">Albie v1.0 · build 2026-08-07 · made in Delhi</p>
+    <p class="small" style="text-align:center;opacity:.7">Albie v1.0 · build 2026-08-08 · made in Delhi</p>
   </div>
 
   <div class="tabbar">
@@ -3553,7 +3558,7 @@ $("#save-round").addEventListener("click",()=>{const log=store.log;
     player:store.p});store.log=log;renderLog();
   $("#rs-notes").value="";$("#rs-score").value="";});
 $("#export").addEventListener("click",async()=>{
-  const payload=JSON.stringify({exported:new Date().toISOString(),version:"1.0",build:"2026-08-07",
+  const payload=JSON.stringify({exported:new Date().toISOString(),version:"1.0",build:"2026-08-08",
     profile:store.p,log:store.log},null,1);
   const fname=`caddie-feedback-${(store.p?.name||"tester").toLowerCase()}-${new Date().toISOString().slice(0,10)}.json`;
   if(window.claude?.downloads?.save){try{await window.claude.downloads.save({filename:fname,data:payload});
