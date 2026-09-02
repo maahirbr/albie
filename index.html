@@ -254,6 +254,26 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
   background-size:6px 6px;background-position:0 0,3px 3px}
 .stars span.on{background:radial-gradient(circle at 32% 28%, #FFFFFF 0 30%, #F2EFE6 60%, #D5CFBE 100%);
   border-color:var(--sage);box-shadow:inset -2px -3px 5px #00000014, 0 0 0 2px #8A9A7855;transform:scale(1.08)}
+/* the shot ledger: this hole's page in a yardage book. Rows are thin and
+   numeric so a glance reads the hole so far, not a feed of cards. */
+.ledger{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:10px 0}
+.lrow{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line)}
+.lrow:last-child{border-bottom:0}
+/* the shot in play: the same brick the tab indicator uses, so "you are here"
+   reads the same way everywhere in the app */
+.lrow.open{background:#8A9A7814}
+.lrow.open .lnum{color:var(--brick)}
+.lnum{font-family:var(--mono);font-size:.7rem;color:var(--dim);letter-spacing:.06em;min-width:16px}
+.lwhat{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.88rem}
+.lwhat{cursor:pointer}
+.lcaret{font-style:normal;color:var(--dim);font-size:.72rem}
+.lgot{font-family:var(--mono);font-size:.76rem;color:var(--dim);white-space:nowrap}
+.lstars{display:flex;gap:6px;flex:none}
+.lstars span{display:block;width:14px;height:14px;border-radius:50%;cursor:pointer;
+  background:radial-gradient(circle at 32% 28%, #D9D5C8 0 30%, #C7C2B1 60%, #AFA995 100%);
+  border:1.2px solid #A9A28C;transition:background .25s,border-color .25s}
+.lstars span.on{background:radial-gradient(circle at 32% 28%, #FFFFFF 0 30%, #F2EFE6 60%, #D5CFBE 100%);
+  border-color:var(--sage)}
 .small{font-size:.82rem;color:var(--dim)}
 /* inline link in body copy: ink on a sage rule, never browser blue */
 .inl{color:var(--ink);text-decoration:none;border-bottom:1.5px solid var(--sage);
@@ -849,6 +869,9 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
          your ball on it. Reference, not an input, so this does not reintroduce
          the inputs-then-output shape. -->
     <div class="card" id="holecard"></div>
+    <!-- Shots played on this hole, oldest first, the open one last. Lives
+         OUTSIDE #advice like #shotfb does, for the same reason. -->
+    <div class="ledger hidden" id="ledger"></div>
     <div class="holemap hidden" id="holemap"></div>
     <div class="card" id="askcard">
       <h2 class="askhead">Ask Albie</h2>
@@ -996,6 +1019,11 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
     <p class="eyebrow">Round log</p>
     <h1 id="log-count"></h1>
     <pre class="ab-field" id="log-field" aria-hidden="true" style="margin:4px auto 0"></pre>
+    <div class="card hidden" id="drivecard">
+      <p class="eyebrow">Measured off the tee</p>
+      <div id="drivestats"></div>
+      <p class="small" style="margin:8px 0 0">Total distance, not carry: where the ball finished, measured from your next position. Only counted from a tap or a GPS fix inside 15 yards.</p>
+    </div>
     <div class="card">
       <p class="eyebrow">Today's card</p>
       <div id="scorecard"></div>
@@ -2355,6 +2383,7 @@ function renderHoles(){const c=COURSES[cur.course];store.cur=cur;
   if(wxAuto){if(wx&&wx.slug===c.slug)applyWx();
     else fetchWx().then(applyWx).catch(wxOff);}
   $("#advice").innerHTML="";
+  if(typeof renderLedger==="function")renderLedger();   // the new hole's page
   autoAsk();}
 /* ---------- live ASCII fields: silhouettes spelled from real course data ----------
    Locked spec: glyph POSITIONS never move; glyphs swap IDENTITY and gain color,
@@ -2942,7 +2971,8 @@ function renderHoleMap(h){
     // (carry numbers card-calibrated like every other distance)
     const crossings=lineToPin(ball,pin,g)
       .map(x=>({kind:x.kind,name:x.name,raw:x.clear,clear:Math.round(x.clear*cf/5)*5}));
-    lastTap={holeN:h.n,ball,pin,crossings,dist,lie,side:sideVal,src:opts.src||"tap"};
+    lastTap={holeN:h.n,ball,pin,crossings,dist,lie,side:sideVal,src:opts.src||"tap",
+      acc:opts.acc||null,hit};
     const LL=Math.hypot(pin[0]-ball[0],pin[1]-ball[1])||1;
     svg.querySelector("#hm-shot").innerHTML=
       `<line x1='${SX(ball[1]).toFixed(1)}' y1='${SY(ball[0]).toFixed(1)}' x2='${SX(pin[1]).toFixed(1)}' y2='${SY(pin[0]).toFixed(1)}' class='hm-shotline'/>`+
@@ -3020,6 +3050,10 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
     swing:chipVal("sit-swing")||"full",temp:tempVal,tempc:tempC(),
     mph:windMph(windState.str),firm:groundFirm()};
   sit.side=$("#sidewrap").classList.contains("hidden")?null:sideVal;
+  // where the ball is, how we know it, and how far it has come from the tee.
+  // The ledger needs all three: a drive is only measured when the NEXT shot
+  // has a trustworthy position, so hit travels on the record, not the screen.
+  if(lastTap&&lastTap.holeN===h.n){sit.src=lastTap.src;sit.acc=lastTap.acc;sit.hit=lastTap.hit;}
   const selT=(p&&p.tees)||"member";
   const tyH=h.ty&&h.ty[selT];
   // par-3 tee shot with no distance yet: the card already knows the number,
@@ -3429,7 +3463,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
   // the shot record learns the new call; the feedback slot is not touched.
   // A locked pick survives the rewrite: it is frozen on the record, and the
   // matching option is re-marked rather than re-chosen.
-  shotSync(clubLine||"rules",sit);
+  shotSync(clubLine||"rules",sit,clubLine);
   if(shot.pick){const o=$$("#advice .opt[data-pick]").find(x=>x.dataset.pick===shot.pick);
     if(o){o.classList.add("chosen");chosenPick=shot.pick;}}
 }
@@ -3452,19 +3486,76 @@ function autoAsk(src){sitSummary();if(!store.p)return;
 let shot=null;
 function shotNew(){const c=COURSES[cur.course];
   const n=shot&&shot.course===c.slug&&shot.hole===cur.hole?shot.n+1:1;
-  shot={course:c.slug,hole:cur.hole,n,advice:null,pick:null,sit:null,rating:0,note:"",logIdx:null,stale:null};
+  shot={course:c.slug,hole:cur.hole,n,advice:null,pick:null,club:null,clubSet:false,sit:null,rating:0,note:"",logIdx:null,stale:null};
   renderShotFb();}
-function shotSync(advice,sit){const c=COURSES[cur.course];
+function shotSync(advice,sit,club){const c=COURSES[cur.course];
   if(!shot||shot.course!==c.slug||shot.hole!==cur.hole)shotNew();
   shot.advice=advice;shot.sit=sit;shot.stale=null;
+  if(!shot.pick&&!shot.clubSet){const bg=(store.p&&store.p.bag)||[];
+    shot.club=(club&&bg.some(b=>b.club===club))?club:null;}   // a locked pick owns the club until it is replaced
   if(shot.logIdx!==null)shotSave();
-  $("#shotfb").classList.remove("hidden");paintShotFb();}
+  $("#shotfb").classList.remove("hidden");paintShotFb();renderLedger();}
 function shotSave(){const lg=store.log;
   const e={t:new Date().toISOString(),type:"shot",course:shot.course,hole:shot.hole,n:shot.n,
-    sit:shot.sit,advice:shot.pick||shot.advice||"rules",rating:shot.rating,note:shot.note};
+    sit:shot.sit,advice:shot.pick||shot.advice||"rules",club:shot.club||null,
+    rating:shot.rating,note:shot.note};
   if(shot.logIdx!==null&&lg[shot.logIdx]&&lg[shot.logIdx].type==="shot"){e.t=lg[shot.logIdx].t;lg[shot.logIdx]=e;}
   else{lg.push(e);shot.logIdx=lg.length-1;}
-  store.log=lg;renderLog();}
+  store.log=lg;renderLog();renderLedger();}
+/* The ledger is a projection of store.log, not a second store: the log already
+   is the record and anything parallel to it would drift. The open shot is shown
+   before it is logged so the page is never blank after a call; "Hit it" commits
+   it for real. A closed shot's distance is what the NEXT shot's position says it
+   travelled, which is why hit rides on sit - no next position, no claim made. */
+function ledgerRows(){const c=COURSES[cur.course],today=new Date().toISOString().slice(0,10);
+  const rows=store.log.map((e,idx)=>({e,idx}))
+    .filter(({e})=>e.type==="shot"&&e.course===c.slug&&e.hole===cur.hole
+      &&(e.t||"").slice(0,10)===today);
+  const byN=new Map();rows.forEach(r=>byN.set(r.e.n||0,r));
+  const out=[...byN.values()].sort((a,b)=>(a.e.n||0)-(b.e.n||0));
+  if(shot&&shot.course===c.slug&&shot.hole===cur.hole&&shot.logIdx===null&&shot.advice)
+    out.push({idx:null,e:{n:shot.n,club:shot.club,advice:shot.pick||shot.advice,
+      sit:shot.sit,rating:shot.rating}});
+  return out;}
+/* Albie's tee call is often a rule, not a club ("your tee club per the rules
+   below"), so the ledger asks rather than guesses. Naming a club is what makes
+   a drive measurable; without it the number would be attributed to nothing. */
+function nameClub(r){const p=store.p;if(!p||!p.bag)return;
+  const opts=p.bag.filter(b=>!b.out&&b.club!=="Putter").map(b=>({club:b.club,l:safeText(b.club,24)}));
+  if(!opts.length)return;
+  pickSheet("What did you hit?",opts,o=>{
+    if(r.idx===null){shot.club=o.club;shot.clubSet=true;shotSave();}
+    else{const lg=store.log;lg[r.idx].club=o.club;store.log=lg;
+      if(shot&&shot.logIdx===r.idx){shot.club=o.club;shot.clubSet=true;}
+      renderLog();}
+    renderLedger();});}
+function renderLedger(){const el=$("#ledger");if(!el)return;
+  const rows=ledgerRows();
+  // one shot is not a stack, and #shotfb already carries its rating
+  el.classList.toggle("hidden",rows.length<2);
+  if(rows.length<2){el.innerHTML="";return}
+  el.innerHTML=rows.map((r,i)=>{const s=r.e.sit||{},nx=rows[i+1]&&rows[i+1].e.sit,last=i===rows.length-1;
+    const got=last?(s.dist?s.dist+" out":"")
+      :(s.lie==="tee"&&nx&&nx.hit!=null&&s.hit!=null&&nx.hit-s.hit>=50)?(nx.hit-s.hit)+"y"
+      :(nx&&nx.lie)?safeText(nx.lie,14):"";
+    return `<div class='lrow${last?" open":""}'>
+      <span class='lnum'>${r.e.n||i+1}</span>
+      <span class='lwhat' data-club='${i}'>${safeText(r.e.club||(s.lie==="tee"?"Tee shot":r.e.advice)||"no call",44)} <i class='lcaret'>▾</i></span>
+      <span class='lgot'>${got}</span>
+      <span class='lstars' data-i='${i}'>${[1,2,3,4,5].map(k=>
+        `<span class='${k<=(r.e.rating||0)?"on":""}' data-r='${k}'></span>`).join("")}</span>
+    </div>`;}).join("");
+  el.onclick=ev=>{const w=ev.target.closest("[data-club]");
+    if(w){const rw=ledgerRows()[+w.dataset.club];if(rw)nameClub(rw);return}
+    const b=ev.target.closest("[data-r]");if(!b)return;
+    const i=+b.parentNode.dataset.i,r=ledgerRows()[i];if(!r)return;const v=+b.dataset.r;
+    if(r.idx===null){shot.rating=shot.rating===v?0:v;shotSave();paintShotFb();}
+    else{const lg=store.log;lg[r.idx].rating=lg[r.idx].rating===v?0:v;store.log=lg;
+      if(shot&&shot.logIdx===r.idx){shot.rating=lg[r.idx].rating;paintShotFb();}
+      renderLog();}
+    renderLedger();};}
+function shotPlayed(){return !!(shot&&shot.advice&&(shot.rating||shot.pick||shot.note
+  ||shot.clubSet||(shot.sit&&shot.sit.src)));}
 function fbLive(){return !!(shot&&(shot.rating||shot.pick||document.activeElement===$("#fb-note")));}
 function paintShotFb(){if(!shot||!$("#fb-stars"))return;
   [...$("#fb-stars").children].forEach((s,j)=>s.classList.toggle("on",j<shot.rating));
@@ -3475,7 +3566,7 @@ function renderShotFb(){const c=COURSES[cur.course],h=c.holes.find(x=>x.n===cur.
    <div class='stars' id='fb-stars'>${"<span></span>".repeat(5)}</div>
    <input type='text' class='fb-note' id='fb-note' placeholder='Optional: what happened / what was wrong' style='margin-top:8px'>
    <div class='row' style='margin-top:12px'>
-     <button data-verb='Next' class='btn2' id='nextshot'>Shot, same hole</button>
+     <button data-verb='Next' class='btn2' id='nextshot'>Hit it</button>
      ${h.n<c.holes.length?`<button data-verb='Go to' class='btn2 sage' id='nexthole'>Hole ${h.n+1}</button>`
        :`<button data-verb='Finish' class='btn2 sage' id='nexthole'>Round done</button>`}
    </div>`;
@@ -3491,7 +3582,8 @@ function renderShotFb(){const c=COURSES[cur.course],h=c.holes.find(x=>x.n===cur.
       const sh=sv.querySelector("#hm-shot");if(sh)sh.innerHTML="";
       const tg=sv.querySelector("#hm-target");if(tg)tg.remove();
       const ac=sv.querySelector("#hm-acc");if(ac)ac.remove();}
-    $("#advice").innerHTML="";shotNew();
+    if(shotPlayed())shotSave();
+    $("#advice").innerHTML="";shotNew();renderLedger();
     const hm=document.getElementById("holemap");
     (hm.classList.contains("hidden")?$("#posband"):hm)
       .scrollIntoView({block:"center",behavior:motionOK?"smooth":"auto"});
@@ -3499,9 +3591,11 @@ function renderShotFb(){const c=COURSES[cur.course],h=c.holes.find(x=>x.n===cur.
     if(gpsWatch!==null&&gpsLastBall&&gpsLastBall.n===cur.hole&&typeof hmPlaceFn==="function"&&hmPlaceHole===cur.hole)
       hmPlaceFn(gpsLastBall.ball,{src:"gps",acc:gpsLastBall.acc});
     else toast(gpsWatch!==null?"Walk to the ball. GPS picks it up.":"Tap the map where the ball ended up.");});
-  $("#nexthole").addEventListener("click",()=>askScore(h,()=>{
+  $("#nexthole").addEventListener("click",()=>{
+    if(shotPlayed())shotSave();   // the last shot on the hole still counts
+    askScore(h,()=>{
     if(h.n<c.holes.length){cur.hole=h.n+1;resetSituation();renderHoles();}
-    else show("log");}));
+    else show("log");});});
   paintShotFb();}
 $("#ask").addEventListener("click",ask);
 $("#sit-dist").addEventListener("input",autoAsk);
@@ -3536,11 +3630,15 @@ $("#advice").addEventListener("click",e=>{
     if(last&&last.type==="choice"&&last.course===c.slug&&last.hole===cur.hole)
       log[log.length-1]=entry;else log.push(entry);
     store.log=log;renderLog();
-    if(shot){shot.pick=chosenPick;if(shot.logIdx!==null)shotSave();}
+    if(shot){shot.pick=chosenPick;
+      if(pick&&pick.club&&pick.club.club)shot.club=pick.club.club;
+      if(shot.logIdx!==null)shotSave();}
+    renderLedger();
     toast("Locked in. Rate the call after the shot.");}});
 let chosenPick=null,lastOpts=null,lastAsk=null;
 /* hole nav + score capture */
 function goHole(n){const c=COURSES[cur.course];if(n<1||n>c.holes.length)return;
+  if(shot&&shot.hole!==n&&shotPlayed())shotSave();
   cur.hole=n;resetSituation();renderHoles();}
 /* Full score range for the hole's par: 1 through par+3, named properly.
    Scorecard notation rides along: circle under par, square over, doubled 2+. */
@@ -3550,18 +3648,25 @@ function scoreOpts(par){const name=s=>
   const o=[];for(let s=1;s<=par+3;s++)o.push([name(s),s]);return o;}
 function scoreMark(rel){if(rel===0)return "";
   return `<i class='scm ${rel<0?"circ":""} ${Math.abs(rel)>=2?"dbl":""}'></i>`;}
-function scoreSheet(holeN,par,title,onPick){
+/* One bottom sheet, two uses: the score after a hole and the club on a shot.
+   Options are addressed by index, never by value, so a club named with a quote
+   in it cannot break out of the attribute. */
+function pickSheet(title,opts,onPick){
   const ex=document.getElementById("scoresheet");if(ex)ex.remove();
   document.body.insertAdjacentHTML("beforeend",
-   `<div id='scoresheet'><button id='ss-x' aria-label='Close'>×</button><span class='ss-t'>${title}</span><div class='chips'>`+
-   scoreOpts(par).map(([l,v])=>`<div class='chip' data-s='${v}'>${scoreMark(v-par)}${l}</div>`).join("")+
-   `<div class='chip' data-s='skip'>Skip</div></div></div>`);
+   `<div id='scoresheet'><button id='ss-x' aria-label='Close'>×</button><span class='ss-t'>${safeText(title,90)}</span><div class='chips'>`+
+   opts.map((o,i)=>`<div class='chip' data-i='${i}'>${o.l}</div>`).join("")+
+   `</div></div>`);
   document.getElementById("scoresheet").addEventListener("click",e=>{
     // the X abandons the sheet entirely: no score, no advancing, no callback
     if(e.target.id==="ss-x"){document.getElementById("scoresheet").remove();return}
     const c=e.target.closest(".chip");if(!c)return;
     document.getElementById("scoresheet").remove();
-    onPick(c.dataset.s==="skip"?null:+c.dataset.s,c.textContent);});}
+    onPick(opts[+c.dataset.i],c.textContent);});}
+function scoreSheet(holeN,par,title,onPick){
+  pickSheet(title,scoreOpts(par).map(([l,v])=>({v,l:scoreMark(v-par)+l}))
+    .concat([{v:"skip",l:"Skip"}]),
+    (o,label)=>onPick(o.v==="skip"?null:+o.v,label));}
 /* one score per hole per day: re-scoring a hole UPDATES it (fixes the
    double-count when a hole is advanced through twice) */
 function saveHoleScore(course,holeN,par,score){
@@ -3635,7 +3740,47 @@ function renderScorecard(){
       if(score===null)return;
       saveHoleScore(c.slug,n,par,score);
       toast(`Hole ${n}: ${label} saved.`);});};}
-function renderLog(){renderScorecard();renderKeep();const log=store.log;
+/* Tee shots the log can actually measure. A drive is only measured when the
+   NEXT shot on that hole has a trustworthy position, because the number is the
+   difference between the two - a tap, or a GPS fix inside 15 yards. Anything
+   looser would quietly invent yardage, which is worse than no number.
+   These are TOTAL distances: carry plus roll. The bag holds carry, so the two
+   are never silently equated - see driveOffer(). */
+function driveStats(){const by={};
+  const shots=store.log.filter(e=>e.type==="shot"&&e.sit);
+  const key=e=>e.course+"#"+e.hole+"#"+(e.t||"").slice(0,10);
+  const holes={};
+  shots.forEach(e=>{(holes[key(e)]=holes[key(e)]||[]).push(e);});
+  Object.values(holes).forEach(g=>{g.sort((a,b)=>(a.n||0)-(b.n||0));
+    const a=g[0],b=g[1];
+    if(!a||!b||a.n!==1||!a.club||a.sit.lie!=="tee")return;
+    if(a.sit.hit==null||b.sit.hit==null)return;
+    const trust=b.sit.src==="tap"||(b.sit.src==="gps"&&b.sit.acc!=null&&b.sit.acc<=15);
+    const d=b.sit.hit-a.sit.hit;
+    if(!trust||d<50||d>420)return;   // a 50-yard "drive" is a topped one, not a number
+    (by[a.club]=by[a.club]||[]).push(d);});
+  return Object.entries(by).map(([club,ds])=>({club,n:ds.length,
+    avg:Math.round(ds.reduce((x,y)=>x+y,0)/ds.length),best:Math.max(...ds)}));}
+/* Never silent, and never a lie: measured total is compared against the claimed
+   CARRY, so only the over-claiming direction is safe to write back (a ball that
+   finishes at 205 cannot have carried 230). The other direction is reported and
+   left to him - writing total into a carry field would over-claim. */
+function driveOffer(s,bag){const c=bag.find(b=>b.club===s.club);if(!c)return "";
+  if(s.avg<c.carry-10)return `<button data-verb='Set' class='btn2' data-drive='${s.club}' data-carry='${s.avg}'>${s.club} carry to ${s.avg}</button>`;
+  if(s.avg>c.carry+40)return `<p class='small' style='margin:4px 0 0'>Your bag says ${c.carry} carry and you are finishing ${s.avg}. Worth re-checking on a launch monitor before I trust either number.</p>`;
+  return "";}
+function renderDrives(){const el=$("#drivestats");if(!el)return;
+  const p=store.p,stats=p&&p.bag?driveStats():[];
+  $("#drivecard").classList.toggle("hidden",!stats.length);
+  if(!stats.length){el.innerHTML="";return}
+  el.innerHTML=stats.map(s=>`<p class='small' style='margin:2px 0;color:var(--ink)'>
+    <b>${safeText(s.club,24)}</b>: avg ${s.avg} · best ${s.best} · ${s.n} measured</p>
+    ${driveOffer(s,p.bag)}`).join("");
+  el.onclick=ev=>{const b=ev.target.closest("[data-drive]");if(!b)return;
+    const pr=store.p,c=pr.bag.find(x=>x.club===b.dataset.drive);if(!c)return;
+    c.carry=+b.dataset.carry;store.p=pr;renderBag&&renderBag();renderDrives();
+    toast(`${c.club} set to ${c.carry}. Every call uses it from now on.`);};}
+function renderLog(){renderScorecard();renderKeep();renderDrives();const log=store.log;
   const today=new Date().toISOString().slice(0,10);
   const hs=log.filter(e=>e.type==="hole"&&(e.t||"").slice(0,10)===today);
   const dp=hs.reduce((a,e)=>a+(e.score-e.par),0);
