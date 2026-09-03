@@ -168,6 +168,8 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .albiesays{font-size:1rem;margin:12px 0;line-height:1.55;padding:10px 12px;
   background:#8A9A7814;border-left:2.5px solid var(--sage);border-radius:0 10px 10px 0}
 .albiesays .who{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;color:var(--sage);display:block;margin-bottom:3px;font-weight:600}
+.albiesays.caveat{margin-top:-6px;font-size:.92rem;background:#B0563014;border-left-color:var(--brick)}
+.albiesays.caveat .who{color:var(--brick)}
 .rules{display:flex;flex-direction:column;gap:8px;margin:12px 0 4px}
 .rule{padding:9px 12px;background:#33362B06;border-left:2px solid var(--sage);
   border-radius:0 9px 9px 0;font-size:.92rem;line-height:1.5}
@@ -3367,6 +3369,25 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
       const pb=sit.pin==="front"?"front":sit.pin==="back"?"back":"mid";
       albieSays=h.mx.approach?.[band]?.[pb]||"";}
   }
+  /* mx.tee is keyed by wind; mx.approach is keyed by band and pin only, yet 30
+     of its lines across 9 courses assert a wind ("take extra club into the
+     prevailing wind"). Voiced blind, that contradicts the live wind chip two
+     inches above it - Albie told a downwind golfer to club up into the breeze
+     (seam sweep, 2026-09-03). The number below is already wind-adjusted, so the
+     honest move is to say which wind the note was written for and what today
+     is. The real fix is to key mx.approach by wind the way mx.tee is; until the
+     pipeline does that, the contradiction is named rather than voiced. */
+  let windCaveat="";
+  if(albieSays&&sit.lie!=="tee"){
+    const says=/\binto[- ]wind|into the (?:prevailing )?wind|into your face|against the (?:into-)?wind|club up for the wind\b/i.test(albieSays)?"into"
+      :/\bdownwind|down[- ]wind|helping wind|with the wind|wind at your back\b/i.test(albieSays)?"down":null;
+    if(says&&sit.wind!==says)
+      windCaveat=sit.wind==="calm"
+        ?`That note is written for this hole's prevailing wind. It is calm right now, so take the club below, not an extra one.`
+        :sit.wind==="cross"
+        ?`That note is written for a wind ${says==="into"?"in your face":"at your back"}. Today it is across you at ${sit.mph} mph, so it costs you far less distance than the note assumes.`
+        :`That note is written for a wind ${says==="into"?"in your face":"at your back"}. Today it is ${sit.wind==="into"?"into you":"helping"} at ${sit.mph} mph, and the number below already accounts for it.`;
+  }
   /* trouble: situation read + ranked ways out, instead of a distance call */
   let troubleHTML="";
   if(sit.lie==="trouble"){
@@ -3463,6 +3484,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
      ${sit.lie==="trouble"?troubleHTML:`${clubLine?`<div class='club'>${clubLine}</div>`:""}${callMath}${approachOpts}`}
      ${wxReadout(sit)}
      ${albieSays?`<p class='albiesays'><span class='who'>ALBIE ▸</span> ${fmt(albieSays)}</p>`:""}
+     ${windCaveat?`<p class='albiesays caveat'><span class='who'>TODAY ▸</span> ${fmt(windCaveat)}</p>`:""}
      ${(h.grn&&sit.lie!=="tee")||runoutNote?`<div class='rules' style='margin:8px 0 2px'>${h.grn&&sit.lie!=="tee"?noteRow("","the green",`${fmt(h.grn.note)} <span class='src'>${h.grn.src||""}</span>`):""}${runoutNote}</div>`:""}
      <button class='expand' id='share-call'>Share this call ▸</button>
      <button class='expand' id='expand-call'>Full reasoning ▾</button>
@@ -3478,7 +3500,9 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
   // the shot record learns the new call; the feedback slot is not touched.
   // A locked pick survives the rewrite: it is frozen on the record, and the
   // matching option is re-marked rather than re-chosen.
-  shotSync(clubLine||"rules",sit);
+  // same seam as v1: a trouble shot has no headline club, so this banked the
+  // literal "rules" as the call (seam sweep, 2026-09-03).
+  shotSync(clubLine||(sit.lie==="trouble"?"the way out":"hole rules"),sit);
   if(shot.pick){const o=$$("#advice .opt[data-pick]").find(x=>x.dataset.pick===shot.pick);
     if(o){o.classList.add("chosen");chosenPick=shot.pick;}}
 }
@@ -3723,6 +3747,16 @@ $("#export").addEventListener("click",async()=>{
   const fname=`caddie-feedback-${(store.p?.name||"tester").toLowerCase()}-${new Date().toISOString().slice(0,10)}.json`;
   if(window.claude?.downloads?.save){try{await window.claude.downloads.save({filename:fname,data:payload});
     toast("Feedback file saved.");return}catch(e){}}
+  /* A real file first, clipboard second. On an iPhone this is what puts the
+     export in Safari's download sheet, where "Save to Files" makes it a file a
+     tester can actually send; the clipboard alone loses it the moment they copy
+     anything else. Both fallbacks stay, because a sandboxed host blocks the
+     download and gives no error. */
+  try{const url=URL.createObjectURL(new Blob([payload],{type:"application/json"}));
+    const a=document.createElement("a");a.href=url;a.download=fname;
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000);
+    toast("Feedback file saved. Send it in.");return}catch(e){}
   try{await navigator.clipboard.writeText(payload);toast("Copied to clipboard. Send it in with your feedback.")}
   catch(e){copySheet("export-copyout",payload,"Copy your feedback data from the box below.")}});
 let resetArmed=0;

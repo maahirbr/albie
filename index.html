@@ -104,7 +104,7 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .btn2::before{content:attr(data-verb);position:absolute;top:-8px;left:13px;
   background:var(--card);padding:0 8px;
   font:600 .58rem var(--mono);letter-spacing:.15em;text-transform:uppercase;color:var(--slate)}
-.btn2:hover{background:#33362B08}
+@media(hover:hover){.btn2:hover{background:#33362B08}}
 /* pressed like a key: the plate travels down onto its own lip */
 .btn2:active{transform:translateY(1.5px);box-shadow:0 0 0 #33362B22}
 /* Weight, not fill, carries emphasis now. A solid dark plate put the notched
@@ -114,21 +114,21 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
    wash rather than a brick block. */
 .btn2.solid{border-width:1.7px;border-color:var(--ink);background:#33362B0D;font-weight:600}
 .btn2.solid::before{color:var(--ink)}
-.btn2.solid:hover{background:#33362B16}
+@media(hover:hover){.btn2.solid:hover{background:#33362B16}}
 .btn2.sage{border-color:var(--sage)}
 .btn2.sage::before{color:#5C6B4F}
-.btn2.sage:hover{background:#8A9A7814}
+@media(hover:hover){.btn2.sage:hover{background:#8A9A7814}}
 /* brick means STOP and nothing else. A brick verb on Copy, Redo, Send and
    Open sat one shade away from Reset and Clear and blunted the only colour
    the app uses to say "this destroys something". Default verbs are slate,
    the same microtype colour every other section label uses. */
 .btn2.danger{color:var(--brick);border-color:var(--brick)}
 .btn2.danger::before{color:var(--brick)}
-.btn2.danger:hover{background:#A4472F0E}
+@media(hover:hover){.btn2.danger:hover{background:#A4472F0E}}
 .btn2.danger.armed{border-width:1.7px;background:#A4472F1C;font-weight:600}
 /* buttons answer the hand: an arrow slides in on hover/press */
 /* the notched verb is the affordance now; a hover arrow on top of it was noise */
-.btn:hover{transform:translateY(-1.5px)}
+@media(hover:hover){.btn:hover{transform:translateY(-1.5px)}}
 /* typing caret for the About headline */
 .typing::after{content:"▌";color:var(--sage);animation:blink .8s steps(1) infinite;font-weight:400}
 @keyframes blink{50%{opacity:0}}
@@ -168,6 +168,8 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .albiesays{font-size:1rem;margin:12px 0;line-height:1.55;padding:10px 12px;
   background:#8A9A7814;border-left:2.5px solid var(--sage);border-radius:0 10px 10px 0}
 .albiesays .who{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;color:var(--sage);display:block;margin-bottom:3px;font-weight:600}
+.albiesays.caveat{margin-top:-6px;font-size:.92rem;background:#B0563014;border-left-color:var(--brick)}
+.albiesays.caveat .who{color:var(--brick)}
 .rules{display:flex;flex-direction:column;gap:8px;margin:12px 0 4px}
 .rule{padding:9px 12px;background:#33362B06;border-left:2px solid var(--sage);
   border-radius:0 9px 9px 0;font-size:.92rem;line-height:1.5}
@@ -236,9 +238,14 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
   font-size:.56rem;color:var(--dim);cursor:pointer;padding:8px 0 6px;border:0;
   background:none;font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase;
   transition:color .2s}
-.tab svg{opacity:.5;transition:opacity .25s,transform .35s var(--spring)}
+/* morphicon: on activation the pictogram firms up — the stroke thickens on the
+   spring and the faint accent strokes (the flag's ground, the bag's band, the
+   log's writing) come to full. No shape appears or vanishes, so nothing reads
+   as a rendering fault at rest, and sixty tab presses a round stay quiet. */
+.tab svg{opacity:.5;transition:opacity .25s,transform .35s var(--spring),stroke-width .3s var(--spring)}
 .tab.on{color:var(--ink);font-weight:700}
-.tab.on svg{opacity:1;transform:translateY(-1.5px)}
+.tab.on svg{opacity:1;transform:translateY(-1.5px);stroke-width:1.9}
+.tab.on svg [opacity]{opacity:1;transition:opacity .3s}
 .tab:active svg{transform:scale(.88)}
 #tab-ind{position:absolute;top:-1px;height:2.5px;width:30px;background:var(--brick);
   border-radius:2px;transition:left .45s var(--spring)}
@@ -268,8 +275,9 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .lwhat{cursor:pointer}
 .lcaret{font-style:normal;color:var(--dim);font-size:.72rem}
 .lgot{font-family:var(--mono);font-size:.76rem;color:var(--dim);white-space:nowrap}
-.lstars{display:flex;gap:6px;flex:none}
-.lstars span{display:block;width:14px;height:14px;border-radius:50%;cursor:pointer;
+.lstars{display:flex;gap:10px;flex:none}
+.lstars span::after{content:"";position:absolute;inset:-5px}
+.lstars span{display:block;position:relative;width:14px;height:14px;border-radius:50%;cursor:pointer;
   background:radial-gradient(circle at 32% 28%, #D9D5C8 0 30%, #C7C2B1 60%, #AFA995 100%);
   border:1.2px solid #A9A28C;transition:background .25s,border-color .25s}
 .lstars span.on{background:radial-gradient(circle at 32% 28%, #FFFFFF 0 30%, #F2EFE6 60%, #D5CFBE 100%);
@@ -278,7 +286,7 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 /* inline link in body copy: ink on a sage rule, never browser blue */
 .inl{color:var(--ink);text-decoration:none;border-bottom:1.5px solid var(--sage);
   padding-bottom:1px}
-.inl:hover{border-bottom-color:var(--brick)}
+@media(hover:hover){.inl:hover{border-bottom-color:var(--brick)}}
 /* thinking orb: a rolling golf ball for real async waits (weather, GPS, 3D).
    Never shown for instant computation - a fake spinner is a cosmetic lie. */
 .orb{display:inline-block;width:13px;height:13px;border-radius:50%;vertical-align:-2px;
@@ -366,7 +374,7 @@ th{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:u
 .inbtn{background:none;border:0;padding:10px 1px;min-width:32px;min-height:36px;cursor:pointer;
   font:600 .55rem var(--mono);letter-spacing:.06em;text-align:left;
   color:#5C6B4F;opacity:.55;transition:opacity .2s,color .2s}
-#bagtable tr:hover .inbtn{opacity:.85}
+@media(hover:hover){#bagtable tr:hover .inbtn{opacity:.85}}
 .clubname{white-space:nowrap}
 .clubout .inbtn{color:var(--brick);opacity:1}
 .clubout .clubname,.clubout .bagnum,.clubout .rmclub{opacity:.5}
@@ -378,7 +386,7 @@ th{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:u
 .dd-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
   padding:11px 14px 10px;border:1px solid var(--line);border-radius:12px;background:var(--card);
   color:var(--ink);cursor:pointer;text-align:left;transition:border-color .2s,box-shadow .25s}
-.dd-btn:hover{border-color:#C6BFA6}
+@media(hover:hover){.dd-btn:hover{border-color:#C6BFA6}}
 .dd-eyebrow{display:block;font:400 .58rem var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--slate);margin-bottom:2px}
 .dd-name{display:block;font:600 1.08rem/1.2 var(--disp);letter-spacing:-.01em}
 .dd-meta{display:block;font:400 .6rem var(--mono);letter-spacing:.09em;color:var(--dim);margin-top:3px;text-transform:uppercase}
@@ -399,8 +407,10 @@ th{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:u
 .dd-empty{padding:12px 14px;font:400 .78rem var(--mono);color:var(--dim);letter-spacing:.03em}
 .dd-menu button::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2.5px;background:var(--sage);
   transform:scaleY(0);transition:transform .3s var(--spring)}
-.dd-menu button:hover,.dd-menu button:focus-visible{background:#EFE9D7;outline:none}
-.dd-menu button:hover::before,.dd-menu button.cur::before{transform:scaleY(1)}
+@media(hover:hover){.dd-menu button:hover{background:#EFE9D7;outline:none}}
+.dd-menu button:focus-visible{background:#EFE9D7;outline:none}
+@media(hover:hover){.dd-menu button:hover::before{transform:scaleY(1)}}
+.dd-menu button.cur::before{transform:scaleY(1)}
 .ddo-name{display:block;font:600 .98rem/1.25 var(--disp);color:var(--ink)}
 .dd-menu button.cur .ddo-name{color:var(--sage)}
 .ddo-meta{display:block;font:400 .58rem var(--mono);letter-spacing:.09em;color:var(--dim);margin-top:2px;text-transform:uppercase}
@@ -477,7 +487,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .gv-slope circle{fill:var(--slate)}
 .gv-lab{font:7.5px var(--mono);fill:#8A8468;letter-spacing:.1em}
 .gv-you{fill:none;stroke:#33362B55;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
-.greenbox #pin-unk{position:absolute;top:8px;left:8px;padding:3px 10px;font-size:.66rem;
+.greenbox #pin-unk{position:absolute;top:8px;left:8px;padding:6px 11px;font-size:.66rem;
   font-family:var(--mono);letter-spacing:.08em}
 .greensrc{font:400 .62rem var(--mono);letter-spacing:.04em;color:var(--dim);margin:3px 2px 0}
 /* ---- components: ruled fields and ball checkboxes, not default chrome ---- */
@@ -515,7 +525,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   transition:border-color .2s,color .2s,transform .3s var(--spring)}
 .numstep button:first-child{border-radius:999px 0 0 999px;border-right-width:0}
 .numstep button:last-child{border-radius:0 999px 999px 0}
-.numstep button:hover{border-color:var(--sage);color:var(--ink)}
+@media(hover:hover){.numstep button:hover{border-color:var(--sage);color:var(--ink)}}
 .numstep button:active{transform:scale(.93)}
 /* the notes field is ruled paper: a line under every line of writing, and the
    rules scroll with the text rather than sitting behind it */
@@ -544,13 +554,15 @@ input::placeholder,textarea::placeholder{color:#8D866E}
 .clubname{background:none;border:0;padding:2px 0;font:inherit;color:inherit;
   cursor:pointer;text-align:left;border-bottom:1px dashed transparent;
   transition:border-color .2s,color .2s}
-.clubname:hover,.clubname:focus-visible{border-bottom-color:var(--sage);color:var(--ink);outline:none}
+@media(hover:hover){.clubname:hover{border-bottom-color:var(--sage);color:var(--ink)}}
+.clubname:focus-visible{border-bottom-color:var(--sage);color:var(--ink);outline:none}
 .bagx{width:40px;text-align:right}
 /* thumb-sized: the glyph is small, the target it sits in is not */
 .rmclub{background:none;border:0;cursor:pointer;color:#A9A28C;
   font:400 1.1rem/1 var(--disp);padding:9px 10px;min-width:34px;
   transition:color .2s,transform .3s var(--spring)}
-.rmclub:hover,.rmclub:focus-visible{color:var(--brick);outline:none}
+@media(hover:hover){.rmclub:hover{color:var(--brick)}}
+.rmclub:focus-visible{color:var(--brick);outline:none}
 .rmclub:active{transform:scale(.86)}
 /* add-a-club picker: a ruled field, not browser chrome */
 .addclub{margin-top:10px}
@@ -558,7 +570,7 @@ input::placeholder,textarea::placeholder{color:#8D866E}
   text-transform:uppercase;color:var(--slate);background-color:var(--paper);
   border:1.2px dashed var(--line);border-radius:8px;padding:11px 34px 11px 12px;cursor:pointer;
   transition:border-color .2s,color .2s}
-.addclub select:hover{border-color:var(--sage);color:var(--ink)}
+@media(hover:hover){.addclub select:hover{border-color:var(--sage);color:var(--ink)}}
 .ctlrow{display:flex;align-items:center;gap:8px;margin:4px 0}
 .ctlrow .chip{padding:6px 12px;font-size:.8rem;flex:0 0 auto}
 .band.zone-band{height:48px;cursor:ew-resize;flex:1;margin:0}
@@ -615,14 +627,14 @@ select{appearance:none;-webkit-appearance:none;font-family:var(--disp);font-weig
 #view-caddie.walk .trust,#view-caddie.walk .teerow,#view-caddie.walk #askcard{display:none}
 #hn-lab{flex:1;text-align:center;font:600 .64rem var(--mono);letter-spacing:.16em;color:var(--dim);text-transform:uppercase}
 .expand{background:none;border:0;font:600 .62rem var(--mono);letter-spacing:.12em;
-  text-transform:uppercase;color:var(--slate);cursor:pointer;padding:8px 0 2px;display:block}
+  text-transform:uppercase;color:var(--slate);cursor:pointer;padding:9px 0 7px;display:block}
 #scoresheet{position:fixed;left:12px;right:12px;bottom:84px;background:var(--card);
   border:1px solid var(--sage);border-radius:14px;padding:10px 12px;z-index:1100;
   box-shadow:0 12px 30px #33362B26;animation:rise .35s var(--settle);max-width:456px;margin:0 auto}
 .ss-t{font:600 .62rem var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--slate);display:block;margin-bottom:6px;padding-right:26px}
 #ss-x{position:absolute;top:4px;right:6px;border:0;background:none;font:600 1.15rem/1 var(--disp);
   color:var(--dim);cursor:pointer;padding:6px 9px;transition:color .2s}
-#ss-x:hover{color:var(--ink)}
+@media(hover:hover){#ss-x:hover{color:var(--ink)}}
 .holemap{background:var(--card);border:1px solid var(--line);border-radius:12px;
   padding:8px 9px 6px;margin:10px 0;position:relative}
 .holemap svg{display:block;width:100%;height:auto;cursor:crosshair;touch-action:manipulation}
@@ -735,10 +747,12 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
 .copyout textarea{width:100%;min-height:64px;font:11px/1.4 var(--mono);padding:8px;border:1px solid var(--sage);
   border-radius:8px;background:var(--card);margin-top:8px;word-break:break-all;color:var(--ink)}
 
+.land-deck{font:400 .66rem var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--slate);margin:.85em 0 0}
 .land-oss{font:600 .64rem var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--sage);margin:1em 0 0}
 /* dithered plates: Bayer-ordered texture in the exact palette, pixel-true */
 .ab-plate{margin:6px 0 14px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
 .ab-plate img{display:block;width:100%;height:auto;image-rendering:pixelated;mix-blend-mode:multiply}
+.ab-plate.photo img{image-rendering:auto;mix-blend-mode:normal}
 .ab-plate figcaption{font:400 .6rem var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);padding:6px 10px;border-top:1px solid var(--line)}
 /* motion: every view enters as a settled stack, not a static dump */
 .view:not(.hidden)>.card{animation:rise .45s var(--settle) backwards}
@@ -772,15 +786,17 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
 <div class="wrap" id="app">
   <div id="view-landing" class="view hidden">
     <div class="land-hero">
-      <p class="eyebrow">Your forecaddie · Est. 2026</p>
       <h1 class="land-mark">Albie<i>.</i></h1>
       <p class="land-line">A caddie who has already walked the course a thousand times.</p>
+      <p class="land-deck">Your forecaddie · Est. 2026</p>
       <p class="land-oss">Open source · built for the love of golf</p>
       <pre class="land-sil" id="land-field" aria-hidden="true"></pre>
     </div>
-    <figure class="ab-plate" style="margin:22px 0 8px">
-      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA8AAAAEECAIAAABoUspHAAAcSUlEQVR42u3dLa9113XF8fUcOQpuvkBRkUFBpJCASC22VGDJUivVxKigaoNCisyMogCDyKQGUQ1MaqnSA1opwMBlAf0AZkYJeYAtGxRc6ebovN39ttaac63fkDU0NIF9fc69Z5899n/P/erbN9/88P13b/3ox89eSimlnE/Mzc3Nzc3Nzc3NzZ/mr9786etCRERERETLdHr+fv08kmVZlmVZlmX5XtZAExERERGt0On6O/W5m5ubm5ubm5ubm5ufTzTQREREREQYaFmWZVmWZVkuGGgiIiIiohKDgeacc84555wvcQ00EREREREGWpZledzsXvix57IsY6CJiIiIiAoGmnPOOeeccww0ERERERFhoGVZlgsu2dzc36ksFww0EREREVHBQHPOOeecc46BJiIiIiIas4Eu+DBzc3NzzvlK97lhPttcA01EREREhIHmnHPOOeccA01EREREFGsPNK7F3Nwcx8w5x0+bmz+ea6CJiIiIiDDQnHPOOeecY6CJiHrprR/9+IfvvzM3n3NORBpozjlf7T98/525+bRzzrkGmoiIiIhIA80555xzzrkGmoio4J7NzXHSRBpozjnHPZub46Q510ATEREREWmgOeecc84559cNNH7L3Nx8hrksy3GyzyXz1PMTfsvc3HySuSzLcbLPJfPUcww0EREREVHBQHPOOeecc95kCweuxdzcHPcsyzJO2tz8wfyEazE3N8c9y7KMkzY3Xz7HQBMRERERFQw055xzzjnnTfZAy7Isy7Isy7L8IJ+wVrIsy7Isy7K8PGOgiai4n9rcPhPvu7m5+fI5Bppz7n5qc/tMvO/m5uYr5hhoWZZlWZZlWcZAy7Isy7IsyzIGmohwz+Y4Zvy0ubl59zkGmnPcM74Nxyzjp83NzVfMMdCyLMuyLMuyjIGWZVmWZVmW5doMNK7F3BwXK8uyLMvyi/mEazE3x8XKsizLsrw8Y6BlWZbll/O5zzCXZVnGQMuyLMu78rnPMJdlWV69Bxonam6Oe5ZlWZZl+QUGGg9qbo57lmVZDp6fS4EH2WslY6BlWcbdmh8/58e636va87JD+HgZAy3LMu7W/IA5P9b9XlWaX7TL24SPlxvtgZZlWZZlWe6Va8hrK1ffAy3LsizLstwlV9I1oSHL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" alt="A dithered course horizon in the Albie palette">
-      <figcaption>Plate 01 · the course · Bayer 8×8, Albie palette</figcaption>
+    <figure class="ab-plate photo" style="margin:22px 0 8px">
+      <img src="art/landing-green.webp" data-fb="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA8AAAAEECAIAAABoUspHAAAcSUlEQVR42u3dLa9113XF8fUcOQpuvkBRkUFBpJCASC22VGDJUivVxKigaoNCisyMogCDyKQGUQ1MaqnSA1opwMBlAf0AZkYJeYAtGxRc6ebovN39ttaac63fkDU0NIF9fc69Z5899n/P/erbN9/88P13b/3ox89eSimlnE/Mzc3Nzc3Nzc3NzZ/mr9786etCRERERETLdHr+fv08kmVZlmVZlmX5XtZAExERERGt0On6O/W5m5ubm5ubm5ubm5ufTzTQREREREQYaFmWZVmWZVkuGGgiIiIiohKDgeacc84555wvcQ00EREREREGWpZledzsXvix57IsY6CJiIiIiAoGmnPOOeeccww0ERERERFhoGVZlgsu2dzc36ksFww0EREREVHBQHPOOeecc46BJiIiIiIas4Eu+DBzc3NzzvlK97lhPttcA01EREREhIHmnHPOOeccA01EREREFGsPNK7F3Nwcx8w5x0+bmz+ea6CJiIiIiDDQnHPOOeecY6CJiHrprR/9+IfvvzM3n3NORBpozjlf7T98/525+bRzzrkGmoiIiIhIA80555xzzrkGmoio4J7NzXHSRBpozjnHPZub46Q510ATEREREWmgOeecc84559cNNH7L3Nx8hrksy3GyzyXz1PMTfsvc3HySuSzLcbLPJfPUcww0EREREVHBQHPOOeecc95kCweuxdzcHPcsyzJO2tz8wfyEazE3N8c9y7KMkzY3Xz7HQBMRERERFQw055xzzjnnTfZAy7Isy7Isy7L8IJ+wVrIsy7Isy7K8PGOgiai4n9rcPhPvu7m5+fI5Bppz7n5qc/tMvO/m5uYr5hhoWZZlWZZlWcZAy7Isy7IsyzIGmohwz+Y4Zvy0ubl59zkGmnPcM74Nxyzjp83NzVfMMdCyLMuyLMuyjIGWZVmWZVmW5doMNK7F3BwXK8uyLMvyi/mEazE3x8XKsizLsrw8Y6BlWZbll/O5zzCXZVnGQMuyLMu78rnPMJdlWV69Bxonam6Oe5ZlWZZl+QUGGg9qbo57lmVZDp6fS4EH2WslY6BlWcbdmh8/58e636va87JD+HgZAy3LMu7W/IA5P9b9XlWaX7TL24SPlxvtgZZlWZZlWe6Va8hrK1ffAy3LsizLstwlV9I1oSHL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"
+           data-fbcap="Plate 01 · the course · Bayer 8×8, Albie palette"
+           alt="A green with the flag in, the sky torn into bands of datamosh">
+      <figcaption>Plate 01 · the green · generated image, datamosh transfer</figcaption>
     </figure>
     <div class="land-points">
       <div class="lp"><span class="coin" aria-hidden="true"><span class="coin-in"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="14" height="16" rx="1.6"/><path d="M7.4 7.4h7.2M7.4 10.8h7.2M7.4 14.2h4.4"/></svg></span></span><div><span class="lp-n">01</span><b>Real local knowledge.</b> Built from official hole guides, tour coverage and caddie wisdom for every course it knows.</div></div>
@@ -2470,7 +2486,13 @@ function renderBgArt(){FIELDS.length=0;
     l.style.bottom=(-50+(cur.hole%4)*22)+"px";}
   if(r){buildField(r,SHAPES[names[(cur.course+1)%3]],data,58,34);
     r.style.top=(30+(cur.hole%3)*34)+"px";}
-  if(land)buildField(land,SHAPES.flag,data,44,26);
+  /* the landing takes the flag's HEAD, not the whole stick: the full shape is
+     26 units wide against 42 tall, so any faithful render of it is a thin column
+     (121x189px at 375px, measured 2026-09-03). Cropping to shape-rows 0-22 keeps
+     the banner and a stub of pole and lets the grid go wide, so the mark reads as
+     a flag instead of a ragged strip of text. W stays 74.67*H/crop, the same
+     ratio that keeps every other field undistorted. */
+  if(land)buildField(land,(fx,fy)=>SHAPES.flag(fx,fy*(22/45)),data,68,20);
   const ab=document.getElementById("about-field");
   if(ab)buildField(ab,SHAPES[names[(cur.course+2)%3]],data,52,30);
   const lf=document.getElementById("log-field");
@@ -2929,7 +2951,7 @@ function renderHoleMap(h){
   const partial=!(g.fw&&g.fw.length)||!(g.gn&&g.gn.length);
   const calNote=straightUnderCard?` <em class='hm-warn'>· straight-line map, card ${g.card}y</em>`
     :Math.abs(cf-1)>0.03?` <em class='hm-warn'>· ×${cf.toFixed(2)} card-calibrated</em>`:"";
-  wrap.innerHTML=`<div class='hm-cap'><span>Hole ${h.n} · tap to drop your ball</span><span id='hm-read'>${g.sketch?`<em class='hm-warn'>sketch · card line only, unsurveyed</em>`:g.derived?`${cardLen}y · OSM · ${g.cl.length>2?"tee to green through the fairway":"straight tee to green"}${partial?", no fairway mapped":""}`:partial?`<em class='hm-warn'>partial map · line ${g.gn&&g.gn.length?"":"+ bunkers "}only</em>`:`${cardLen}y · OSM`}${g.sketch?"":calNote}</span><button class='chip' id='gps-chip' style='padding:3px 11px;font-size:.66rem;font-family:var(--mono);letter-spacing:.08em'>GPS</button>${(g.el&&!g.sketch&&g.cl.length>2)?`<button class='chip' id='d3-chip' style='padding:3px 11px;font-size:.66rem;font-family:var(--mono);letter-spacing:.08em'>3D</button>`:""}</div>
+  wrap.innerHTML=`<div class='hm-cap'><span>Hole ${h.n} · tap to drop your ball</span><span id='hm-read'>${g.sketch?`<em class='hm-warn'>sketch · card line only, unsurveyed</em>`:g.derived?`${cardLen}y · OSM · ${g.cl.length>2?"tee to green through the fairway":"straight tee to green"}${partial?", no fairway mapped":""}`:partial?`<em class='hm-warn'>partial map · line ${g.gn&&g.gn.length?"":"+ bunkers "}only</em>`:`${cardLen}y · OSM`}${g.sketch?"":calNote}</span><button class='chip' id='gps-chip' style='padding:6px 12px;font-size:.66rem;font-family:var(--mono);letter-spacing:.08em'>GPS</button>${(g.el&&!g.sketch&&g.cl.length>2)?`<button class='chip' id='d3-chip' style='padding:6px 12px;font-size:.66rem;font-family:var(--mono);letter-spacing:.08em'>3D</button>`:""}</div>
    <svg viewBox='0 0 ${W.toFixed(0)} ${Hh.toFixed(0)}' preserveAspectRatio='xMidYMid meet'>
     ${corridor}${polys(g.tr,"hm-tr")}${polys(g.fw,"hm-fw")}${polys(g.wa,"hm-wa")}${polys(g.te,"hm-te")}${polys(g.bk,"hm-bk")}${(g.gn||[]).map(f=>polys([f],"hm-gn"+(f.src==="trace"?" approx":""))).join("")}${rings}${greenArt}
     <polyline points='${P(g.cl)}' class='hm-cl'/>${ticks}
@@ -3352,6 +3374,25 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
       const pb=sit.pin==="front"?"front":sit.pin==="back"?"back":"mid";
       albieSays=h.mx.approach?.[band]?.[pb]||"";}
   }
+  /* mx.tee is keyed by wind; mx.approach is keyed by band and pin only, yet 30
+     of its lines across 9 courses assert a wind ("take extra club into the
+     prevailing wind"). Voiced blind, that contradicts the live wind chip two
+     inches above it - Albie told a downwind golfer to club up into the breeze
+     (seam sweep, 2026-09-03). The number below is already wind-adjusted, so the
+     honest move is to say which wind the note was written for and what today
+     is. The real fix is to key mx.approach by wind the way mx.tee is; until the
+     pipeline does that, the contradiction is named rather than voiced. */
+  let windCaveat="";
+  if(albieSays&&sit.lie!=="tee"){
+    const says=/\binto[- ]wind|into the (?:prevailing )?wind|into your face|against the (?:into-)?wind|club up for the wind\b/i.test(albieSays)?"into"
+      :/\bdownwind|down[- ]wind|helping wind|with the wind|wind at your back\b/i.test(albieSays)?"down":null;
+    if(says&&sit.wind!==says)
+      windCaveat=sit.wind==="calm"
+        ?`That note is written for this hole's prevailing wind. It is calm right now, so take the club below, not an extra one.`
+        :sit.wind==="cross"
+        ?`That note is written for a wind ${says==="into"?"in your face":"at your back"}. Today it is across you at ${sit.mph} mph, so it costs you far less distance than the note assumes.`
+        :`That note is written for a wind ${says==="into"?"in your face":"at your back"}. Today it is ${sit.wind==="into"?"into you":"helping"} at ${sit.mph} mph, and the number below already accounts for it.`;
+  }
   /* trouble: situation read + ranked ways out, instead of a distance call */
   let troubleHTML="";
   if(sit.lie==="trouble"){
@@ -3448,6 +3489,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
      ${sit.lie==="trouble"?troubleHTML:`${clubLine?`<div class='club'>${clubLine}</div>`:""}${callMath}${approachOpts}`}
      ${wxReadout(sit)}
      ${albieSays?`<p class='albiesays'><span class='who'>ALBIE ▸</span> ${fmt(albieSays)}</p>`:""}
+     ${windCaveat?`<p class='albiesays caveat'><span class='who'>TODAY ▸</span> ${fmt(windCaveat)}</p>`:""}
      ${(h.grn&&sit.lie!=="tee")||runoutNote?`<div class='rules' style='margin:8px 0 2px'>${h.grn&&sit.lie!=="tee"?noteRow("","the green",`${fmt(h.grn.note)} <span class='src'>${h.grn.src||""}</span>`):""}${runoutNote}</div>`:""}
      <button class='expand' id='share-call'>Share this call ▸</button>
      <button class='expand' id='expand-call'>Full reasoning ▾</button>
@@ -3463,7 +3505,11 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
   // the shot record learns the new call; the feedback slot is not touched.
   // A locked pick survives the rewrite: it is frozen on the record, and the
   // matching option is re-marked rather than re-chosen.
-  shotSync(clubLine||"rules",sit,clubLine);
+  // A trouble shot has no headline club, so this used to bank the literal
+  // string "rules" as the call. A tester's export then carried a shot whose
+  // advice named nothing at all (seam sweep, 2026-09-03). Record what was
+  // actually voiced: the way out, or the hole rule that stood in for a club.
+  shotSync(clubLine||(sit.lie==="trouble"?"the way out":"hole rules"),sit,clubLine);
   if(shot.pick){const o=$$("#advice .opt[data-pick]").find(x=>x.dataset.pick===shot.pick);
     if(o){o.classList.add("chosen");chosenPick=shot.pick;}}
 }
@@ -3475,7 +3521,7 @@ function autoAsk(src){sitSummary();if(!store.p)return;
   // a background re-think (GPS fix, live weather) never redraws what a finger
   // is on or a shot already committed to: it leaves a readout on the record
   if((src==="gps"||src==="wx")&&fbLive()){
-    shot.stale=src==="gps"?"GPS moved you · re-think ▸":"Weather changed · re-think ▸";
+    shot.stale=src==="gps"?{k:"gps",d:+$("#sit-dist").value||0}:{k:"wx"};
     paintShotFb();return}
   clearTimeout(autoAskT);autoAskT=setTimeout(ask,90);}
 /* ---------- the shot record ----------
@@ -3485,7 +3531,14 @@ function autoAsk(src){sitSummary();if(!store.p)return;
    ball corrects the rating instead of logging a second shot. */
 let shot=null;
 function shotNew(){const c=COURSES[cur.course];
-  const n=shot&&shot.course===c.slug&&shot.hole===cur.hole?shot.n+1:1;
+  // A shot number continues TODAY's ledger for this hole. Re-opening a hole
+  // already played this round used to restart at 1 and stack a second "1" row
+  // on top of the first (seen at 375px, 2026-09-03).
+  const today=new Date().toISOString().slice(0,10);
+  const logged=store.log.reduce((m,e)=>(e.type==="shot"&&e.course===c.slug&&e.hole===cur.hole
+    &&(e.t||"").slice(0,10)===today)?Math.max(m,e.n||0):m,0);
+  const prev=(shot&&shot.course===c.slug&&shot.hole===cur.hole)?shot.n:0;
+  const n=Math.max(logged,prev)+1;
   shot={course:c.slug,hole:cur.hole,n,advice:null,pick:null,club:null,clubSet:false,sit:null,rating:0,note:"",logIdx:null,stale:null};
   renderShotFb();}
 function shotSync(advice,sit,club){const c=COURSES[cur.course];
@@ -3537,7 +3590,7 @@ function renderLedger(){const el=$("#ledger");if(!el)return;
   el.innerHTML=rows.map((r,i)=>{const s=r.e.sit||{},nx=rows[i+1]&&rows[i+1].e.sit,last=i===rows.length-1;
     const got=last?(s.dist?s.dist+" out":"")
       :(s.lie==="tee"&&nx&&nx.hit!=null&&s.hit!=null&&nx.hit-s.hit>=50)?(nx.hit-s.hit)+"y"
-      :(nx&&nx.lie)?safeText(nx.lie,14):"";
+      :(nx&&nx.lie&&nx.lie!=="tee")?safeText(nx.lie,14):"";
     return `<div class='lrow${last?" open":""}'>
       <span class='lnum'>${r.e.n||i+1}</span>
       <span class='lwhat' data-club='${i}'>${safeText(r.e.club||(s.lie==="tee"?"Tee shot":r.e.advice)||"no call",44)} <i class='lcaret'>▾</i></span>
@@ -3557,9 +3610,28 @@ function renderLedger(){const el=$("#ledger");if(!el)return;
 function shotPlayed(){return !!(shot&&shot.advice&&(shot.rating||shot.pick||shot.note
   ||shot.clubSet||(shot.sit&&shot.sit.src)));}
 function fbLive(){return !!(shot&&(shot.rating||shot.pick||document.activeElement===$("#fb-note")));}
+/* Scritto grammar on the yardage, the twin of wxMoment() on the wind: a GPS
+   fix that moves you NAMES the new number and rolls to it, so the change is
+   legible without spending a re-think. Still on first appearance (there is
+   nothing to roll from), still under reduced motion, and never under a finger
+   — this only ever fires on a background fix the golfer did not ask for. */
+function rollNum(el,to){if(!el)return;
+  const from=+el.dataset.n;el.dataset.n=to;
+  if(!motionOK||!isFinite(from)||from===to){el.textContent=to;return}
+  const t0=performance.now();
+  const step=t=>{const f=Math.min(1,(t-t0)/450),e=1-Math.pow(1-f,3);
+    el.textContent=Math.round(from+(to-from)*e);
+    if(f<1)requestAnimationFrame(step);};
+  requestAnimationFrame(step);}
 function paintShotFb(){if(!shot||!$("#fb-stars"))return;
   [...$("#fb-stars").children].forEach((s,j)=>s.classList.toggle("on",j<shot.rating));
-  const st=$("#fb-stale");st.classList.toggle("hidden",!shot.stale);if(shot.stale)st.textContent=shot.stale;}
+  const st=$("#fb-stale");st.classList.toggle("hidden",!shot.stale);
+  if(!shot.stale)return;
+  const k=shot.stale.k;
+  if(st.dataset.k!==k){st.dataset.k=k;
+    st.innerHTML=k==="gps"?"GPS moved you · <b class='rollnum'>0</b>y · re-think ▸"
+                          :"Weather changed · re-think ▸";}
+  if(k==="gps")rollNum(st.querySelector(".rollnum"),shot.stale.d);}
 function renderShotFb(){const c=COURSES[cur.course],h=c.holes.find(x=>x.n===cur.hole);
   $("#shotfb").innerHTML=`<div class='fbhead'><p class='eyebrow'>Rate this call</p>
      <button class='fb-chip hidden' id='fb-stale' data-verb='Re-think'></button></div>
@@ -3819,6 +3891,16 @@ $("#export").addEventListener("click",async()=>{
   const fname=`caddie-feedback-${(store.p?.name||"tester").toLowerCase()}-${new Date().toISOString().slice(0,10)}.json`;
   if(window.claude?.downloads?.save){try{await window.claude.downloads.save({filename:fname,data:payload});
     toast("Feedback file saved.");return}catch(e){}}
+  /* A real file first, clipboard second. On an iPhone this is what puts the
+     export in Safari's download sheet, where "Save to Files" makes it a file a
+     tester can actually send; the clipboard alone loses it the moment they copy
+     anything else. Both fallbacks stay, because a sandboxed host blocks the
+     download and gives no error. */
+  try{const url=URL.createObjectURL(new Blob([payload],{type:"application/json"}));
+    const a=document.createElement("a");a.href=url;a.download=fname;
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000);
+    toast("Feedback file saved. Send it in.");return}catch(e){}
   try{await navigator.clipboard.writeText(payload);toast("Copied to clipboard. Send it in with your feedback.")}
   catch(e){copySheet("export-copyout",payload,"Copy your feedback data from the box below.")}});
 let resetArmed=0;
@@ -3918,6 +4000,16 @@ window.addEventListener("resize",moveTabInd);
 setTimeout(moveTabInd,60);
 
 /* ---------- boot ---------- */
+/* Feature photography lives at a URL under art/, never inside the bundle: the
+   app has to stay one offline-capable file and two 140KB plates would not earn
+   their place in it. If the fetch fails (offline, first PWA launch, air-mode on
+   the course) the embedded dither plate takes the frame and the caption stops
+   claiming to be a photograph. */
+$$(".ab-plate img[data-fb]").forEach(im=>im.addEventListener("error",()=>{
+  const fig=im.closest(".ab-plate");fig.classList.remove("photo");
+  im.src=im.dataset.fb;
+  const cap=fig.querySelector("figcaption");
+  if(cap&&im.dataset.fbcap)cap.textContent=im.dataset.fbcap;},{once:true}));
 banner();
 renderCourseSel();renderHoles();renderLog();renderAbout();
 /* weather runs itself: silent fetch at the course's coordinates on open.
