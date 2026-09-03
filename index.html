@@ -32,6 +32,20 @@
      where 1.56 overshoot reads as dated rather than physical. */
   --spring:cubic-bezier(.34,1.56,.64,1);
   --settle:cubic-bezier(.16,1,.3,1);
+  /* Control tokens. Two radii, five spacings, five type stops, one control
+     height. A glove and low sun read shape and size, not subtlety, so the
+     app gets one of each instead of nineteen. Every control draws from
+     these; preflight's c_control_tokens fails the build on any radius or
+     control font-size that does not. */
+  --r-s:4px;   /* every control: buttons, chips, tags, fields, stepper caps */
+  --r-m:10px;  /* every container: cards, ledger, map, menus, toast, green box */
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;
+  --t-xs:.72rem;  /* mono: tags, tab labels, notched verbs */
+  --t-s:.85rem;   /* chips, secondary lines */
+  --t-m:1rem;     /* body, fields, buttons */
+  --t-l:1.35rem;  /* display: section heads */
+  --t-xl:2.2rem;  /* display: the club in the call */
+  --ctl:44px;     /* anything a gloved thumb taps */
 }
 *{box-sizing:border-box}
 html{background:#F1ECDA}
@@ -46,18 +60,27 @@ body{margin:0;color:var(--ink);font:16px/1.55 var(--body);-webkit-font-smoothing
 body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22><filter id=%22n%22><feTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%222%22/><feColorMatrix values=%220 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0%22/></filter><rect width=%22300%22 height=%22300%22 filter=%22url(%23n)%22/></svg>");
   opacity:.32;mix-blend-mode:multiply;pointer-events:none;z-index:999}
 .wrap{max-width:480px;margin:0 auto;padding:14px 14px 0}
-h1{font-family:var(--disp);font-weight:600;font-size:1.3rem;margin:.2rem 0 .1rem}
+h1{font-family:var(--disp);font-weight:600;font-size:var(--t-l);margin:.2rem 0 .1rem}
 h2{font-family:var(--disp);font-weight:600}
-.eyebrow{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--slate);font-weight:400}
+/* a section header, tracked mono caps. It labels a compartment of the page,
+   which is why it is an h2 and not a floating line above a headline. */
+.cardhead{font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--slate);font-weight:400;margin:0 0 4px}
 .brand{display:flex;align-items:baseline;gap:8px;padding:4px 0 10px;border-bottom:2px solid var(--sage);margin-bottom:12px}
 .wordmark{font-family:var(--disp);font-weight:600;font-size:1.5rem;letter-spacing:-.02em}
+button.wordmark{background:none;border:0;padding:0;color:inherit;cursor:pointer}
 .wordmark i{font-style:normal;color:var(--brick)}
 .brand .beta{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--paper);background:var(--sage);border-radius:999px;padding:2px 9px;align-self:center}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:10px 0;position:relative}
+  color:var(--paper);background:var(--sage);border-radius:var(--r-s);padding:2px 9px;align-self:center}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);padding:var(--sp-4);margin:10px 0;position:relative}
 .num{font-variant-numeric:tabular-nums;font-family:var(--mono)}
-select,input[type=text],input[type=number],input[type=email],textarea{width:100%;padding:10px;border:1px solid var(--line);
-  border-radius:9px;background:var(--card);color:var(--ink);font-size:1rem;font-family:var(--body)}
+/* one field idiom: a bordered box at control height. The ruled-underline
+   fields read as a scorecard on paper and as nothing at all through a glove
+   in sunlight, which is where this app is used. */
+.field,select,input[type=text],input[type=number],input[type=email],textarea{
+  width:100%;min-height:var(--ctl);padding:var(--sp-2) var(--sp-3);
+  border:1px solid var(--line);border-radius:var(--r-s);
+  background:var(--card);color:var(--ink);
+  font-size:var(--t-m);font-family:var(--body)}
 label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-family:var(--mono);
   text-transform:uppercase;letter-spacing:.1em;font-size:.66rem}
 /* side-by-side fields sit on ONE baseline even when a label wraps to two
@@ -68,15 +91,17 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0;align-items:flex-start;align-content:flex-start}
 .chips.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .chips.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.chips.grid2 .chip,.chips.grid3 .chip{text-align:center;width:100%;padding:10px 4px}
-.chip{padding:8px 14px;border-radius:999px;background:var(--card);border:1px solid var(--line);
-  font-size:.88rem;cursor:pointer;user-select:none;align-self:flex-start;height:fit-content;
-  transition:transform .3s var(--spring),background .2s,color .2s,border-color .2s}
+.chips.grid2 .chip,.chips.grid3 .chip{text-align:center;width:100%;padding:var(--sp-2) var(--sp-1)}
+.chip{display:inline-flex;align-items:center;justify-content:center;
+  min-height:var(--ctl);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-s);
+  background:var(--card);border:1px solid var(--line);
+  font-size:var(--t-s);cursor:pointer;user-select:none;align-self:flex-start;height:fit-content;
+  transition:transform .3s var(--spring),background-color .2s,color .2s,border-color .2s}
 .chip:active{transform:scale(.93)}
-.chip.on{background:var(--sage);color:#fff;border-color:var(--sage);font-weight:600}
+.chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:600}
 .holestrip{display:flex;gap:6px;overflow-x:auto;padding:6px 0;scrollbar-width:none}
 .holestrip::-webkit-scrollbar{display:none}
-.hole-n{min-width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+.hole-n{min-width:var(--ctl);height:var(--ctl);border-radius:var(--r-s);display:flex;align-items:center;justify-content:center;
   background:var(--card);border:1px solid var(--line);font-weight:700;cursor:pointer;flex:0 0 auto;
   font-family:var(--mono)}
 .hole-n.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
@@ -89,22 +114,30 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
    the yardage book. Filled ink is reserved for the one true primary action
    on a screen (Export), and brick for destructive confirmation. */
 /* The plate button. Its VERB notches into the top rule the way the call
-   card's eyebrow sets into its border - the most distinctive detail in the
+   card's label sets into its border - the most distinctive detail in the
    app, which until now lived in exactly one place - and the OBJECT it acts on
    sits in the body. That split also kills the two-line label wrap that made
    "Export data for feedback & calibration" look broken. */
 .btn2{position:relative;display:flex;align-items:center;justify-content:center;
-  width:100%;min-height:54px;padding:16px 16px 14px;
-  border:1.2px solid #33362B4A;border-radius:3px;
+  width:100%;min-height:54px;padding:var(--sp-4) var(--sp-4) 14px;
+  border:1px solid #33362B4A;border-radius:var(--r-s);
   background:var(--card);color:var(--ink);
-  font:500 .95rem var(--body);letter-spacing:0;text-transform:none;text-align:center;
+  font:500 var(--t-m) var(--body);letter-spacing:0;text-transform:none;text-align:center;
   cursor:pointer;margin:17px 0 10px;
   box-shadow:0 1.5px 0 #33362B22;
-  transition:transform .13s var(--settle),background .2s,color .2s,border-color .2s,box-shadow .13s}
+  transition:transform .13s var(--settle),background-color .2s,color .2s,border-color .2s}
 .btn2::before{content:attr(data-verb);position:absolute;top:-8px;left:13px;
   background:var(--card);padding:0 8px;
-  font:600 .58rem var(--mono);letter-spacing:.15em;text-transform:uppercase;color:var(--slate)}
+  font:600 var(--t-xs) var(--mono);letter-spacing:.15em;text-transform:uppercase;color:var(--slate)}
 @media(hover:hover){.btn2:hover{background:#33362B08}}
+/* icon-only: a 44px square for the hole arrows, the stepper caps and the
+   in/out marker. Its label is the aria-label, so it carries no notch. */
+.btn2.icon{width:var(--ctl);min-width:var(--ctl);height:var(--ctl);min-height:var(--ctl);
+  flex:0 0 auto;padding:0;margin:0;font:600 var(--t-m)/1 var(--disp)}
+.btn2.icon::before{content:none}
+.btn2.icon.mono{font:600 var(--t-xs)/1 var(--mono);letter-spacing:.06em}
+/* inline: same plate, sized to its words, for rows that hold more than it */
+.btn2.compact{width:auto;min-height:var(--ctl);margin:0;padding:0 var(--sp-3)}
 /* pressed like a key: the plate travels down onto its own lip */
 .btn2:active{transform:translateY(1.5px);box-shadow:0 0 0 #33362B22}
 /* Weight, not fill, carries emphasis now. A solid dark plate put the notched
@@ -112,7 +145,7 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
    the primary action instead gets a heavier ink frame over tinted paper, and
    the rule it breaks stays visible. Same reason the armed state is a brick
    wash rather than a brick block. */
-.btn2.solid{border-width:1.7px;border-color:var(--ink);background:#33362B0D;font-weight:600}
+.btn2.solid{border-color:var(--ink);background:#33362B14;font-weight:600}
 .btn2.solid::before{color:var(--ink)}
 @media(hover:hover){.btn2.solid:hover{background:#33362B16}}
 .btn2.sage{border-color:var(--sage)}
@@ -125,24 +158,21 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .btn2.danger{color:var(--brick);border-color:var(--brick)}
 .btn2.danger::before{color:var(--brick)}
 @media(hover:hover){.btn2.danger:hover{background:#A4472F0E}}
-.btn2.danger.armed{border-width:1.7px;background:#A4472F1C;font-weight:600}
+.btn2.danger.armed{background:#A4472F1C;font-weight:600}
 /* buttons answer the hand: an arrow slides in on hover/press */
 /* the notched verb is the affordance now; a hover arrow on top of it was noise */
 @media(hover:hover){.btn:hover{transform:translateY(-1.5px)}}
 /* typing caret for the About headline */
-.typing::after{content:"▌";color:var(--sage);animation:blink .8s steps(1) infinite;font-weight:400}
-@keyframes blink{50%{opacity:0}}
+.typing::after{content:"▌";color:var(--sage);font-weight:400}
 .btn:active{transform:scale(.965)}
-.btn.red{background-image:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAzMDAgMTAwJz48ZGVmcz48ZmlsdGVyIGlkPSdzJz48ZmVEcm9wU2hhZG93IGR4PScwJyBkeT0nMi41JyBzdGREZXZpYXRpb249JzIuNScgZmxvb2QtY29sb3I9JyMwMDAwMDAzMCcvPjwvZmlsdGVyPjxsaW5lYXJHcmFkaWVudCBpZD0nZycgeDE9JzAnIHkxPScwJyB4Mj0nMCcgeTI9JzEnPjxzdG9wIG9mZnNldD0nMCcgc3RvcC1jb2xvcj0nIzNBM0QzMScvPjxzdG9wIG9mZnNldD0nMScgc3RvcC1jb2xvcj0nIzJDMkYyNScvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxwYXRoIGQ9J00yOTIuOSw0Ni4wIEwyOTIuNSw0OS44IEwyOTAuMCw1My41IEwyODUuNiw1Ny4yIEwyNzkuNiw2MC42IEwyNzIuMSw2My45IEwyNjMuNCw2Ni45IEwyNTMuNyw2OS43IEwyNDMuMSw3Mi4yIEwyMzEuNSw3NC41IEwyMTkuMSw3Ni40IEwyMDYuMCw3Ny45IEwxOTIuNCw3OS4xIEwxNzguNCw3OS45IEwxNjQuMiw4MC4zIEwxNTAuMCw4MC40IEwxMzUuOSw4MC4xIEwxMjEuOSw3OS41IEwxMDguMSw3OC43IEw5NC43LDc3LjUgTDgxLjYsNzYuMCBMNjkuMyw3NC4yIEw1Ny44LDcyLjAgTDQ3LjUsNjkuNCBMMzguNSw2Ni41IEwzMS4wLDYzLjQgTDI1LjAsNjAuMSBMMjAuNCw1Ni43IEwxNy4xLDUzLjIgTDE0LjksNDkuNiBMMTMuNyw0Ni4wIEwxMy42LDQyLjQgTDE0LjcsMzguNyBMMTcuMiwzNS4xIEwyMS4zLDMxLjUgTDI3LjEsMjguMCBMMzQuNiwyNC43IEw0My45LDIxLjggTDU0LjYsMTkuMSBMNjYuNSwxNi44IEw3OS4zLDE0LjkgTDkyLjgsMTMuNCBMMTA2LjgsMTIuMyBMMTIxLjEsMTEuNSBMMTM1LjYsMTEuMiBMMTUwLjAsMTEuMiBMMTY0LjMsMTEuNiBMMTc4LjEsMTIuNCBMMTkxLjUsMTMuNiBMMjA0LjIsMTUuMSBMMjE2LjIsMTYuOSBMMjI3LjUsMTguOSBMMjM4LjIsMjEuMiBMMjQ4LjMsMjMuNSBMMjU3LjksMjYuMSBMMjY2LjksMjguOSBMMjc1LjAsMzEuOSBMMjgyLjAsMzUuMSBMMjg3LjUsMzguNiBMMjkxLjIsNDIuMiBMMjkyLjksNDYuMCBaJyBmaWxsPSd1cmwoI2cpJyBmaWx0ZXI9J3VybCgjcyknLz48cGF0aCBkPSdNMjkzLjUsNzQuMCBMMjkzLjQsNzUuNiBMMjkzLjEsNzcuMyBMMjkyLjcsNzkuMCBMMjkyLjAsODAuNyBMMjkxLjAsODIuNCBMMjg5LjQsODQuMCBMMjg3LjMsODUuNCBMMjg0LjgsODYuNiBMMjgxLjgsODcuNyBMMjc4LjcsODguNCBMMjc1LjQsODkuMSBMMjcyLjEsODkuNiBMMjY4LjgsOTAuMSBMMjY1LjUsOTAuNiBMMjYyLjAsOTEuMiBMMjU4LjMsOTEuNyBMMjU0LjQsOTIuMCBMMjUwLjMsOTIuMCBMMjQ2LjMsOTEuNyBMMjQyLjUsOTAuOSBMMjM5LjEsODkuNyBMMjM2LjQsODguMiBMMjM0LjMsODYuNSBMMjMyLjksODQuNiBMMjMxLjksODIuNyBMMjMxLjQsODAuOCBMMjMxLjIsNzkuMCBMMjMxLjEsNzcuMyBMMjMxLjMsNzUuNiBMMjMxLjcsNzQuMCBMMjMyLjQsNzIuNCBMMjMzLjMsNzAuOSBMMjM0LjQsNjkuNSBMMjM1LjYsNjguMSBMMjM2LjksNjYuNyBMMjM4LjEsNjUuMyBMMjM5LjQsNjMuOCBMMjQwLjcsNjIuMiBMMjQyLjMsNjAuNSBMMjQ0LjMsNTguNyBMMjQ2LjksNTcuMSBMMjUwLjEsNTUuNyBMMjUzLjgsNTQuNiBMMjU3LjgsNTQuMSBMMjYyLjAsNTQuMSBMMjY2LjEsNTQuNSBMMjY5LjksNTUuNCBMMjczLjQsNTYuNSBMMjc2LjUsNTcuOCBMMjc5LjIsNTkuMSBMMjgxLjgsNjAuNCBMMjg0LjIsNjEuNyBMMjg2LjUsNjMuMCBMMjg4LjUsNjQuNCBMMjkwLjMsNjUuOCBMMjkxLjcsNjcuNCBMMjkyLjcsNjkuMCBMMjkzLjIsNzAuNyBMMjkzLjUsNzIuMyBMMjkzLjUsNzQuMCBaJyBmaWxsPScjQ0JCQjhFJy8+PHBhdGggZD0nTTI5My41LDc0LjAgTDI5My40LDc1LjYgTDI5My4xLDc3LjMgTDI5Mi43LDc5LjAgTDI5Mi4wLDgwLjcgTDI5MS4wLDgyLjQgTDI4OS40LDg0LjAgTDI4Ny4zLDg1LjQgTDI4NC44LDg2LjYgTDI4MS44LDg3LjcgTDI3OC43LDg4LjQgTDI3NS40LDg5LjEgTDI3Mi4xLDg5LjYgTDI2OC44LDkwLjEgTDI2NS41LDkwLjYgTDI2Mi4wLDkxLjIgTDI1OC4zLDkxLjcgTDI1NC40LDkyLjAgTDI1MC4zLDkyLjAgTDI0Ni4zLDkxLjcgTDI0Mi41LDkwLjkgTDIzOS4xLDg5LjcgTDIzNi40LDg4LjIgTDIzNC4zLDg2LjUgTDIzMi45LDg0LjYgTDIzMS45LDgyLjcgTDIzMS40LDgwLjggTDIzMS4yLDc5LjAgTDIzMS4xLDc3LjMgTDIzMS4zLDc1LjYgTDIzMS43LDc0LjAgTDIzMi40LDcyLjQgTDIzMy4zLDcwLjkgTDIzNC40LDY5LjUgTDIzNS42LDY4LjEgTDIzNi45LDY2LjcgTDIzOC4xLDY1LjMgTDIzOS40LDYzLjggTDI0MC43LDYyLjIgTDI0Mi4zLDYwLjUgTDI0NC4zLDU4LjcgTDI0Ni45LDU3LjEgTDI1MC4xLDU1LjcgTDI1My44LDU0LjYgTDI1Ny44LDU0LjEgTDI2Mi4wLDU0LjEgTDI2Ni4xLDU0LjUgTDI2OS45LDU1LjQgTDI3My40LDU2LjUgTDI3Ni41LDU3LjggTDI3OS4yLDU5LjEgTDI4MS44LDYwLjQgTDI4NC4yLDYxLjcgTDI4Ni41LDYzLjAgTDI4OC41LDY0LjQgTDI5MC4zLDY1LjggTDI5MS43LDY3LjQgTDI5Mi43LDY5LjAgTDI5My4yLDcwLjcgTDI5My41LDcyLjMgTDI5My41LDc0LjAgWicgZmlsbD0nbm9uZScgc3Ryb2tlPScjMDAwMDAwMjInIHN0cm9rZS13aWR0aD0nMScvPjwvc3ZnPg==")}
-.btn.ghost{background-image:none;border:1.5px solid var(--sage);border-radius:12px;color:var(--ink);
-  font-weight:500;height:auto;min-height:48px;padding:11px 24px}
 .btn:focus-visible,.chip:focus-visible,.hole-n:focus-visible,.tab:focus-visible{outline:2px solid var(--brick);outline-offset:2px}
 /* the call is a yardage-book plate, not an app card: survey frame, the
    title set into the border, data as ruled mono lines instead of pills */
-.call{border:1.2px solid #33362B4A;border-radius:3px;position:relative;
+.call{border:1px solid #33362B4A;border-radius:var(--r-s);position:relative;
   padding:20px 16px 14px;margin:18px 0 12px;background:var(--card)}
-.call>.eyebrow{position:absolute;top:-9px;left:12px;background:var(--card);
-  padding:0 9px;color:var(--brick);font-weight:600}
+.call[data-verb]::before{content:attr(data-verb);position:absolute;top:-9px;left:12px;
+  background:var(--card);padding:0 9px;color:var(--brick);
+  font:600 var(--t-xs) var(--mono);letter-spacing:.14em;text-transform:uppercase}
 /* ONE rhythm inside the call. The children had carried margins of 2, 6, 8, 10,
    12 and 14px in no particular order, so adjacent margins collapsed
    unpredictably and the card read as badly spaced. Two steps only: 12px
@@ -152,7 +182,7 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .call>.callmath+.club,.call>.club+.callmath{margin-top:6px}
 .call>.expand+.expand{margin-top:2px}
 .call>.call-more{margin-top:0}
-.call .club{font-family:var(--disp);font-weight:600;font-size:2.2rem;letter-spacing:-.02em;line-height:1.1;margin:2px 0 6px}
+.call .club{font-family:var(--disp);font-weight:600;font-size:var(--t-xl);letter-spacing:-.02em;line-height:1.1;margin:2px 0 6px}
 /* flex-wrap, not inline: the spans carry no whitespace between them, so
    only flex gives them a break opportunity (they clipped off-screen before) */
 .callmath{display:flex;flex-wrap:wrap;align-items:baseline;margin:2px 0 8px;
@@ -163,33 +193,29 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
    dot, and it keeps real breathing room either side */
 .callmath .cm:not(:last-child)::after{content:"·";margin:0 .55em;color:var(--sand)}
 .callmath .cm b{font-weight:700;color:var(--ink)}
-.readout{font-family:var(--mono);font-size:.62rem;letter-spacing:.09em;color:#33362B99;
+.readout{font-family:var(--mono);font-size:.62rem;letter-spacing:.09em;text-transform:uppercase;color:#33362B99;
   margin:2px 0 8px;line-height:1.6}
 .albiesays{font-size:1rem;margin:12px 0;line-height:1.55;padding:10px 12px;
-  background:#8A9A7814;border-left:2.5px solid var(--sage);border-radius:0 10px 10px 0}
-.albiesays .who{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;color:var(--sage);display:block;margin-bottom:3px;font-weight:600}
+  background:#8A9A7814;border-left:2.5px solid var(--sage);border-radius:var(--r-s)}
+.albiesays .who{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--sage);display:block;margin-bottom:3px;font-weight:600}
 .albiesays.caveat{margin-top:-6px;font-size:.92rem;background:#B0563014;border-left-color:var(--brick)}
 .albiesays.caveat .who{color:var(--brick)}
 .rules{display:flex;flex-direction:column;gap:8px;margin:12px 0 4px}
 .rule{padding:9px 12px;background:#33362B06;border-left:2px solid var(--sage);
-  border-radius:0 9px 9px 0;font-size:.92rem;line-height:1.5}
+  border-radius:var(--r-s);font-size:.92rem;line-height:1.5}
 .rule.warn{border-left-color:var(--brick);background:#A4472F0A}
 .rule .when{display:block;font:600 .6rem var(--mono);letter-spacing:.12em;text-transform:uppercase;
   color:var(--slate);margin-bottom:2px}
 .rule.warn .when{color:var(--brick)}
 .rule .src{display:block;margin-top:3px;font:400 .62rem var(--mono);color:var(--dim);letter-spacing:.06em}
-#shotfb{margin-top:-2px}
-.fbhead{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.fbhead .eyebrow{margin:0}
+/* what is left after the rating moved to the ledger: the re-think readout
+   and the two doors out of the shot. */
+#shotfb{display:flex;flex-direction:column;gap:var(--sp-3);margin-top:var(--sp-2)}
 /* a background re-think that was held back: readout, not redraw */
-.fb-chip{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--ink);border:1px solid var(--sage);border-radius:999px;padding:3px 10px;cursor:pointer;
-  background:var(--card);white-space:nowrap}
-.fb-chip:active{transform:scale(.97)}
 /* left accent held at 2px across every callout type: the ledger convention
    stays, the one 3px outlier that read as a colored card border does not */
 .sitblock{margin:8px 0 12px;padding:10px 12px;border:1px solid var(--line);border-left:2px solid var(--slate);
-  border-radius:0 10px 10px 0;background:#5A71850F;font-size:.94rem;line-height:1.5}
+  border-radius:var(--r-s);background:#5A71850F;font-size:.94rem;line-height:1.5}
 .sitblock .who{font:600 .6rem var(--mono);letter-spacing:.13em;color:var(--slate);display:block;margin-bottom:3px;text-transform:uppercase}
 /* options read as entries on a yardage-book page: hairline rules between
    them, no nested boxes. The play is marked the way a scorecard marks a
@@ -198,11 +224,7 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .opt{display:flex;gap:12px;align-items:flex-start;padding:13px 2px;
   border:0;border-top:1px solid var(--line);background:none}
 .opts .opt:first-of-type{border-top:0}
-.opt.rec{background:#8A9A7810;border-radius:6px;padding:13px 9px;margin:0 -7px}
-.opt[data-pick]{cursor:pointer;transition:transform .3s var(--spring),background .2s}
-.opt[data-pick]:active{transform:scale(.985)}
-.opt.chosen{background:#33362B0F;border-radius:6px;padding:13px 9px;margin:0 -7px}
-.opt.chosen .orank::after{content:" · your pick";color:var(--brick)}
+.opt.rec{background:#8A9A7810;border-radius:var(--r-s);padding:13px 9px;margin:0 -7px}
 .opt .oicon{flex:0 0 46px;color:var(--ink);opacity:.6;margin-top:3px}
 .opt.rec .oicon{color:#5C6B4F;opacity:1}
 .opt .orank{display:flex;align-items:center;gap:7px;font:600 .6rem var(--mono);
@@ -210,24 +232,22 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .opt.rec .orank{color:#5C6B4F}
 .oidx{display:inline-flex;align-items:center;justify-content:center;
   min-width:19px;height:19px;font:600 .64rem var(--mono);color:var(--dim);flex:0 0 auto}
-.opt.rec .oidx{border:1.3px solid var(--sage);border-radius:999px;color:#5C6B4F}
+.opt.rec .oidx{border:1.3px solid var(--sage);border-radius:50%;color:#5C6B4F}
 .opt .opct{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--dim)}
 /* the aim panel opens under the option you locked in */
 .aimpanel{margin-top:9px;padding:9px 11px;background:var(--paper);border:1px solid var(--line);
-  border-radius:8px;font-size:.9rem;line-height:1.5;animation:rise .35s var(--settle)}
+  border-radius:var(--r-m);font-size:.9rem;line-height:1.5;animation:rise .35s var(--settle)}
 .aimpanel .when{display:block;font:600 .58rem var(--mono);letter-spacing:.13em;
   text-transform:uppercase;color:var(--brick);margin-bottom:3px}
 .aimpanel .src{display:block;margin-top:4px;font:400 .6rem var(--mono);color:var(--dim);letter-spacing:.05em}
 /* the map, again, right where the advice is */
 .minimap-wrap{margin-top:8px}
 .minimap{display:block;width:100%;height:auto;background:var(--card);
-  border:1px solid var(--line);border-radius:7px}
+  border:1px solid var(--line);border-radius:var(--r-m)}
 .mini-cap{padding:5px 2px 0;font-size:.54rem}
 .opt h4{font:600 .98rem var(--disp);margin:0 0 3px;letter-spacing:-.01em}
 .opt p{margin:0;font-size:.85rem;color:#4A4F3C;line-height:1.5}
 .opt .src{display:block;margin-top:4px;font:400 .62rem var(--mono);color:var(--dim);letter-spacing:.05em}
-.gate{background:var(--sandbg);border:1px solid var(--line);border-radius:9px;padding:9px 11px;margin:7px 0;font-size:.9rem}
-.gate b{font-family:var(--mono);font-weight:600}
 .voice{font-size:.98rem;margin:8px 0;color:#565B3F}
 /* tab bar: thin-line pictograms + a brick indicator that TRAVELS on a spring
    (Setproduct tab rule: the marker moves, it doesn't teleport). Centered
@@ -235,35 +255,35 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .tabbar{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:center;background:var(--card);
   border-top:1px solid var(--line);padding:5px 0 max(5px,env(safe-area-inset-bottom));z-index:1000}
 .tab{flex:0 1 92px;display:flex;flex-direction:column;align-items:center;gap:3px;
-  font-size:.56rem;color:var(--dim);cursor:pointer;padding:8px 0 6px;border:0;
+  font-size:var(--t-xs);color:var(--dim);cursor:pointer;padding:8px 0 6px;border:0;
   background:none;font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase;
   transition:color .2s}
-/* morphicon: on activation the pictogram firms up — the stroke thickens on the
-   spring and the faint accent strokes (the flag's ground, the bag's band, the
-   log's writing) come to full. No shape appears or vanishes, so nothing reads
-   as a rendering fault at rest, and sixty tab presses a round stay quiet. */
-.tab svg{opacity:.5;transition:opacity .25s,transform .35s var(--spring),stroke-width .3s var(--spring)}
+/* morphicon: on activation the pictogram firms up — the key shape (the flag,
+   the bag body, the log cover) fills to a faint ink wash and the accent strokes
+   come to full. No shape appears or vanishes, so nothing reads as a rendering
+   fault at rest, and sixty tab presses a round stay quiet. The stroke-width
+   transition that used to carry this is gone: a stroke re-layouts every frame. */
+.tab svg{opacity:.5;transition:opacity .25s,transform .35s var(--spring)}
+.tab svg .key{fill:var(--ink);fill-opacity:0;transition:fill-opacity .3s var(--spring)}
 .tab.on{color:var(--ink);font-weight:700}
-.tab.on svg{opacity:1;transform:translateY(-1.5px);stroke-width:1.9}
+.tab.on svg{opacity:1;transform:translateY(-1px)}
+.tab.on svg .key{fill-opacity:.18}
 .tab.on svg [opacity]{opacity:1;transition:opacity .3s}
 .tab:active svg{transform:scale(.88)}
-#tab-ind{position:absolute;top:-1px;height:2.5px;width:30px;background:var(--brick);
-  border-radius:2px;transition:left .45s var(--spring)}
-.raterow{display:flex;align-items:center;gap:14px}
-.ratecount{font-family:var(--mono);font-size:.72rem;color:var(--dim);letter-spacing:.08em}
-.stars{display:flex;gap:10px;margin-top:6px}
-.stars span{display:block;width:27px;height:27px;border-radius:50%;cursor:pointer;position:relative;
-  background:radial-gradient(circle at 32% 28%, #D9D5C8 0 30%, #C7C2B1 60%, #AFA995 100%);
-  border:1.5px solid #A9A28C;box-shadow:inset -2px -3px 5px #00000014;
-  transition:transform .35s var(--spring),background .25s,border-color .25s}
-.stars span::after{content:"";position:absolute;inset:5px;border-radius:50%;opacity:.45;
-  background-image:radial-gradient(#00000022 1px, transparent 1.2px),radial-gradient(#00000022 1px, transparent 1.2px);
-  background-size:6px 6px;background-position:0 0,3px 3px}
-.stars span.on{background:radial-gradient(circle at 32% 28%, #FFFFFF 0 30%, #F2EFE6 60%, #D5CFBE 100%);
-  border-color:var(--sage);box-shadow:inset -2px -3px 5px #00000014, 0 0 0 2px #8A9A7855;transform:scale(1.08)}
+#tab-ind{position:absolute;top:-1px;left:0;height:2.5px;width:30px;background:var(--brick);
+  border-radius:var(--r-s);transition:transform .45s var(--spring)}
+/* the verdict: two words in the chip family, on the shot the golfer just
+   played. A five-point scale asked a question nobody can answer standing over
+   a ball; "was that the right call" they can. Its own node, never inside
+   #ledger or #advice, because both are rebuilt under a live finger. */
+#verdict{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-2)}
+/* the verb sits on its own line: a notch that starts 8px above its button
+   lands on the source line when the button is inside the paragraph */
+.aimrow{display:flex;margin-top:var(--sp-4);line-height:1}
+#verdict .field{flex:1 1 100%}
 /* the shot ledger: this hole's page in a yardage book. Rows are thin and
    numeric so a glance reads the hole so far, not a feed of cards. */
-.ledger{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:10px 0}
+.ledger{background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);margin:10px 0}
 .lrow{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line)}
 .lrow:last-child{border-bottom:0}
 /* the shot in play: the same brick the tab indicator uses, so "you are here"
@@ -275,13 +295,10 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .lwhat{cursor:pointer}
 .lcaret{font-style:normal;color:var(--dim);font-size:.72rem}
 .lgot{font-family:var(--mono);font-size:.76rem;color:var(--dim);white-space:nowrap}
-.lstars{display:flex;gap:10px;flex:none}
-.lstars span::after{content:"";position:absolute;inset:-5px}
-.lstars span{display:block;position:relative;width:14px;height:14px;border-radius:50%;cursor:pointer;
-  background:radial-gradient(circle at 32% 28%, #D9D5C8 0 30%, #C7C2B1 60%, #AFA995 100%);
-  border:1.2px solid #A9A28C;transition:background .25s,border-color .25s}
-.lstars span.on{background:radial-gradient(circle at 32% 28%, #FFFFFF 0 30%, #F2EFE6 60%, #D5CFBE 100%);
-  border-color:var(--sage)}
+/* a past row's verdict is a readout, not a control: only the open shot is
+   re-tappable, so the mark is a dot, not a button pretending to be one */
+.lverd{width:7px;height:7px;border-radius:50%;flex:none;background:var(--sage)}
+.lverd.bad{background:var(--brick)}
 .small{font-size:.82rem;color:var(--dim)}
 /* inline link in body copy: ink on a sage rule, never browser blue */
 .inl{color:var(--ink);text-decoration:none;border-bottom:1.5px solid var(--sage);
@@ -302,8 +319,8 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
    over par, doubled ring for two+) — Fried Egg tagging pattern */
 .sym{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;
   padding:0 4px;border:1.2px solid currentColor;font-family:var(--mono);color:var(--ink)}
-.sym.circ{border-radius:999px}
-.sym.sq{border-radius:3px}
+.sym.circ{border-radius:50%}
+.sym.sq{border-radius:var(--r-s)}
 .sym.dbl{box-shadow:0 0 0 2px var(--card),0 0 0 3.2px currentColor}
 /* the score-ink moment: a freshly logged symbol draws itself like a pencil
    circling the number. The SVG stroke replaces the border for that one render;
@@ -326,11 +343,11 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .scard .scc:active{background:#8A9A781A}
 .scard .sym{min-width:18px;height:18px;font-size:.74rem;padding:0 2px}
 .scm{display:inline-block;width:9px;height:9px;border:1.2px solid currentColor;
-  vertical-align:-1px;margin-right:6px;border-radius:1.5px}
+  vertical-align:-1px;margin-right:6px;border-radius:var(--r-s)}
 .scm.circ{border-radius:50%}
 .scm.dbl{box-shadow:0 0 0 1.5px var(--card),0 0 0 2.4px currentColor}
-.lv .sym-ring{display:inline-block;padding:0 7px;border:1.1px solid currentColor;border-radius:999px}
-.lv .sym-box{display:inline-block;padding:0 6px;border:1.1px solid currentColor;border-radius:3px}
+.lv .sym-ring{display:inline-block;padding:0 7px;border:1.1px solid currentColor;border-radius:var(--r-s)}
+.lv .sym-box{display:inline-block;padding:0 6px;border:1.1px solid currentColor;border-radius:var(--r-s)}
 /* yardage-book corner numeral (Golf Digest / Number magazine convention) */
 .corner-num{position:absolute;top:8px;right:12px;text-align:right;pointer-events:none;line-height:1}
 .corner-num span{font:700 3rem/1 var(--mono);letter-spacing:-.02em;color:#33362B26}
@@ -338,7 +355,7 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
 .corner-num i{display:block;font:400 .6rem var(--mono);font-style:normal;letter-spacing:.14em;
   color:var(--dim);margin-top:3px;text-transform:uppercase}
 /* Eephus scorebook: log entries sit on a punched page edge, summary card folds */
-#logentries .card{margin-left:16px;border-radius:4px 12px 12px 4px;position:relative}
+#logentries .card{margin-left:16px;border-radius:var(--r-m);position:relative}
 #logentries .card::before{content:"";position:absolute;left:-10px;top:4px;bottom:4px;width:10px;
   background-image:radial-gradient(circle at 5px 9px,#33362B1C 2.2px,transparent 2.9px);
   background-size:10px 22px;background-repeat:repeat-y}
@@ -351,50 +368,55 @@ label{display:block;margin:10px 0 4px;font-size:.8rem;color:var(--dim);font-fami
    markers snap on springs. All springs, all killed by reduced-motion. */
 .call{animation:rise .4s var(--settle)}
 .opt{opacity:0;animation:rise .45s var(--settle) forwards}
-.opt.chosen{opacity:1;animation:pick .35s var(--settle)}
 @keyframes pick{from{transform:scale(.96)}to{transform:none}}
-.zone-band .me,.zone-band .melab{transition:left .35s var(--spring),opacity .2s}
+/* the wind and side markers sit under the thumb that drags them: an eased
+   `left` made them trail the finger, and `left` is layout. They snap now. */
+.zone-band .me,.zone-band .melab{transition:opacity .2s}
 table{border-collapse:collapse;width:100%}
 td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:.9rem}
 th{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:400}
 .bagnum{width:76px}
 .ghead td{font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;
   color:var(--slate);padding-top:14px;border-bottom:0}
-#bagtable input[type=number]{padding:8px 6px;font-size:1rem}
+#bagtable input[type=number]{padding:8px 6px;font-size:var(--t-m)}
 /* crossed off the card: strike the club, dim the line, stamp OUT in the
    margin. The whole row is the tap target. */
 #bagtable tr[data-row]{cursor:pointer}
 /* the whole row already toggles, so this marker does not need to be a big
    target too: keep it narrow enough that "3-wood" stays on one line */
-.inout{width:34px}
+.inout{width:48px}
 /* both states are stated: sage IN, brick OUT. IN is deliberately the quieter
    of the two so the eye is pulled to the club that is NOT in the bag, which is
    the unusual one. Dimming sits on the struck cells only, never on the marker,
    or OUT would end up the faintest thing in its own row. */
-.inbtn{background:none;border:0;padding:10px 1px;min-width:32px;min-height:36px;cursor:pointer;
-  font:600 .55rem var(--mono);letter-spacing:.06em;text-align:left;
-  color:#5C6B4F;opacity:.55;transition:opacity .2s,color .2s}
-@media(hover:hover){#bagtable tr:hover .inbtn{opacity:.85}}
+.inout .btn2{color:#5C6B4F;opacity:.7;transition:opacity .2s,color .2s}
+@media(hover:hover){#bagtable tr:hover .inout .btn2{opacity:1}}
 .clubname{white-space:nowrap}
-.clubout .inbtn{color:var(--brick);opacity:1}
+.clubout .inout .btn2{color:var(--brick);opacity:1}
 .clubout .clubname,.clubout .bagnum,.clubout .rmclub{opacity:.5}
 .clubout .clubname{text-decoration:line-through;text-decoration-thickness:1.1px}
 .clubout .bagnum{text-decoration:line-through;text-decoration-thickness:1px}
-.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.66rem;font-weight:600;
+/* the data tag: never tappable, always mono, says what a thing IS */
+.tag{display:inline-block;padding:2px 9px;border-radius:var(--r-s);font-size:var(--t-xs);font-weight:600;
   background:var(--sandbg);letter-spacing:.08em;text-transform:uppercase;font-family:var(--mono)}
+/* the carry gate is a tag that runs to a sentence, so it keeps body type and
+   its own casing; the brick edge is what makes it a warning. */
+.tag.warn{display:block;text-transform:none;letter-spacing:0;font-weight:400;
+  font-family:var(--body);font-size:var(--t-s);
+  border-left:2px solid var(--brick);padding:9px 11px;margin:7px 0}
+.tag.warn b{font-family:var(--mono);font-weight:600}
 .dd{position:relative;margin:2px 0 4px;z-index:70}
-.dd-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:11px 14px 10px;border:1px solid var(--line);border-radius:12px;background:var(--card);
-  color:var(--ink);cursor:pointer;text-align:left;transition:border-color .2s,box-shadow .25s}
-@media(hover:hover){.dd-btn:hover{border-color:#C6BFA6}}
-.dd-eyebrow{display:block;font:400 .58rem var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--slate);margin-bottom:2px}
+.dd .field{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:11px 14px 10px;cursor:pointer;text-align:left;transition:border-color .2s}
+@media(hover:hover){.dd .field:hover{border-color:#C6BFA6}}
+.dd-lab{display:block;font:400 .58rem var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--slate);margin-bottom:2px}
 .dd-name{display:block;font:600 1.08rem/1.2 var(--disp);letter-spacing:-.01em}
 .dd-meta{display:block;font:400 .6rem var(--mono);letter-spacing:.09em;color:var(--dim);margin-top:3px;text-transform:uppercase}
 .dd-chev{flex:0 0 auto;color:var(--dim);transition:transform .4s var(--spring),color .2s}
 .dd.open .dd-chev{transform:rotate(180deg);color:var(--sage)}
-.dd.open .dd-btn{border-color:var(--sage);box-shadow:0 0 0 3px #8A9A7826}
+.dd.open .field{border-color:var(--sage);box-shadow:0 0 0 3px #8A9A7826}
 .dd-menu{position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:60;background:var(--card);
-  border:1px solid var(--line);border-radius:14px;overflow:hidden;transform-origin:top center;
+  border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden;transform-origin:top center;
   max-height:min(62vh,430px);overflow-y:auto;overscroll-behavior:contain;
   box-shadow:0 18px 44px #33362B29,0 2px 8px #33362B14;animation:ddpop .32s var(--settle)}
 @keyframes ddpop{from{opacity:0;transform:translateY(-7px) scale(.985)}to{opacity:1;transform:none}}
@@ -414,7 +436,8 @@ th{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:u
 .ddo-name{display:block;font:600 .98rem/1.25 var(--disp);color:var(--ink)}
 .dd-menu button.cur .ddo-name{color:var(--sage)}
 .ddo-meta{display:block;font:400 .58rem var(--mono);letter-spacing:.09em;color:var(--dim);margin-top:2px;text-transform:uppercase}
-.ddo-check{flex:0 0 auto;color:var(--sage);opacity:0;transform:scale(.5);transition:.3s var(--spring)}
+.ddo-check{flex:0 0 auto;color:var(--sage);opacity:0;transform:scale(.5);
+  transition:opacity .3s var(--spring),transform .3s var(--spring)}
 .dd-menu button.cur .ddo-check{opacity:1;transform:none}
 .trust{margin:2px 0 6px}
 .trust-strip{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;
@@ -423,7 +446,7 @@ th{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:u
 .trust-strip .dd-chev{flex:0 0 auto}
 .trust.open .trust-strip .dd-chev{transform:rotate(180deg)}
 .lv{font-weight:600}.lv.hi{color:var(--sage)}.lv.md{color:#9A8A5A}.lv.lo{color:var(--brick)}
-.trust-body{background:var(--card);border:1px solid var(--line);border-radius:12px;
+.trust-body{background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);
   padding:13px 14px;margin:8px 0 2px;animation:rise .4s var(--settle)}
 .trust-rank{font-family:var(--disp);font-weight:600;font-size:1.02rem;margin:0 0 2px}
 .trust-rank .src{font:400 .6rem var(--mono);color:var(--dim);letter-spacing:.06em;display:block;margin-top:2px;text-transform:uppercase}
@@ -435,8 +458,7 @@ th{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:u
 .trust-meta{font:400 .6rem var(--mono);letter-spacing:.08em;color:var(--dim);text-transform:uppercase;border-top:1px dashed var(--line);padding-top:8px;margin:0}
 .teedot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:0}
 .teedot.red{background:#B3402E}.teedot.white{background:#F6F3E8;border:1px solid #A9A28C}.teedot.gold{background:#C9A23F}
-.teerow{display:flex;align-items:center;gap:10px;margin:6px 0 2px}
-.teerow .chip{padding:5px 12px;font-size:.8rem}
+.teerow{display:flex;flex-direction:column;align-items:flex-start;gap:var(--sp-1);margin:var(--sp-2) 0}
 /* landing */
 .land-hero{position:relative;padding:34px 0 6px;overflow:visible}
 .land-mark{font-family:var(--disp);font-weight:600;font-size:clamp(64px,21vw,96px);
@@ -444,12 +466,11 @@ th{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:u
 .land-mark i{font-style:normal;color:var(--brick)}
 .land-line{font-size:1.08rem;color:#4A4F3C;max-width:300px;margin:.4em 0 0}
 .land-sil{position:absolute;right:-16px;top:0;margin:0;font:8.5px/1.12 var(--mono);white-space:pre;
-  mix-blend-mode:multiply;opacity:.6;pointer-events:none;user-select:none;z-index:0;
-  animation:drift 12s ease-in-out infinite alternate}
+  mix-blend-mode:multiply;opacity:.6;pointer-events:none;user-select:none;z-index:0}
 @media(min-width:860px){.land-sil{display:none}}
 .land-hero h1,.land-hero p{position:relative;z-index:1}
 .land-points{margin:22px 0 6px;display:flex;flex-direction:column;gap:14px}
-.lp{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 15px;
+.lp{background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);padding:13px 15px;
   font-size:.95rem;line-height:1.5;opacity:0;animation:rise .5s var(--settle) forwards;
   display:flex;gap:13px;align-items:flex-start}
 /* 3D coins: the point icons turn slowly in real perspective, offset phases */
@@ -464,20 +485,11 @@ th{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:u
 .lp:nth-child(2){animation-delay:.08s}.lp:nth-child(3){animation-delay:.16s}
 .lp b{display:inline}
 .lp-n{font-family:var(--mono);font-size:.66rem;color:var(--sage);letter-spacing:.14em;display:block;margin-bottom:3px}
-@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-@keyframes drift{from{transform:translateY(0)}to{transform:translateY(12px)}}
-.hcp-row{display:flex;gap:12px;align-items:center}
-.hcp-row input[type=number]{width:76px;text-align:center;font-family:var(--mono);font-size:1.15rem;flex:0 0 auto}
-input[type=range]{flex:1;appearance:none;-webkit-appearance:none;height:34px;background:none;margin:0}
-input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:4px;background:var(--line)}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;
-  background:var(--sage);border:2.5px solid var(--card);box-shadow:0 1px 4px #00000030;margin-top:-9px}
-input[type=range]::-moz-range-track{height:6px;border-radius:4px;background:var(--line)}
-input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--sage);border:2.5px solid var(--card)}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 /* the green, seen from where you stand: surveyed outline, greenside sand,
    the fall arrow, and a tap target that gives depth AND side in one move */
 .greenbox{position:relative;background:var(--card);border:1px solid var(--line);
-  border-radius:12px;padding:6px 6px 2px;margin:4px 0 2px}
+  border-radius:var(--r-m);padding:6px 6px 2px;margin:4px 0 2px}
 #greenview{display:block;width:100%;height:auto;cursor:crosshair;touch-action:manipulation}
 .gv-green{fill:#F8F4E8;stroke:#33362B;stroke-width:1.2}
 .gv-green.sketch{stroke-dasharray:4 4;stroke:#33362B77}
@@ -485,21 +497,21 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .gv-ring{fill:none;stroke:#33362B20;stroke-width:.9}
 .gv-slope line{stroke:var(--slate);stroke-width:1.3}
 .gv-slope circle{fill:var(--slate)}
-.gv-lab{font:7.5px var(--mono);fill:#8A8468;letter-spacing:.1em}
+.gv-lab{font:7.5px var(--mono);fill:#8A8468;letter-spacing:.1em;text-transform:uppercase}
 .gv-you{fill:none;stroke:#33362B55;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
-.greenbox #pin-unk{position:absolute;top:8px;left:8px;padding:6px 11px;font-size:.66rem;
-  font-family:var(--mono);letter-spacing:.08em}
+.pinrow{display:flex;justify-content:center;margin:var(--sp-2) 0 0}
 .greensrc{font:400 .62rem var(--mono);letter-spacing:.04em;color:var(--dim);margin:3px 2px 0}
+.gv-empty{display:block;margin:2px 0 4px;text-align:center;background:var(--sandbg);
+  border:1px solid var(--line);border-radius:var(--r-s);padding:6px 8px;
+  font:400 var(--t-xs) var(--mono);letter-spacing:.04em;color:var(--ink)}
 /* ---- components: ruled fields and ball checkboxes, not default chrome ---- */
 /* Fields are scorecard cells, not form boxes. No walls: one ink baseline, and
-   the value written ON the rule the way a score is written on the card.
-   (Selects keep their box - a dropdown is a different kind of control.) */
-input[type=text],input[type=number],input[type=email],textarea{
-  background:transparent;border:0;border-bottom:1.3px solid var(--line);border-radius:0;
-  padding:8px 2px 6px;
-  transition:border-color .2s,box-shadow .2s,background-color .2s}
-input[type=text]:focus,input[type=number]:focus,input[type=email]:focus,textarea:focus{
-  outline:none;border-bottom-color:var(--sage);box-shadow:0 1.3px 0 var(--sage);
+   the value written ON the rule. Sunlight and a glove settled it: one box. */
+.field,input[type=text],input[type=number],input[type=email],textarea{
+  transition:border-color .2s,background-color .2s}
+.field:focus,input[type=text]:focus,input[type=number]:focus,input[type=email]:focus,
+textarea:focus,select:focus{
+  outline:none;border-color:var(--sage);box-shadow:0 0 0 3px #8A9A7826;
   background-color:#8A9A780A}
 /* numbers are card figures: mono, tabular, so columns line up. The browser's
    own spinner arrows were the last piece of unstyled chrome in the app. */
@@ -507,44 +519,26 @@ input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums;
   appearance:textfield;-moz-appearance:textfield}
 input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-/* the stepper that replaces them: thin ink, the app's own line-work. The rule
-   runs under the whole field, stepper included, so it reads as one control. */
-.numfield{display:flex;align-items:center;gap:6px;
-  border-bottom:1.3px solid var(--line);transition:border-color .2s,box-shadow .2s}
-.numfield.narrow{max-width:184px}
-.numfield input[type=number]{flex:1;min-width:0;border-bottom:0}
-.numfield input[type=number]:focus{box-shadow:none;background-color:transparent}
-.numfield:focus-within{border-bottom-color:var(--sage);box-shadow:0 1.3px 0 var(--sage)}
-/* steppers read as ONE fitting in the chip geometry (pill ends, shared
-   hairline), not two floating default-UI squares. The last pre-plate holdout
-   named in the 2026-08-05 release note; the rest of that note is resolved. */
-.numstep{display:flex;gap:0;flex:0 0 auto;padding:3px 0}
-.numstep button{width:34px;height:30px;border:1px solid var(--line);border-radius:0;
-  background:var(--card);color:var(--dim);font:400 1.05rem/1 var(--mono);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:border-color .2s,color .2s,transform .3s var(--spring)}
-.numstep button:first-child{border-radius:999px 0 0 999px;border-right-width:0}
-.numstep button:last-child{border-radius:0 999px 999px 0}
-@media(hover:hover){.numstep button:hover{border-color:var(--sage);color:var(--ink)}}
-.numstep button:active{transform:scale(.93)}
-/* the notes field is ruled paper: a line under every line of writing, and the
-   rules scroll with the text rather than sitting behind it */
-textarea{border-bottom:0;padding:0 2px;line-height:27px;min-height:81px;resize:vertical;
+/* the stepper: a field flanked by two icon buttons, all three the same box */
+.numfield{display:flex;align-items:center;gap:var(--sp-2)}
+.numfield.narrow{max-width:220px}
+.numfield input[type=number]{flex:1;min-width:0}
+/* the notes field keeps its ruled paper inside the box: a line under every
+   line of writing, scrolling with the text rather than sitting behind it */
+textarea{padding:2px 10px;line-height:27px;min-height:81px;resize:vertical;
   background-image:repeating-linear-gradient(transparent 0 26px,var(--line) 26px 27px);
   background-attachment:local}
 textarea:focus{box-shadow:none}
 /* a field with no walls leans on its placeholder to read as a field at all,
    so the hint has to clear the 3:1 floor. #A9A28C measured 2.3:1 on card. */
 input::placeholder,textarea::placeholder{color:#8D866E}
-/* two exceptions that are already the right idiom and stay boxed: the bag's
-   tabular cells (a scorecard grid IS ruled boxes) and the profile-code box */
-#bagtable input[type=number]{border:1px solid #DCD5C0;border-radius:6px;padding:8px 6px}
+#bagtable input[type=number]{border-color:#DCD5C0;padding:8px 6px;min-height:38px}
 #rs-score{font-size:1.15rem}
-.copyout textarea{border:1px solid var(--sage);border-radius:8px;padding:8px;
+.copyout textarea{border-color:var(--sage);padding:8px;
   line-height:1.4;background-image:none;min-height:64px}
 /* the bag reads as a scorecard: mono tabular cells on a ruled sheet */
 #bagtable input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums;
-  text-align:center;border-radius:6px;background:transparent;border-color:#DCD5C0}
+  text-align:center;background:transparent;border-color:#DCD5C0}
 #bagtable input[type=number]:focus{background:var(--card)}
 /* No checkbox anywhere in the app any more. The one place that had one (a club
    in or out of the bag) crosses the club off the card instead: golf's own
@@ -566,13 +560,13 @@ input::placeholder,textarea::placeholder{color:#8D866E}
 .rmclub:active{transform:scale(.86)}
 /* add-a-club picker: a ruled field, not browser chrome */
 .addclub{margin-top:10px}
-.addclub select{width:100%;font:600 .8rem var(--mono);letter-spacing:.08em;
+.addclub select{width:100%;font:600 var(--t-s) var(--mono);letter-spacing:.08em;
   text-transform:uppercase;color:var(--slate);background-color:var(--paper);
-  border:1.2px dashed var(--line);border-radius:8px;padding:11px 34px 11px 12px;cursor:pointer;
+  border:1px dashed var(--line);border-radius:var(--r-s);padding:11px 34px 11px 12px;cursor:pointer;
   transition:border-color .2s,color .2s}
 @media(hover:hover){.addclub select:hover{border-color:var(--sage);color:var(--ink)}}
 .ctlrow{display:flex;align-items:center;gap:8px;margin:4px 0}
-.ctlrow .chip{padding:6px 12px;font-size:.8rem;flex:0 0 auto}
+.ctlrow .chip{flex:0 0 auto}
 .band.zone-band{height:48px;cursor:ew-resize;flex:1;margin:0}
 #wind-lab,#pin-lab{font-family:var(--mono);font-size:.72rem;letter-spacing:.03em}
 /* the wind-arrival needle: absolute direction from the live reading, arrow
@@ -584,6 +578,8 @@ input::placeholder,textarea::placeholder{color:#8D866E}
 #wind-needle g{stroke:var(--ink);stroke-width:1.3;fill:var(--ink);stroke-linecap:round;
   transform-box:view-box;transform-origin:50% 50%;transition:transform .6s var(--spring)}
 .askhead{font-family:var(--disp);font-weight:600;font-size:1.15rem;margin:0 0 4px}
+/* the second half of a screen that already has its h1 */
+.sechead{font-size:var(--t-l);margin:var(--sp-5) 0 .1rem}
 /* the Ask card collapses to one line. The map tap sets lie, distance and side
    and live weather sets the wind, so most golfers never open it. */
 .sitline{display:flex;align-items:baseline;gap:8px;padding:3px 0 1px}
@@ -614,30 +610,40 @@ input::placeholder,textarea::placeholder{color:#8D866E}
 .parline .num{font-size:.95rem;color:var(--dim)}
 .holesummary{font-size:.95rem;margin:.2rem 0 .4rem;color:#4A4F3C}
 .teenote{font-family:var(--mono);font-size:.66rem;color:var(--sand);color:#9A8A5A;margin:.1rem 0 .3rem;letter-spacing:.02em}
-select{appearance:none;-webkit-appearance:none;font-family:var(--disp);font-weight:600;font-size:1.02rem;
+select{appearance:none;-webkit-appearance:none;font-family:var(--disp);font-weight:600;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' fill='none' stroke='%237C7660' stroke-width='1.6'/></svg>");
   background-repeat:no-repeat;background-position:right 14px center;padding-right:34px}
 /* hole map: contour-survey rendering of real OSM geometry, tee left, green right */
 .holenav{display:flex;align-items:center;gap:8px;margin:8px 0 2px}
-.holenav button{flex:0 0 46px;height:40px;border:1px solid var(--line);border-radius:10px;
-  background:var(--card);font:600 1rem var(--disp);color:var(--ink);cursor:pointer;
-  transition:transform .3s var(--spring)}
-.holenav button:active{transform:scale(.94)}
+/* the header strip: where you are, one line, the height of a thumb. The chevron
+   is the only ornament, because the strip has to read as a door and not a title */
+.hdrstrip{width:100%;min-height:var(--ctl);display:flex;align-items:center;justify-content:space-between;
+  gap:var(--sp-2);background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);
+  padding:0 var(--sp-3);margin:0 0 var(--sp-2);cursor:pointer;text-align:left;
+  font-family:var(--disp);font-weight:600;font-size:var(--t-s);color:var(--ink)}
+.hdrstrip .dd-chev{flex:0 0 auto;transition:transform .2s var(--settle)}
+.hdrstrip[aria-expanded="true"] .dd-chev{transform:rotate(180deg)}
+@media(hover:hover){.hdrstrip:hover{border-color:#C6BFA6}}
+#hdr-line{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#holesheet{margin:0 0 var(--sp-3)}
+.maprow{display:flex;margin:var(--sp-4) 0 0}
 /* walk mode: on the course it's map, call, score. GPS or a tap does the rest. */
-#view-caddie.walk .trust,#view-caddie.walk .teerow,#view-caddie.walk #askcard{display:none}
+#view-caddie.walk #askcard{display:none}
 #hn-lab{flex:1;text-align:center;font:600 .64rem var(--mono);letter-spacing:.16em;color:var(--dim);text-transform:uppercase}
 .expand{background:none;border:0;font:600 .62rem var(--mono);letter-spacing:.12em;
   text-transform:uppercase;color:var(--slate);cursor:pointer;padding:9px 0 7px;display:block}
 #scoresheet{position:fixed;left:12px;right:12px;bottom:84px;background:var(--card);
-  border:1px solid var(--sage);border-radius:14px;padding:10px 12px;z-index:1100;
+  border:1px solid var(--sage);border-radius:var(--r-m);padding:10px 12px;z-index:1100;
   box-shadow:0 12px 30px #33362B26;animation:rise .35s var(--settle);max-width:456px;margin:0 auto}
 .ss-t{font:600 .62rem var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--slate);display:block;margin-bottom:6px;padding-right:26px}
 #ss-x{position:absolute;top:4px;right:6px;border:0;background:none;font:600 1.15rem/1 var(--disp);
   color:var(--dim);cursor:pointer;padding:6px 9px;transition:color .2s}
 @media(hover:hover){#ss-x:hover{color:var(--ink)}}
-.holemap{background:var(--card);border:1px solid var(--line);border-radius:12px;
+.holemap{background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);
   padding:8px 9px 6px;margin:10px 0;position:relative}
 .holemap svg{display:block;width:100%;height:auto;cursor:crosshair;touch-action:manipulation}
+/* collapsed the map is a strip you can see is there; expanded it is the input */
+.holemap.collapsed{display:none}
 .hm-cap{display:flex;justify-content:space-between;gap:8px;font:400 .58rem var(--mono);
   letter-spacing:.11em;color:var(--dim);text-transform:uppercase;padding:2px 3px 6px}
 .hm-cap b{color:var(--ink);font-weight:600}
@@ -664,19 +670,18 @@ select{appearance:none;-webkit-appearance:none;font-family:var(--disp);font-weig
 .hm-carry{font:7.5px var(--mono);fill:var(--brick);
   paint-order:stroke;stroke:var(--paper);stroke-width:2.6px;stroke-linejoin:round}
 .hm-warn{font-style:normal;color:#9A8A5A;font-weight:600}
-.btn.ghost.danger{border-color:var(--brick);color:var(--brick)}
 .band{position:relative;height:56px;background:var(--sandbg);border:1px solid var(--line);
-  border-radius:9px;margin:4px 0 2px;cursor:crosshair;overflow:hidden}
+  border-radius:var(--r-m);margin:4px 0 2px;cursor:crosshair;overflow:hidden}
 .band .tick{position:absolute;top:0;bottom:0;width:1px;background:var(--line)}
 .band .greenzone{position:absolute;top:0;bottom:0;right:0;background:var(--sage);opacity:.3}
 .band .gatemark{position:absolute;top:7px;font-family:var(--mono);font-size:.74rem;color:var(--brick)}
-.band .me{position:absolute;top:5px;bottom:5px;width:2.5px;background:var(--ink);border-radius:2px;display:none}
-.band .melab{position:absolute;bottom:4px;display:none;font:600 .72rem var(--mono);color:var(--paper);
-  background:var(--ink);padding:2px 9px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;z-index:2}
+.band .me{position:absolute;top:5px;bottom:5px;width:2.5px;background:var(--ink);border-radius:var(--r-s);display:none}
+.band .melab{position:absolute;bottom:4px;display:none;font:600 var(--t-xs) var(--mono);text-transform:uppercase;color:var(--paper);
+  background:var(--ink);padding:2px 9px;border-radius:var(--r-s);letter-spacing:.03em;white-space:nowrap;z-index:2}
 .band.side-band{height:48px;cursor:ew-resize}
 .band.side-band .zone{position:absolute;top:0;bottom:0;width:32%;background:#00000007}
 .band.side-band .zl{left:0}.band.side-band .zr{right:0}
-.band .teelab,.band .pinlab{position:absolute;top:5px;font:600 .64rem var(--mono);color:#6E6852;letter-spacing:.1em}
+.band .teelab,.band .pinlab{position:absolute;top:5px;font:600 .64rem var(--mono);color:#6E6852;letter-spacing:.1em;text-transform:uppercase}
 #bgart{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;transition:opacity .25s}
 /* while the page moves, the ambient fields step back so text never fights
    them mid-scroll; they settle back to full strength at rest */
@@ -693,10 +698,9 @@ select{appearance:none;-webkit-appearance:none;font-family:var(--disp);font-weig
 .afw.r .af{right:0}
 @media(max-width:1075px){#bgart{display:none}}
 .af{position:absolute;margin:0;font:13px/1.15 var(--mono);letter-spacing:.03em;white-space:pre;
-  mix-blend-mode:multiply;opacity:.52;user-select:none;
-  animation:drift 16s ease-in-out infinite alternate}
+  mix-blend-mode:multiply;opacity:.52;user-select:none}
 .af.l{left:-2ch;bottom:-40px}
-.af.r{right:-4ch;top:30px;animation-delay:-8s;animation-duration:19s}
+.af.r{right:-4ch;top:30px}
 /* the landing silhouette goes IN-FLOW on phones: its own space under the
    strapline instead of floating behind it */
 @media(max-width:859px){
@@ -704,7 +708,7 @@ select{appearance:none;-webkit-appearance:none;font-family:var(--disp);font-weig
     opacity:.55;margin:10px 0 0;animation:none}}
 /* text beats the ambient field, at every scroll position: a soft paper halo
    lifts every out-of-card line off the glyphs (invisible over cards) */
-h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
+h1,h2,.cardhead,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
 .view>.small,.askhead,.foot-line,.secnum{
   text-shadow:0 1px 4px var(--paper),0 0 10px var(--paper),0 0 18px var(--paper)}
 .hidden{display:none !important}
@@ -729,28 +733,29 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
 .flagfig figcaption{font:400 .6rem var(--mono);letter-spacing:.14em;
   text-transform:uppercase;color:var(--dim);margin-top:6px}
 .ab-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 13px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);padding:12px 13px}
 .stat b{display:block;font:600 1.7rem/1.1 var(--disp);letter-spacing:-.02em}
 .stat span{font:400 .6rem var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
 .how{display:flex;flex-direction:column;gap:11px;margin-top:8px}
 .how-step{display:flex;gap:12px;border-left:2px solid var(--sage);padding-left:11px;font-size:.9rem;line-height:1.5}
 .how-step b{font:600 .64rem var(--mono);letter-spacing:.1em;color:var(--sage);padding-top:3px}
 .how-step i{font-style:normal;font-weight:600;font-family:var(--disp)}
-#toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%) translateY(10px);background:var(--ink);
-  color:var(--paper);padding:9px 17px;border-radius:999px;font:500 .85rem var(--body);opacity:0;
+#toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%) translateY(8px);background:var(--ink);
+  color:var(--paper);padding:9px 17px;border-radius:var(--r-m);font:500 var(--t-s) var(--body);opacity:0;
   pointer-events:none;transition:opacity .25s,transform .35s var(--spring);z-index:1200;max-width:88vw;text-align:center}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 /* an undo has to be reachable, so it opts back into hit testing on its own */
 .toast-act{pointer-events:auto;margin-left:13px;background:none;border:0;
   border-bottom:1.4px solid var(--paper);color:var(--paper);cursor:pointer;padding:0 0 1px;
   font:600 .62rem var(--mono);letter-spacing:.12em;text-transform:uppercase}
-.copyout textarea{width:100%;min-height:64px;font:11px/1.4 var(--mono);padding:8px;border:1px solid var(--sage);
-  border-radius:8px;background:var(--card);margin-top:8px;word-break:break-all;color:var(--ink)}
+.copyout textarea{width:100%;min-height:64px;font:var(--t-xs)/1.4 var(--mono);padding:8px;
+  border:1px solid var(--sage);border-radius:var(--r-s);
+  background:var(--card);margin-top:8px;word-break:break-all;color:var(--ink)}
 
 .land-deck{font:400 .66rem var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--slate);margin:.85em 0 0}
 .land-oss{font:600 .64rem var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--sage);margin:1em 0 0}
 /* dithered plates: Bayer-ordered texture in the exact palette, pixel-true */
-.ab-plate{margin:6px 0 14px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+.ab-plate{margin:6px 0 14px;border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden;background:var(--card)}
 .ab-plate img{display:block;width:100%;height:auto;image-rendering:pixelated;mix-blend-mode:multiply}
 .ab-plate.photo img{image-rendering:auto;mix-blend-mode:normal}
 .ab-plate figcaption{font:400 .6rem var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);padding:6px 10px;border-top:1px solid var(--line)}
@@ -773,7 +778,6 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
 #logentries .card:nth-child(3){animation-delay:.08s}
 #logentries .card:nth-child(4){animation-delay:.12s}
 .hole-n.on{animation:pick .3s var(--settle)}
-@media (prefers-reduced-motion: no-preference){.view{animation:fade .18s ease}@keyframes fade{from{opacity:.4}to{opacity:1}}}
 @media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}
   /* nothing may DEPEND on an animation to become visible. These three start at
      opacity:0 and are revealed by `rise`, so killing animation above used to
@@ -804,22 +808,193 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <div class="lp"><span class="coin" aria-hidden="true"><span class="coin-in"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.6"/><path d="M11 11l3.4-3.4"/><path d="M11 1.8v2.4M11 17.8v2.4M1.8 11h2.4M17.8 11h2.4" opacity=".55"/></svg></span></span><div><span class="lp-n">03</span><b>Tuned to your game.</b> Your carries and misses decide every number. No launch monitor needed.</div></div>
     </div>
     <button class="btn" id="land-cta">Meet Albie</button>
+    <button data-verb="Read" class="btn2" id="land-about" style="max-width:300px;margin:0 auto 8px">What Albie is</button>
     <button data-verb="Add" class="btn2" id="a2hs" style="max-width:300px;margin:0 auto 8px">Albie to your home screen</button>
     <p class="small num" id="land-stats" style="text-align:center;font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)"></p>
     <p class="small" style="text-align:center">Two-minute setup. Everything stays on your phone.</p>
   </div>
-  <div id="view-onboard" class="view hidden">
-    <div class="brand"><span class="wordmark">Albie<i>.</i></span><span class="beta">test</span></div>
-    <h1>Tell your caddie about your game</h1>
+  <div id="view-caddie" class="view hidden"><div class="sil flag" aria-hidden="true"></div>
+    <!-- The header strip. Everything about WHERE you are on one 44px line, and
+         everything behind it (course, tees, hole strip, the hole's facts, the
+         trust card) folded into the sheet it opens. Standing over a ball you
+         need the shot in front of you, not the map of the round: the reference
+         layer is one tap away and off the screen the rest of the time. -->
+    <button class="hdrstrip" id="hdrstrip" type="button" aria-expanded="false" aria-controls="holesheet">
+      <span id="hdr-line">Hole 1</span>
+      <svg class="dd-chev" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div id="holesheet" class="hidden">
+    <div class="dd" id="course-dd">
+      <button class="field" id="course-btn" aria-haspopup="listbox" aria-expanded="false">
+        <span><span class="dd-lab">Course</span><span class="dd-name" id="course-name"></span><span class="dd-meta" id="course-meta"></span></span>
+        <svg class="dd-chev" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="dd-menu hidden" id="course-menu" role="listbox"></div>
+    </div>
+    <div class="teerow"><span class="spec" style="font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)">Playing</span>
+      <div class="chips" id="tee-today" data-single>
+        <div class="chip" data-v="forward"><i class="teedot red"></i>Forward</div><div class="chip" data-v="member"><i class="teedot white"></i>Member</div>
+        <div class="chip" data-v="champ"><i class="teedot gold"></i>Champ</div>
+      </div>
+    </div>
+    <div class="holestrip" id="holestrip"></div>
+    <div class="holenav"><button class="btn2 icon" id="prevhole" aria-label="Previous hole">←</button><span id="hn-lab"></span><button class="btn2 icon" id="nextholenav" aria-label="Next hole">→</button><button class="chip" id="walk-chip">Walk</button></div>
+    <!-- Hole facts come BEFORE the map (Maahir, from real use): you need par,
+         the total yardage and what the hole does before you can sensibly drop
+         your ball on it. Reference, not an input, so this does not reintroduce
+         the inputs-then-output shape. -->
+    <div class="card" id="holecard"></div>
+    <div class="trust" id="trustcard">
+      <button class="trust-strip" id="trust-toggle" aria-expanded="false">
+        <span id="trust-line"></span>
+        <svg class="dd-chev" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="trust-body hidden" id="trust-body"></div>
+    </div>
+    </div>
+    <div class="card" id="askcard">
+      <div class="sitline">
+        <span id="sit-summary">On the tee</span>
+        <button class="adjust" id="sit-adjust" type="button" aria-expanded="false" aria-controls="askbody">Adjust <i>▾</i></button>
+      </div>
+      <!-- Distance is promoted out of Adjust: it is the one number that changes
+           on every single shot, so it can never live behind a toggle. -->
+      <div class="row">
+        <div><label>Distance to pin (yds)</label><input type="number" id="sit-dist" inputmode="numeric" placeholder="Type it, or slide above" data-step="5"></div>
+      </div>
+      <div id="askbody" class="hidden">
+      <details class="grp" open><summary>Ball</summary>
+      <label>Where's the ball?</label>
+      <div class="chips" id="sit-lie" data-single>
+        <div class="chip on" data-v="tee">Tee</div><div class="chip" data-v="fairway">Fairway</div>
+        <div class="chip" data-v="rough">Rough</div><div class="chip" data-v="bunker">Bunker</div>
+        <div class="chip" data-v="trouble">Trees / trouble</div>
+      </div>
+      <div id="lieqwrap" class="hidden">
+        <label>How's the lie?</label>
+        <div class="chips" id="sit-lieq" data-single>
+          <div class="chip on" data-v="clean">Clean</div><div class="chip" data-v="sitting">Sitting down</div>
+          <div class="chip" data-v="buried">Buried</div>
+        </div>
+      </div>
+      <div id="sidewrap" class="hidden">
+        <label id="side-q">Where across the fairway? Slide it</label>
+        <div class="band side-band" id="sideband">
+          <div class="zone zl"></div><div class="zone zr"></div>
+          <div class="teelab" style="left:6px">Left</div><div class="pinlab" style="right:6px">Right</div>
+          <div class="me" id="sideme" style="display:block;left:50%"></div>
+          <div class="melab" id="sidelab" style="display:block;left:calc(50% - 18px)">Centre</div>
+        </div>
+      </div>
+      <div id="troublewrap" class="hidden">
+        <div class="row">
+          <div><label>Window to the green?</label>
+            <div class="chips" id="sit-window" data-single>
+              <div class="chip on" data-v="none">None</div><div class="chip" data-v="low">Low gap</div>
+              <div class="chip" data-v="open">Open</div>
+            </div></div>
+          <div><label>Swing</label>
+            <div class="chips" id="sit-swing" data-single>
+              <div class="chip on" data-v="full">Full</div><div class="chip" data-v="restricted">Restricted</div>
+            </div></div>
+        </div>
+      </div>
+      <label>Your position. Slide it, or tap the hole</label>
+      <div class="band" id="posband"></div>
+      </details>
+      <details class="grp" open><summary>Wind</summary>
+      <label>Wind. Slide it, or let live weather set it</label>
+      <div class="ctlrow">
+        <div class="band zone-band" id="windband" role="slider" aria-label="Wind, into to helping, with strength">
+          <div class="tick" style="left:20%"></div><div class="tick" style="left:40%"></div>
+          <div class="tick" style="left:60%"></div><div class="tick" style="left:80%"></div>
+          <div class="teelab" style="left:6px">Into</div><div class="pinlab" style="right:6px">Helping</div>
+          <div class="me" id="wind-me" style="display:block;left:50%"></div>
+          <div class="melab" id="wind-pill" style="display:block;left:calc(50% - 24px)">Calm</div>
+        </div>
+        <div class="chip" id="wind-cross">Across</div>
+      </div>
+      <div class="ctlrow" style="justify-content:space-between">
+        <svg id="wind-needle" class="hidden" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.6"/><g><line x1="8" y1="12.6" x2="8" y2="4.6"/><path d="M8 2.6l-2.3 3.3h4.6z"/></g></svg>
+        <span class="small" id="wind-lab">Calm</span>
+        <div class="chip" id="wx-live">Live weather</div>
+      </div>
+      </details>
+      </div>
+      <!-- The pin lives OUTSIDE Adjust on purpose. It is the one input that
+           changes the call most and that a golfer can actually see from where
+           they stand, so hiding it behind a toggle buried the best thing here.
+           The fine detail (lie quality, side, wind strength) stays folded. -->
+      <div class="grp pingrp">
+        <label>Pin position. Tap the green where the flag is</label>
+        <div class="greenbox">
+          <svg id="greenview" viewBox="0 0 220 165" preserveAspectRatio="xMidYMid meet" aria-label="Top view of the green, tap the pin position"></svg>
+        </div>
+        <div class="pinrow"><button class="chip" id="pin-unk" type="button">Not sure</button></div>
+        <p class="small" id="pin-lab">Unknown. Albie plays the middle.</p>
+        <p class="greensrc" id="green-src"></p>
+      </div>
+      <button class="btn2 sage" data-verb="Ask" id="ask">Albie</button>
+    </div>
+    <!-- THE CALL SITS LAST, after everything that shapes it (Maahir, from a
+         real round). It used to sit above the Ask card so it could not be
+         pushed off screen, but that put the answer ABOVE the pin picker and
+         the adjust controls: change the pin at the bottom, scroll back up to
+         read the result. Reading order now matches the order you actually
+         work in. Placement is the tradeoff we accept; autoAsk still scrolls
+         the fresh call to the thumb after a deliberate tap. -->
+    <div id="advice"></div>
+    <!-- Shots played on this hole, oldest first, the open one last. Lives
+         OUTSIDE #advice like #shotfb does, for the same reason. -->
+    <div class="ledger hidden" id="ledger"></div>
+    <!-- the verdict on the shot just played. Its own node so neither the
+         ledger rebuild nor the advice rewrite can take it out from under
+         a finger, the same law #shotfb lives by. -->
+    <div id="verdict" class="hidden"></div>
+    <!-- The shot record. Rating, note and the next-shot doors live HERE, not
+         inside #advice, because ask() rewrites #advice on every re-think and a
+         GPS fix or live weather can fire one mid-tap (Maahir, iPhone,
+         2026-09-02). Rendered once per shot; a re-think only updates it. -->
+    <div id="shotfb" class="hidden"></div>
+    <!-- The map sits under the call, collapsed to a strip. It is how you tell
+         Albie where the ball is, not how you read the answer, so it earns its
+         height only when a thumb asks for it. -->
+    <div class="maprow hidden" id="maprow"><button class="btn2 compact" id="map-toggle" data-verb="Show">Map</button></div>
+    <div class="holemap hidden collapsed" id="holemap"></div>
+    <!-- Shown once, only after the golfer has actually built something worth
+         losing. Their bag and log live in this browser and nowhere else. -->
+    <div class="card hidden" id="keepcard">
+      <h2 class="cardhead">Keep your setup</h2>
+      <p class="small" style="margin:2px 0 8px">Your bag, calibration and log live on this phone only. Clear your browser or switch phones and they are gone. Your profile code puts them back.</p>
+      <button data-verb="Copy" class="btn2" id="keep-copy">My profile code</button>
+      <div class="copyout hidden" id="keep-copyout"></div>
+      <form id="keep-form" style="margin-top:6px">
+        <label for="keep-email">Email me when new courses land (optional)</label>
+        <input type="email" id="keep-email" autocomplete="email" placeholder="you@example.com">
+        <div class="chips" id="keep-share" data-single style="margin:8px 0 2px">
+          <div class="chip on" data-v="yes">Send my setup too</div>
+          <div class="chip" data-v="no">Email only</div>
+        </div>
+        <p class="small" style="margin:2px 0 0;font-size:.78rem">Your setup means handicap, tees and carry numbers. It tunes the calls. No name, no location, no round scores.</p>
+        <button data-verb="Send" class="btn2 sage" type="submit" id="keep-submit">This to Albie</button>
+      </form>
+      <p class="small hidden" id="keep-done">Got it. Your code is yours to keep, wherever you saved it.</p>
+      <button class="expand" id="keep-dismiss" type="button">Not now</button>
+    </div>
+  </div>
+
+  <div id="view-bag" class="view hidden"><div class="sil bag" aria-hidden="true"></div>
+    <div class="brand"><button type="button" class="wordmark" id="to-about2">Albie<i>.</i></button><span class="beta">test</span></div>
+    <!-- Your game and your bag are one screen: the numbers you type here are
+         the numbers the table below is built from, and keeping them two tabs
+         apart made the profile a place nobody went back to. -->
+    <h1>Your game</h1>
     <p class="small">Two minutes. No launch monitor needed, honest guesses beat no data. Everything stays on this phone.</p>
     <p class="small hidden" id="sink-disclosure">Your shot calls are sent to Maahir anonymously. Add your name if you want him to be able to ask you about them.</p>
     <div class="card">
       <label>Your name</label><input type="text" id="ob-name" placeholder="First name">
       <label>Handicap</label>
-      <div class="hcp-row">
-        <input type="range" id="ob-hcp-slide" min="0" max="36" value="14">
-        <input type="number" id="ob-hcp" inputmode="numeric" min="0" max="54" value="14">
-      </div>
+      <input type="number" id="ob-hcp" inputmode="numeric" min="0" max="54" value="14" data-narrow>
       <p class="small" style="margin-top:2px">Slide it, or type the exact number. A guess is fine.</p>
       <div class="row">
         <div><label>Driver total, flat (yds)</label><input type="number" id="ob-dr" inputmode="numeric" placeholder="e.g. 240" data-step="5"></div>
@@ -853,164 +1028,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       </div>
       <button class="btn" id="ob-save">Build my bag →</button>
     </div>
-    <figure class="ab-plate"><img src="data:image/png;base64,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" alt="A ball flight over the range, dithered">
-      <figcaption>Plate 04 · the range</figcaption></figure>
-  </div>
-
-  <div id="view-caddie" class="view hidden"><div class="sil flag" aria-hidden="true"></div>
-    <div class="brand"><span class="wordmark">Albie<i>.</i></span><span class="beta">test</span></div>
-    <div class="dd" id="course-dd">
-      <button class="dd-btn" id="course-btn" aria-haspopup="listbox" aria-expanded="false">
-        <span><span class="dd-eyebrow">Course</span><span class="dd-name" id="course-name"></span><span class="dd-meta" id="course-meta"></span></span>
-        <svg class="dd-chev" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-      <div class="dd-menu hidden" id="course-menu" role="listbox"></div>
-    </div>
-    <div class="trust" id="trustcard">
-      <button class="trust-strip" id="trust-toggle" aria-expanded="false">
-        <span id="trust-line"></span>
-        <svg class="dd-chev" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-      <div class="trust-body hidden" id="trust-body"></div>
-    </div>
-    <div class="teerow"><span class="spec" style="font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;color:var(--dim)">PLAYING</span>
-      <div class="chips" id="tee-today" data-single>
-        <div class="chip" data-v="forward"><i class="teedot red"></i>Forward</div><div class="chip" data-v="member"><i class="teedot white"></i>Member</div>
-        <div class="chip" data-v="champ"><i class="teedot gold"></i>Champ</div>
-      </div>
-    </div>
-    <div class="holestrip" id="holestrip"></div>
-    <div class="holenav"><button id="prevhole" aria-label="Previous hole">←</button><span id="hn-lab"></span><button id="nextholenav" aria-label="Next hole">→</button><button class="chip" id="walk-chip" style="padding:6px 12px;font-size:.72rem">Walk</button></div>
-    <!-- Hole facts come BEFORE the map (Maahir, from real use): you need par,
-         the total yardage and what the hole does before you can sensibly drop
-         your ball on it. Reference, not an input, so this does not reintroduce
-         the inputs-then-output shape. -->
-    <div class="card" id="holecard"></div>
-    <!-- Shots played on this hole, oldest first, the open one last. Lives
-         OUTSIDE #advice like #shotfb does, for the same reason. -->
-    <div class="ledger hidden" id="ledger"></div>
-    <div class="holemap hidden" id="holemap"></div>
-    <div class="card" id="askcard">
-      <h2 class="askhead">Ask Albie</h2>
-      <div class="sitline">
-        <span id="sit-summary">On the tee</span>
-        <button class="adjust" id="sit-adjust" type="button" aria-expanded="false" aria-controls="askbody">Adjust <i>▾</i></button>
-      </div>
-      <div id="askbody" class="hidden">
-      <details class="grp" open><summary>Ball</summary>
-      <label>Where's the ball?</label>
-      <div class="chips" id="sit-lie" data-single>
-        <div class="chip on" data-v="tee">Tee</div><div class="chip" data-v="fairway">Fairway</div>
-        <div class="chip" data-v="rough">Rough</div><div class="chip" data-v="bunker">Bunker</div>
-        <div class="chip" data-v="trouble">Trees / trouble</div>
-      </div>
-      <div id="lieqwrap" class="hidden">
-        <label>How's the lie?</label>
-        <div class="chips" id="sit-lieq" data-single>
-          <div class="chip on" data-v="clean">Clean</div><div class="chip" data-v="sitting">Sitting down</div>
-          <div class="chip" data-v="buried">Buried</div>
-        </div>
-      </div>
-      <div id="sidewrap" class="hidden">
-        <label id="side-q">Where across the fairway? Slide it</label>
-        <div class="band side-band" id="sideband">
-          <div class="zone zl"></div><div class="zone zr"></div>
-          <div class="teelab" style="left:6px">LEFT</div><div class="pinlab" style="right:6px">RIGHT</div>
-          <div class="me" id="sideme" style="display:block;left:50%"></div>
-          <div class="melab" id="sidelab" style="display:block;left:calc(50% - 18px)">CENTRE</div>
-        </div>
-      </div>
-      <div id="troublewrap" class="hidden">
-        <div class="row">
-          <div><label>Window to the green?</label>
-            <div class="chips" id="sit-window" data-single>
-              <div class="chip on" data-v="none">None</div><div class="chip" data-v="low">Low gap</div>
-              <div class="chip" data-v="open">Open</div>
-            </div></div>
-          <div><label>Swing</label>
-            <div class="chips" id="sit-swing" data-single>
-              <div class="chip on" data-v="full">Full</div><div class="chip" data-v="restricted">Restricted</div>
-            </div></div>
-        </div>
-      </div>
-      <label>Your position. Slide it, or tap the hole</label>
-      <div class="band" id="posband"></div>
-      <div class="row">
-        <div><label>Distance to pin (yds)</label><input type="number" id="sit-dist" inputmode="numeric" placeholder="Type it, or slide above" data-step="5"></div>
-      </div>
-      </details>
-      <details class="grp" open><summary>Wind</summary>
-      <label>Wind. Slide it, or let live weather set it</label>
-      <div class="ctlrow">
-        <div class="band zone-band" id="windband" role="slider" aria-label="Wind, into to helping, with strength">
-          <div class="tick" style="left:20%"></div><div class="tick" style="left:40%"></div>
-          <div class="tick" style="left:60%"></div><div class="tick" style="left:80%"></div>
-          <div class="teelab" style="left:6px">INTO</div><div class="pinlab" style="right:6px">HELPING</div>
-          <div class="me" id="wind-me" style="display:block;left:50%"></div>
-          <div class="melab" id="wind-pill" style="display:block;left:calc(50% - 24px)">CALM</div>
-        </div>
-        <div class="chip" id="wind-cross">Across</div>
-      </div>
-      <div class="ctlrow" style="justify-content:space-between">
-        <svg id="wind-needle" class="hidden" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.6"/><g><line x1="8" y1="12.6" x2="8" y2="4.6"/><path d="M8 2.6l-2.3 3.3h4.6z"/></g></svg>
-        <span class="small" id="wind-lab">Calm</span>
-        <div class="chip" id="wx-live">Live weather</div>
-      </div>
-      </details>
-      <button class="btn red" id="ask">Ask Albie</button>
-      </div>
-      <!-- The pin lives OUTSIDE Adjust on purpose. It is the one input that
-           changes the call most and that a golfer can actually see from where
-           they stand, so hiding it behind a toggle buried the best thing here.
-           The fine detail (lie quality, side, wind strength) stays folded. -->
-      <div class="grp pingrp">
-        <label>Pin position. Tap the green where the flag is</label>
-        <div class="greenbox">
-          <svg id="greenview" viewBox="0 0 220 165" preserveAspectRatio="xMidYMid meet" aria-label="Top view of the green, tap the pin position"></svg>
-          <button class="chip" id="pin-unk" type="button">Not sure</button>
-        </div>
-        <p class="small" id="pin-lab">Unknown. Albie plays the middle.</p>
-        <p class="greensrc" id="green-src"></p>
-      </div>
-    </div>
-    <!-- THE CALL SITS LAST, after everything that shapes it (Maahir, from a
-         real round). It used to sit above the Ask card so it could not be
-         pushed off screen, but that put the answer ABOVE the pin picker and
-         the adjust controls: change the pin at the bottom, scroll back up to
-         read the result. Reading order now matches the order you actually
-         work in. Placement is the tradeoff we accept; autoAsk still scrolls
-         the fresh call to the thumb after a deliberate tap. -->
-    <div id="advice"></div>
-    <!-- The shot record. Rating, note and the next-shot doors live HERE, not
-         inside #advice, because ask() rewrites #advice on every re-think and a
-         GPS fix or live weather can fire one mid-tap (Maahir, iPhone,
-         2026-09-02). Rendered once per shot; a re-think only updates it. -->
-    <div id="shotfb" class="card hidden"></div>
-    <!-- Shown once, only after the golfer has actually built something worth
-         losing. Their bag and log live in this browser and nowhere else. -->
-    <div class="card hidden" id="keepcard">
-      <p class="eyebrow">Keep your setup</p>
-      <p class="small" style="margin:2px 0 8px">Your bag, calibration and log live on this phone only. Clear your browser or switch phones and they are gone. Your profile code puts them back.</p>
-      <button data-verb="Copy" class="btn2" id="keep-copy">My profile code</button>
-      <div class="copyout hidden" id="keep-copyout"></div>
-      <form id="keep-form" style="margin-top:6px">
-        <label for="keep-email">Email me when new courses land (optional)</label>
-        <input type="email" id="keep-email" autocomplete="email" placeholder="you@example.com">
-        <div class="chips" id="keep-share" data-single style="margin:8px 0 2px">
-          <div class="chip on" data-v="yes">Send my setup too</div>
-          <div class="chip" data-v="no">Email only</div>
-        </div>
-        <p class="small" style="margin:2px 0 0;font-size:.78rem">Your setup means handicap, tees and carry numbers. It tunes the calls. No name, no location, no round scores.</p>
-        <button data-verb="Send" class="btn2 sage" type="submit" id="keep-submit">This to Albie</button>
-      </form>
-      <p class="small hidden" id="keep-done">Got it. Your code is yours to keep, wherever you saved it.</p>
-      <button class="expand" id="keep-dismiss" type="button">Not now</button>
-    </div>
-  </div>
-
-  <div id="view-bag" class="view hidden"><div class="sil bag" aria-hidden="true"></div>
-    <p class="eyebrow">My bag</p>
-    <h1>Estimated carries</h1>
+    <h2 class="sechead">Estimated carries</h2>
     <p class="small" id="bag-count" style="margin:0 0 4px"></p>
     <p class="small">Built from your driver + 7-iron numbers. Tap any number to correct it and the caddie updates instantly.</p>
     <div class="card"><table id="bagtable"></table>
@@ -1018,7 +1036,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <p class="small" style="margin:6px 0 0">Carries are estimated from your gapping. Tap any number to correct it.</p>
     </div>
     <div class="card">
-      <p class="eyebrow">Keep your profile safe</p>
+      <h2 class="cardhead">Keep your profile safe</h2>
       <p class="small">Storage can be wiped by the browser. Copy your profile code somewhere safe (notes, WhatsApp). Pasting it back restores everything, on any phone.</p>
       <button data-verb="Copy" class="btn2" id="copy-profile">My profile code</button>
       <div class="copyout hidden" id="profile-copyout"></div>
@@ -1028,30 +1046,29 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
     </div>
     <button data-verb="Rebuild" class="btn2 sage" id="rebuild-bag">Bag from my driver and 7-iron</button>
     <button data-verb="Redo" class="btn2" id="redo-onboard">Setup questionnaire</button>
-    <figure class="ab-plate"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA8AAAAEECAIAAABoUspHAAAZwElEQVR42u3dP+hk53XG8Xdv7KiyC0GqhKQRpDDChcHNFoJdgkDItapYjaukCKRPpU4QYlyo2iYqDEprI9gigS2EcDphosoY1LmSwRbEilSkGBgN8/t358697z3nvJ8H8/D4FGL3N7+978xzv3Puoz998buvv/qytdZa+9a3X5JlWZZlWZZl+Z786Ivff9aIiIiIiGiepuN76uNIlmVZlmVZluW7sgaaiIiIiOgCTT5DyLIsy7Isy/L8rIEmIiIiImoYaFmWZVmWZVluGGgiIiIiohaCgT710/fX5ubm5ub95zyX+701Nx9troEmIiIiIsJAy7Isy7Isy3LDQBMRERERtXh7oHEt5ubm5nhljsM2Nze/a66BJiIiIiLCQMuyLMuyLMtyw0ATEREREbV4e6A555xzzjnnd7kGmoiIiIgIAy3Lcubsu952g9hZYW5ee94w0EREREREDQPNOeecc845x0ATEREREWGgZVluuGccM8dVm5s3PDQGmoiIiIioYaA555xzzjnHQBMR0Qb61rdf+vqrL82zzIloxAYal2Nubt5wvZH866++NE8055y3Mb5XoIEmIiIiIsJAc84555xzjoEmImr4ZnOcNBGF2gON1zQ3N8c945vNcdKc457vn2ugiYiIiIgw0JxzzjnnnGOgiajhgwPPZXmLjCM3930ADTTnnJflg2V5i4wjN/d9AA00ERHZ46EnIyINNOeccz29noxzjoEmItKn4p5lnLS5ufs8GmjOuT4V9yzjpM3N3efRQBMR6ePN9WdEpIHmnHN9vLn+7EFf/AmNc35VA60/MDc3xw3LckvLPa91r0OWcfwz55P+wNzcHDcsy7nyivLzlHH8C+YYaCJqOGN9vJyoV8vy74KoYaA557zhjPXx8t692qbvm5v92Zwv28KB1zQ3N9e/yjfzqfecyz37XT9nGQ89cz7hMs3NzfWv8oP51HvO5S2454aHlvHQ180x0ETUcM96dzl432YfuTk1DDTnnDfcsyzvzT1346HNG7689h7oqryLLMsynnhkz8tzR+ieZVluNxnoEXgXWZZlPPHI3nLy3DvKv1NZvidjoKkmV0c4SF2abP+GHlrGhWOgOQ4VHzY0N+x+lDxgjvDu2WthrwUufB8GWi8ly7KMb8ZJ5+qenZWyvDMDrZeSZVnGN+OkczHQzkpZxkDT0Bwt4Z5lzyDEPeue5XqcNAaa42jx0F4v95d0537m57/PGGgZJx3zfI+yB1qWZblGt8r5Whx2tB46+72IaHvB3ZPBQMuyLOtWOV+Zw47GQGe/FxFtL7h7MkUYaM+XN6/Kofr544Z15HZoZOwIMdCyHPZ8nzxf3rw8h+rnjxvWkduhkbEjxEDLctjzHQMty7JOV6fL43bqcejnSjxx1bmMgZZlWdbp8tF56FDfHazEE1edyzvvgcaDmuOhvS6yZxPipPHQ/p3KeOhb5xPu0xwPbS4P+2zCqp1comcN3p8x0LIc83zHQMuyPNa+Vc6R0Mt2P3P3XvDcGGhZlgfdt8o5Etq755H3i+O5N9wDXZVfkWVZtruDZ+wCcc+yHCpPQ/ErsizL4+zusKMg5r2IBX/+zvLvXZYfzBhoWZbr89CcI6HxGzwvJ42BlmVZd4t75jwuCe2njZPGQ8dioO3BlWVZd855fB7av31ZDsRA24Mry7LufIvuRx7tdd/iHbMzUZYXMtCeq24/rrm5bpXz0ahoP0mOz14wn3Qb9uOam+OMsY9+98akov0kuWvUsnmsPdCyLMtx7uFwXrWNrvrsOnO7MgbdAy3LshznHk7kTkW2/3sBG33Rn8q9NXPXJXugdWnm5rpbzjnneOh1unZ7oPHQ5uaYVOyg30nOuWvaBV07BlqWZfdwOOfVnl1njnveND/60xe/cxXgnPM5Gw+WzUvm115/4/oVEC+efzjCz2pmXuv3bc6cc36lP7wH2lzXxTkfyh8/edoi6fA+2+vCOY9z70UDzTnnFXruZf13tPfKF+mj//rPmL0v53yIBhrLIo+8e0TOuyuGr9grv/WTH33w7BfL5mvla/48umrOh+XjMdCcc457Xi2nbpdXbKnx0Ppyzlf36fS9/F2fIcw7zDnnARuUxfNd8uMnTw//e+31N65/9/zWT360eH5XXuu/P19nP5PHT57Geb3uyU4fzoOfCBpozjlP3HOrmVepqPW7nPOLG+jIn8LlGjla9y/ner303Gfz0z710g74+nzqW8z75NOK+mc//+nh5+k3lvO97tqlO9810Jxz+ysS7G9eZe8yjcBPZ+SwzWPO+SwGmnPONR+h7gac8rvbccxV8+r8tDtR5r6dxTHQnHMedF8HrDm+5j9DUV/I+RANNAbUp/YRPsV6XbQOAfd1HPvODp3xHC45i/fnqltrRwb9SE7bp8H5UOe7BppzjnvejTdVNhfe6YGHNsdDY6A55xz3vFq+dYfGHI5ZD73vHo+Z2HSundPurJq7v4GB5pzzuP13gb55rSdvL3tSd9WdHvpCztPvgcZD+9SOh/a68HV/c4595Hb9cTf/4Nkvdpnv2HOvlU93evgXzXn2c1wDzTmPziWn2NOMb6bFzfSYe6ZlfHzq+yoYaM551iYgZu7MN1fap1GDn16wbXr+Tg9ZHvlOOwaac86r7W9O1DefcsbZc21++pqdHvZI2I/Bd9sDbY5O41xffn///WDfHJBvPuWMs+cd+ekOuz6u2enh5PWOgm96amigOed46FH45jndre45+04PWcY9Y6A553jocfc377JDQ/e8Yw996cLpYz+Nx5Vxzxhozjm3v7krx3zqd8338jl/Tt32/fw0bhgPzbs20Ogi9BLng/fi1+xvTsQxn3qod88z/5zpuu3t9oGcVtQ/+/lPD/30YfO0k9c7Cq6B5i/5nG0ef543Z0Sc+7PIl/bEffpj/LT90zLeukN/j4HGm5qbj7Wn+Z585Eqz88198qU9cZ/+OCA/vR0nveL+aSy1jLfWQHPO3Ve5oBeP1jfX45jH5Kcr6cXzD3Wielx8tgaacz7ufZWZffOOvXI9jnlMfrpleG7izG77Zlett9bjDs5na6D1c+bmY3HPkfnm2vs0IvTQuue8z1aMkFe8emDQg/Toi/3RF7//zDtRznl5n3/yrfsulvNc7/59Ksj1HVCugeac803ut7z2+huV9jTzqu9oifo8qxL3jIHmnOOh75wf9+Duwjdvt++Cx+Gqw/LTcbhquU++eX27i1nHPa/ZQI/2uQSHKsuF8y59M77Zvg4dM2HTh+KqpwG/j9ns35XlcvnYr8zf37ysk95xT7M9G9n3dZTslS/993XNfMGn1pLz1XWzq7af5ME5BppzHuu+TUu7TwPfzHHS5LmV6fZpYKA55xXu27TrnheYen8zx0nvzknjp+UHn1sZcy/1zls4Rvs+Ju5Zlu1vjsY3cz207plG7qdT8NDT4N/HxD3LcvB8f998ffcckG/meujdu+c5fbMeeoTueSZCfeynx+GhMdCc83D3bXYsm+c8XUKvzDPuA/G0FNp3F3UxrgEDzTmPct/m2GGs26ks7pLxzbzSPpA5v+e8pPe/b3C63GPT/dOB9kBH/n4lnliW6+XIZPNanTTn/TlpHTNhpjfNU7S9enhiWR5nZ/P8d89B9jcv66Q5789JF+iYr+Gw58xH+Dnsu/+7NjONgcabmpv3uD9Tb4cG57Wfm6jzpp568fzDXPukMdD2hJibb3J/5mxv6EZdiP3NHCfdYf80rho/vXrPfaZle6Z35KrXZKD1bbI8eH7wSdr2N3Me/3mHl3bMumfqs8ejLANtv7IsD5XPOubF757tb+Y81PMOL+2Ydc9D9dA9+ekVn32IgcZD43HNd7sPE39jBr6Z8+xctYxfn1NL785DY6Dx0BHnZ73m0fHH3eZnP//4HDO+mfMaXLVcnl+/8uw43S29Iw+91R5oGf+KtUqRM5bK3TppzvXKsi45byedcg+0XCzf2keuwr/G0Zy/4z05BaN8M6/4rjQa33x9J825XlnWJbc99nUsOL5vdtKdGOi9OEs88c35Jx+9/53vvvzHP3y+ln//8Y9biWfCEeGbOa/Uf5uvO+/fedd43uGC92/T7vzlmDzx//z3B5989P6pH/53yK21P/7h8xX97L9/mu95Jtyl35nt+QykCM9YqjTfLuObOb/f33vn7df+5uV1PVH/bb7uvH/n3aLu/bjo/vCC93UY6M3zb3/9yxW75A7+9//0b6pNsr+Z83XfJYe6zv/y17/RN+ubq3bPq3TSGOiu+Wa/+8lH76/bJZ/54Wq47n/zvXfePv1f1U66Z9e747vMIK9XkO7Zu2fex2+2wtudAsv8rvZa36xv3qV73u58P0OlV/zO0u17oKtyz+vy0KuTyvpp0iXrlXlGf/PVV6pe87foqvnI+1vid9Iz3wdOQ3HP1/DQN3nlaI1CHz8rp5d9DzfLfLQ85+cTsEv27pnv3jEXvuZHZqx5xv0tMTnpx0+eXvr+EAN9ex6zXV7s//Av/65JpS06afubOY45yyngN8Re8Bp7qV88/xADvZxdnsMZXzOPlq/8e53W0npc/fSKnbT9zTzOlozs58Kmf/7ViWqedy/4Rnupt/u+05ludtK3M9A/+OH3Zr7XXpBj7l3WLqOlCd/M+ZhMs66a9+y5W5VdHzefVTydvtd+/OTpuv3u7nuXz3rljbYs8/tp6b2eipTXu/HH+GbObyWbXcO38+C7qyttBI/QcxfgpM+eVfwNA/2DH34v1LPFF2e9sk6aKnHMemiub+ZJN4Ek+o26/mc77J7pqc14tvgcFqRDvutZetfsxBiBb47Az+mkd9wrsnv3bH8zr9E3j3AubH0+rru1etMm+5r2d6gtK4X3TN+vR59+/GyVzzHff/zj+Vyytpjf7KQv/Q7vXvMRumEcM9c3c877k+uJOuxprc8xZ5zxzZ4YhbxvLx6fk770O7x7zStxyX06Y++eOb6Z80rkejF+etlzIVZroDnHSdutoZ/m+mbO9dOb7p+OwkDvyD/1nMtZuDq7O0bbreHdM+/ZNzsvcNjen6z+93qQn153//TuezkOWQPNc3yu3br7lPXHXN/MOY+532NZb52DgcYfF+4zduStT58Btmn3KeuPeYEduonOC3s2eG2/npm+vrfedI+HBprrpGU9NE/8vtlVkfPC2zyu56Q36qQn/JCcqBc5dtJ6Xz001zcf7k2t0hPL7pf6Pelw/2HBtunrOemN+OnpO999ubV29MPP4nQSfy7XyHNe96O/+eor773z9puvvtLzzG6tlZxznotyPrTO91wfnCPOEe83dv95PuibnuOn592yfKsfdMiPfvX8XWu5jp+fVpxXzdf8fDbVi88+996C88JbNRKdC67/Qc4FyqVc5zgGmtfcJL31Hsp6vPKlc85t1eCcR9jgscs+6Qk7tVE+9Urz+DzWYY301nso6/HKl84577lVIxef6jovy9ec4/056QU+Yac2yqdeaZ6Fkz6QVZs+cZRzvsX75lsp51x8quu8LMf/vtOVnPQ3DPTWnFPPuYyfvqkF23M4593eN+OY5b047JHfn+Ti2kOd41Pq/Ru+J+v7vPNdJ815lr55LXeOOEe8P+n/89zOrznHr9/Lcbaj49Gvnr/rc+2l+Ywb23S+lm/x54z/uVknzXnevjlXn9fzXIgwl+XBz3EMdHS+bS0fmYd+8LNs533SnOub6+1vrvq9F5y0nOIc7/D8h1kMNH5Izvt51D5pzkfgm2v01rLs+0tJOekpHW8k+zy6qeukOU/BN3vuoCyP8P2lZZ10h70c+RjojPzxaF6Pn0ZLc77seYG57jc6F2J+32Yvbns0rj0X7z7zHN/urrInEXK+7ROS+D0NpVfK8wI55zzj2f0wAy37zBrts2ko7gozvSPt6hUc7bWOzze7zsty8HN8rWv+hO/xXex038UOxV0dmekRyOnTv+mtHoSBu+YVPHPvle969Xd5veLzza7zshz8HF/rvL6dgR6hQ+V46D7fL87FT99kWGnk9nrZ70O9/c18HE7afMDnQiy7kv/ZP//jW4efxf99+b+3/q5XnfM+Pud12Tef+qXzOf53j//21b/+y5v+53/1F/0bxFv/JKe+7O84rN/zk+z/+m7xG7LsJzPn31Gc7LyIeS6Y55rHP8dnXsnf/df/wECn4dsqdQCD89BEWe5LJKLVx+SeM3a6slzpHH/wKo2B3p9v28vx0Jzvu6l0vs/fhjHzv5noZzUm9xzheo6Tlkc+xx/8Jsw3DDTn+OkIXHWl+cjP34r2HK/ary+OmfO897QT9d+ntPTkVedhPW/nEe35nXvNR37+VrTneNV+fSPf6+PceR35HL/oOnx6H++8gY7wWcGODl0yfpqokmpwzNzODXP89FFTwM8KEbiujPxx9r8v7orzql6DY85+LlT6vo053n33cxwDzXXYeOjKHLPXF/fMOXeOr349x0BzPDQeujLH7PXFPXPOneOrX8/P90B7BiHHQ+Ok43CxkfdaUPY+23mBkzbHQ1/FQI/G8dTeixyHR6/HQ+Ok4++F8Hrleh3r7W92/Y9z/prjoTHQnA/KT8uyZ7tyznnAcxwDXXm3IvcMLVnGMXPOneOrZw009xnUfgb7OryOOGbO+bjPJlzAT08+u+gsE3VI9Xgs+xns2fC6R7v+OBdqP5fA/WfPJlyFn9ZAc5+JMamyrDPmnDvHMdAD9+I+9+OhZdk9K9d/n0y4cxwDzXnZLhnPipP2+6DD5tx5ne65EJO9g3LSLqrG7wmeFSft98H+ZjkLn+3nOcLPeeZ1cjq8s77rE0PYuVwjz3ndQ32GLv8bm+UK4IoU//fBv1a59lXLz7PqOT4zTxgan0exjL6b79la/u1jbe3lwGFz/5Yx0Jzn465k2S4OzjlPcV4/+vTjZ4f/c3xPLcu75LPPgvHvBHHOo3VLD15PZFnuc16XP8cnHJWMh+5MWG5N2mXkiSu9XtlJytrcsyzLI18lVrxiPPr042dj9hBrzWX9Medcn+36r6eM9v7EubypY6A5jgoPLcu4Z865cxwD3TGfauv5Wtriz6n/5pyP1gf3vP5HmMuycxwDvVo+9a3na/kWf078NOd8NL655/U/wlyWneO3MNDRuByfyXzu5JxzHLMs278RtIH2LXXZ587+Oxw8zcuzCX3L3l4OWXZlSHo1wED35tuyCA/NOdcf1z4XcNKy+9IY6DR8WxbHQ3PO9ce1zwWctOy+9GK/nYGWZZ87Oed6a1mW8dAXMNCy7HNnpWfdjfCsQc8m3Jd311vLsvN6hO813cJAj7bPkmLydvpvzvXBEThmysthm4/Mu3c7x6dh91nymLyd/ptzHHMEjpnn5bDNR+bdu53jGGjfxa7zGVR/zLneOu/1f61zQQcp+x4UBtqODjs39Mec6609gzZopyvLwz4X4vY90PhmwkN73lKfHjHCnPd/fXHPhJO2/zt1nz3hmzkeuvzGCZsuvF5hv8mOe+bDctL2f6fuszHQnkFYpzPWO3KOe455Lozc9cpyyXMcA+0ZhHU6Y70j57jnmOfCyF2vLJc8x2/fA02kC4/GVUeYyzVex7yvO46ZaJx7GsGv5xO+al0//pSLzXXhYZ8A13Muj/lEyVwdsHOhxnWe49eDX8/PG2jPICSdMX663r4OjmN2Lti5Yd6G4d07nAuTZxBynTF+uvy+Do5jdi7YuWHehuHdO5wLGGjSbY/F18r46YZ7JiI89HXXbQx0Mr7t0lyen6v3HXAcM3664Z7zdMZVv/eCk+aeefzwkwhxzKQz9jzCcZ476HXEPbsO46S9P8FDr7wHGsfMdca429rPHfQ64p5dh3HS3p/goTHQRGW5K1mukd1jJKJi964n/PH1nLEcnKvzDC1Zjt8B79jhOS9ingvR+Gy8u3vX5wy0TzbkM2izh0FX6jmFOGYiGvIcX3CdtIXD59RMn0drdMb2MNiz4fehMMfs+s95unN8wXVSA00+++KhZRn3TETO8baQgR6N78GoxeTh8NCyjHuO0BPLeXlo88Gf/9DhHNdAE45KlkfnpPN22ETkHN/luo2Bxrdl/TyqM5Zx0rV5d9yz6z9veOio120NNFHlZziN/OyuyH/fSryybpiIBuy8J2yW3HDSdZ/hNPKzuyL/fSvxyjhmWZZbIX4aA02En5ZluziIyDm+fp5y8Uw4M/wcflqW7eJwvpibD861736Oa6CJRuFuG87V6+h1JyJa43ssGGi5ZeeoyuynbAPzyiNw7V73hnuWZed4lX3SGmjyGRQPLcsN90xEzvGLGWjcj3nDQ+OhZRn3bG5uno2T3uUc10ATEREREV0gDLTccFecc3yzLMvO8fmugSZqza6GvnOvYw1eGcdMRMPy0xOOxxx3ZVfD4Ls7Rn42YYHX1/XQ3Nw53p+f1kATERERETUMtCzjoTkv8hxZWZblaOe4Bpqo4aQbzhXv7nUnItf52Ty0PdDmOCqctGcQ4t2Tve6ue+bmzvF9eWgNNBERERFRw0DLcuvJXVXlqvUiuHkcsyzL+GkMNBERERHRVbIH2tycc+7+hrm5uXNcA01EREREhIGW5ZaZh97r83TGXiHj65X9vge+WZZl57gGmoiIiIiobchA42nMzTnnuGdzc3PnuAaaiIiIiAgDLcuyLMuyLMttN35aA01ERERE1OyBNjfHaeFTvb5+H8zNzc03uW5roImIiIiIMNCyLMuyLMuyvE3WQBMRERERNXugzc3NzXHS+GZzc3PzTa7PGmgiIiIiIgy0LMuyLMuyLDcMNBERERFRswfa3Nzc3Nzc3NzcPM/8/wHC4RmWCiTMHQAAAABJRU5ErkJggg==" alt="A bunker, dithered in the Albie palette">
-      <figcaption>Plate 02 · the bunker</figcaption></figure>
+    <figure class="ab-plate"><img src="data:image/png;base64,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" alt="A ball flight over the range, dithered">
+      <figcaption>Plate 04 · the range</figcaption></figure>
   </div>
 
   <div id="view-log" class="view hidden">
-    <p class="eyebrow">Round log</p>
-    <h1 id="log-count"></h1>
+    <h1>Round log</h1>
+    <span class="tag" id="log-count"></span>
     <pre class="ab-field" id="log-field" aria-hidden="true" style="margin:4px auto 0"></pre>
     <div class="card hidden" id="drivecard">
-      <p class="eyebrow">Measured off the tee</p>
+      <h2 class="cardhead">Measured off the tee</h2>
       <div id="drivestats"></div>
       <p class="small" style="margin:8px 0 0">Total distance, not carry: where the ball finished, measured from your next position. Only counted from a tap or a GPS fix inside 15 yards.</p>
     </div>
     <div class="card">
-      <p class="eyebrow">Today's card</p>
+      <h2 class="cardhead">Today's card</h2>
       <div id="scorecard"></div>
       <p class="small" style="margin:8px 0 0">Tap any hole to add or fix its score.</p>
     </div>
     <div class="card">
-      <p class="eyebrow">End of round</p>
+      <h2 class="cardhead">End of round</h2>
       <label>Score today</label><input type="number" id="rs-score" inputmode="numeric" placeholder="e.g. 82" data-narrow data-step="1">
       <label>Caddie overall</label>
-      <div class="raterow"><div class="stars" id="rs-stars"><span></span><span></span><span></span><span></span><span></span></div>
-      <span class="ratecount" id="rs-count">Tap a ball</span></div>
+      <div id="rs-verdict"><button class="chip" data-v="5">Albie helped</button><button class="chip" data-v="1">Albie missed</button></div>
       <label>Best call · worst call · what was missing?</label>
       <textarea id="rs-notes" rows="3" placeholder="Best: 12th club call. Worst: ... Missing: green speeds"></textarea>
       <button data-verb="Save" class="btn2 sage" id="save-round">Round summary</button>
@@ -1069,7 +1086,6 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
   <div id="view-about" class="view hidden">
     <div class="brand"><span class="wordmark">Albie<i>.</i></span><span class="beta">test</span></div>
     <div class="ab-hero">
-      <p class="eyebrow">About</p>
       <h1 class="ab-mark">For the love of golf<i>.</i></h1>
       <p class="land-line">Albie is an open source caddie. It reads everything ever written, filmed or mapped about a course, argues with itself like a tour caddie, and hands you ranked ways to play the shot in front of you.</p>
     </div>
@@ -1081,7 +1097,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
     <p class="ab-fieldcap">Every glyph is real course data. Run your finger through it.</p>
     <div class="ab-stats" id="ab-stats"></div>
     <div class="card">
-      <p class="eyebrow">How Albie thinks</p>
+      <h2 class="cardhead">How Albie thinks</h2>
       <div class="how">
         <div class="how-step"><b>01</b><span><i>Ingest.</i> Official hole guides, tour coverage, caddie videos, member forums, OpenStreetMap geometry.</span></div>
         <div class="how-step"><b>02</b><span><i>Triangulate.</i> Nothing counts on one source. Conflicts get flagged, never merged.</span></div>
@@ -1095,15 +1111,15 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <figcaption>The pin, spelled from this course's own numbers</figcaption>
     </figure>
     <div class="card">
-      <p class="eyebrow">The short game</p>
+      <h2 class="cardhead">The short game</h2>
       <p class="small" style="font-size:.9rem">Inside 40 yards Albie switches to the chip engine: it reads your lie, the green speed and the slope at the green, picks runner, pitch or high-soft, and marks the exact landing spot on the map. Putting stays yours. No green-reading theater.</p>
     </div>
     <div class="card">
-      <p class="eyebrow">Honesty, by design</p>
+      <h2 class="cardhead">Honesty, by design</h2>
       <p class="small" style="font-size:.9rem">Every fact carries a source tag and a freshness date. Confidence is computed, not claimed: check any course's trust card. What Albie doesn't know is displayed, never hidden.</p>
     </div>
     <div class="card">
-      <p class="eyebrow">What's coming</p>
+      <h2 class="cardhead">What's coming</h2>
       <p class="small" style="font-size:.9rem">Built in the open, in this order. Your testing is the fuel: every rated call and exported round decides what ships next.</p>
       <div class="how">
         <div class="how-step"><b>01</b><span><i>A caddie that learns you.</i> Your logged rounds become habit memory: keep coming up short with the 8-iron and Albie starts handing you the 7.</span></div>
@@ -1115,7 +1131,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       </div>
     </div>
     <div class="card">
-      <p class="eyebrow">Get updates</p>
+      <h2 class="cardhead">Get updates</h2>
       <p class="small" style="font-size:.9rem">New courses, a smarter brain, the field-test diaries. One email, no spam.</p>
       <form id="updates-form">
         <label for="upd-email">Your email</label>
@@ -1125,7 +1141,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <p class="small hidden" id="upd-done">You're on the list. See you out there.</p>
     </div>
     <div class="card">
-      <p class="eyebrow">Request a course</p>
+      <h2 class="cardhead">Request a course</h2>
       <p class="small" style="font-size:.9rem">Tell Albie where to caddie next. Destination trips are the whole point: name the course and it joins the ingest queue.</p>
       <form id="course-req">
         <label for="cr-name">Course name</label>
@@ -1135,20 +1151,20 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
       <p class="small hidden" id="cr-done">Noted. It goes on the ingest list.</p>
     </div>
     <div class="card">
-      <p class="eyebrow">Open source, soon</p>
+      <h2 class="cardhead">Open source, soon</h2>
       <p class="small" style="font-size:.9rem">The app is free, and the code is going open source: the app, then the ingestion pipeline as the data licensing sweep finishes. Build courses with us. Map data © OpenStreetMap contributors.</p>
       <a class="btn2" data-verb="Read" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="story.html">The field guide, how Albie knows this</a>
       <a class="btn2" data-verb="Open" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="https://github.com/maahirbr/albie" target="_blank" rel="noopener">Albie on GitHub</a>
     </div>
     <div class="card" style="text-align:center">
-      <p class="eyebrow">Buy Albie a beer</p>
+      <h2 class="cardhead">Buy Albie a beer</h2>
       <pre class="ab-field" id="beer-field" aria-hidden="true" style="margin:6px auto 2px"></pre>
       <p class="small">Coming soon. Albie stays free, for the love of golf.</p>
     </div>
     <!-- Privacy, written from what the code actually does. If any of this stops
          being true, change the code or change this text, not neither. -->
     <div class="card" id="privacy">
-      <p class="eyebrow">Privacy</p>
+      <h2 class="cardhead">Privacy</h2>
       <p class="small" style="font-size:.9rem">Albie has no accounts, no analytics,
         no trackers and no cookies. Nobody is measuring you.</p>
       <p class="small" style="font-size:.9rem"><b>Stays on your phone.</b> Your
@@ -1170,15 +1186,14 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
         <a class="inl" href="mailto:maahirbharatram@gmail.com">maahirbharatram@gmail.com</a>.</p>
     </div>
     <p class="small" style="text-align:center;opacity:.7">Albie v1.0 · build 2026-09-03 · made in Delhi</p>
+    <button class="expand" id="to-landing" type="button">Back to the front page</button>
   </div>
 
   <div class="tabbar">
     <span id="tab-ind" aria-hidden="true"></span>
-    <button class="tab on" data-view="caddie"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15.5V2.8"/><path d="M6 3.4l7.4 2.3L6 8"/><path d="M3.6 15.5h4.8" opacity=".55"/></svg>Caddie</button>
-    <button class="tab" data-view="bag"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="6.2" width="8" height="9.6" rx="2"/><path d="M7 6V3.8M9.2 6V3M11.2 6V3.9"/><path d="M5 10.4h8" opacity=".55"/></svg>Bag</button>
-    <button class="tab" data-view="log"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2.8" width="10" height="12.6" rx="1.5"/><circle cx="7.2" cy="6.6" r="1.15" opacity=".8"/><path d="M9.6 6.6h2.2M6.2 9.8h5.6M6.2 12.2h3.4"/></svg>Log</button>
-    <button class="tab" data-view="onboard"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6.2" r="2.6"/><path d="M4.3 15.3c.6-3.1 2.4-4.7 4.7-4.7s4.1 1.6 4.7 4.7"/></svg>Profile</button>
-    <button class="tab" data-view="about"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="9" r="6.6"/><path d="M9 8.2v4"/><path d="M9 5.8v.2"/></svg>About</button>
+    <button class="tab on" data-view="caddie"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15.5V2.8"/><path class="key" d="M6 3.4l7.4 2.3L6 8"/><path d="M3.6 15.5h4.8" opacity=".55"/></svg>Caddie</button>
+    <button class="tab" data-view="bag"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect class="key" x="5" y="6.2" width="8" height="9.6" rx="2"/><path d="M7 6V3.8M9.2 6V3M11.2 6V3.9"/><path d="M5 10.4h8" opacity=".55"/></svg>Bag</button>
+    <button class="tab" data-view="log"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect class="key" x="4" y="2.8" width="10" height="12.6" rx="1.5"/><circle cx="7.2" cy="6.6" r="1.15" opacity=".8"/><path d="M9.6 6.6h2.2M6.2 9.8h5.6M6.2 12.2h3.4"/></svg>Log</button>
   </div>
 </div>
 
@@ -1314,7 +1329,7 @@ const chipVals=id=>$$("#"+id+" .chip.on").map(c=>c.dataset.v);
 /* ---------- wind: a band slider (same idiom as position/side) carries
    direction + strength in one drag; Across flips the axis ---------- */
 let windState={dir:"calm",str:1},windV=0;   // windV: -2 strong into .. +2 strong helping
-const WLAB=["STRONG INTO","INTO","CALM","HELPING","STRONG HELPING"];
+const WLAB=["Strong into","Into","Calm","Helping","Strong helping"];
 const bandFrac=(el,x)=>{const r=el.getBoundingClientRect();
   return Math.min(.999,Math.max(0,(x-r.left)/r.width));};
 const wxOff=()=>{wxAuto=false;$("#wx-live").classList.remove("on");paintWxChip();
@@ -1411,18 +1426,25 @@ function greenBody(h,fr,o){
     const x0=W-34,y0=26,L=17;
     slope=`<g class='gv-slope'><line x1='${x0}' y1='${y0}' x2='${(x0+ux*L).toFixed(1)}' y2='${(y0+uy*L).toFixed(1)}'/>`+
       `<circle cx='${(x0+ux*L).toFixed(1)}' cy='${(y0+uy*L).toFixed(1)}' r='2.4'/></g>`+
-      `<text x='${x0}' y='${y0-9}' text-anchor='middle' class='gv-lab'>FALL</text>`;}
+      `<text x='${x0}' y='${y0-9}' text-anchor='middle' class='gv-lab'>Fall</text>`;}
   const mx=(fr.mnX+fr.mxX)/2,my=(fr.mnY+fr.mxY)/2;
   return `${sand}<polygon points='${P(fr.pts)}' class='gv-green ${fr.real?(fr.approx?"approx":""):"sketch"}'/>
     <polygon points='${P(fr.pts.map(p=>[(p[0]-mx)*.45+mx,(p[1]-my)*.45+my]))}' class='gv-ring'/>
     ${slope}
     ${o.you?`<path d='M${W/2-13} ${H-9} h26 M${W/2} ${H-15} l0 6 M${W/2-4} ${H-13} l4 4 4-4' class='gv-you'/>
-    <text x='${W/2}' y='${H-1}' text-anchor='middle' class='gv-lab'>YOU</text>`:""}`;}
+    <text x='${W/2}' y='${H-1}' text-anchor='middle' class='gv-lab'>You</text>`:""}`;}
 function renderGreen(h){
   const svg=document.getElementById("greenview");if(!svg)return;
   const fr=greenFrame(h,220,165,22);
   greenCtx=Object.assign({holeN:h.n},fr);
   svg.innerHTML=greenBody(h,fr,{slope:1,you:1})+`<g id='gv-pin'></g>`;
+  // a dashed generic circle with no caption reads as "the green did not load"
+  // on a phone (tester, first sink round). Say what it is, in words, in the box.
+  // The shape stays: it is the tap target, and front/mid/back off it still count.
+  const box=svg.parentElement,was=box.querySelector(".gv-empty");
+  if(was)was.remove();
+  if(!fr.real)box.insertAdjacentHTML("beforeend","<span class='gv-empty'>No surveyed "+
+    "green for this hole. Tap roughly where the flag is; front, middle and back still count.</span>");
   paintPin();}
 function paintPin(){
   const svg=document.getElementById("greenview"),g=document.getElementById("gv-pin");
@@ -1447,16 +1469,24 @@ function paintPinLab(){
   if(!src)return;
   const t=COURSES[cur.course].trust,lvl=t&&t.aspects&&t.aspects.greens.level;
   const bits=[];
-  if(!greenCtx||!greenCtx.real)bits.push("No outline for this green yet. Tap roughly where the flag is; front, middle and back still count");
-  else if(greenCtx.approx)bits.push(`Outline traced from aerial imagery, approximate${greenCtx.gp&&greenCtx.gp.conf==="low"?" (low confidence)":""}. Front, middle and back are reliable, the exact edge is not`);
-  else bits.push("Surveyed green outline, OpenStreetMap");
+  // the no-green case is said once, inside the box by renderGreen, not here
+  if(greenCtx&&greenCtx.real){
+    if(greenCtx.approx)bits.push(`Outline traced from aerial imagery, approximate${greenCtx.gp&&greenCtx.gp.conf==="low"?" (low confidence)":""}. Front, middle and back are reliable, the exact edge is not`);
+    else bits.push("Surveyed green outline, OpenStreetMap");}
   if(h.stale)bits.push("under renovation, treat the shape as provisional");
   else if(lvl==="LOW")bits.push("green detail is thin for this course, low confidence");
-  src.textContent=bits.join(" · ")+".";}
+  src.textContent=bits.length?bits.join(" · ")+".":"";}
 (function(){const svg=document.getElementById("greenview");if(!svg)return;
   const setFromEvent=e=>{
     if(!greenCtx)return;
-    const r=svg.getBoundingClientRect();if(!r.width||!r.height)return;
+    const r=svg.getBoundingClientRect();
+    // mobile Safari resizes the viewport mid-tap while the address bar moves and
+    // the rect comes back 0. Dropping the tap reads as a dead control; retry one
+    // frame, once, with the same point (tester: "the green does not load").
+    if(!r.width||!r.height){
+      if(e.retried)return;
+      const p={clientX:e.clientX,clientY:e.clientY,retried:1};
+      requestAnimationFrame(()=>setFromEvent(p));return;}
     const sx=(e.clientX-r.left)/r.width*greenCtx.W,sy=(e.clientY-r.top)/r.height*greenCtx.H;
     const [lx,ly]=greenCtx.inv(sx,sy);
     pinXY=[lx,ly];pinKnown=true;
@@ -1569,16 +1599,16 @@ function paintWxChip(){const el=$("#wx-live");if(!el)return;
 /* the readout: every call names the weather it was computed from */
 function wxReadout(sit){
   const c=COURSES[cur.course];
-  const dir=sit.wind==="into"?"INTO":sit.wind==="down"?"HELPING":"ACROSS";
+  const dir=sit.wind==="into"?"Into":sit.wind==="down"?"Helping":"Across";
   const live=wxAuto&&wx&&wx.slug===c.slug;
-  const wind=sit.wind==="calm"||!sit.mph?"WIND CALM":`WIND ${sit.mph} MPH ${dir}`;
-  if(!live)return `<div class='readout'>${wind} · SET BY HAND · NO LIVE READING</div>`;
+  const wind=sit.wind==="calm"||!sit.mph?"Wind calm":`Wind ${sit.mph} mph ${dir}`;
+  if(!live)return `<div class='readout'>${wind} · Set by hand · No live reading</div>`;
   const m=wxAge(),d=new Date(wx.t),hm=`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
   const ini=(c.course||"").replace(/\(.*?\)/g,"").split(/\s+/).filter(w=>/^[A-Z]/.test(w)).map(w=>w[0]).slice(0,3).join("");
-  return `<div class='readout'>${wind} · ${wx.temp}°C · OPEN-METEO ${hm}`+
-    (m>45?` · CACHED ${wxAgeLab(m).toUpperCase()} AGO`:"")+
-    (wx.rain72!=null?` · RAIN 72H ${wx.rain72} MM`:"")+
-    ` · ${ini||"COURSE"} ANCHOR</div>`;}
+  return `<div class='readout'>${wind} · ${wx.temp}°C · Open-Meteo ${hm}`+
+    (m>45?` · Cached ${wxAgeLab(m)} ago`:"")+
+    (wx.rain72!=null?` · Rain 72h ${wx.rain72} mm`:"")+
+    ` · ${ini||"Course"} anchor</div>`;}
 /* ground firmness, inferred from 72h rain at the anchor. A logged observation
    (observations.md -> c.firm: "firm"|"receptive"|"soft") overrides the inference.
    It moves runout notes and lay-up leaves only, never a carry. */
@@ -1758,7 +1788,7 @@ function saveOnboard(){
 }
 function prefillOnboard(){const p=store.p;if(!p)return;
   $("#ob-name").value=p.name==="Player"?"":p.name;
-  $("#ob-hcp").value=p.hcp;$("#ob-hcp-slide").value=Math.min(36,p.hcp);
+  $("#ob-hcp").value=p.hcp;
   $("#ob-dr").value=p.drTotal;$("#ob-7i").value=p.c7;
   const single=(id,v)=>$$("#"+id+" .chip").forEach(c=>c.classList.toggle("on",c.dataset.v===v));
   single("ob-shape",p.shape);single("ob-miss",p.miss);single("ob-style",p.style);
@@ -1766,8 +1796,6 @@ function prefillOnboard(){const p=store.p;if(!p)return;
   $$("#ob-weak .chip").forEach(c=>c.classList.toggle("on",(p.weaknesses||[]).includes(c.dataset.v)));
   $("#ob-trust").value=p.trust||"";}
 $("#ob-save").addEventListener("click",saveOnboard);
-$("#ob-hcp-slide").addEventListener("input",e=>$("#ob-hcp").value=e.target.value);
-$("#ob-hcp").addEventListener("input",e=>$("#ob-hcp-slide").value=Math.min(36,+e.target.value||0));
 $("#redo-onboard").addEventListener("click",()=>show("onboard"));
 $("#addclub").addEventListener("change",e=>{
   const v=e.target.value;e.target.value="";
@@ -1947,7 +1975,7 @@ function renderBag(){const p=store.p;if(!p)return;
   $("#bagtable").innerHTML="<tr><th></th><th>Club</th><th class='bagnum'>Carry</th><th class='bagnum'>Total</th><th></th></tr>"+
    p.bag.map((b,i)=>{const g=grp(i);const head=g!==lastG?`<tr class='ghead'><td colspan='5'><span style='display:inline-flex;align-items:center;gap:7px'>${CLUBICONS[g]||""}${g}</span></td></tr>`:"";lastG=g;
    return head+`<tr class='${b.out?"clubout":""}' data-row='${i}'>
-   <td class='inout'><button type='button' class='inbtn' data-io='${i}' aria-pressed='${b.out?"false":"true"}' aria-label='${b.out?"Put the "+b.club+" back in the bag":"Take the "+b.club+" out of the bag"}'>${b.out?"OUT":"IN"}</button></td>`
+   <td class='inout'><button type='button' class='btn2 icon mono' data-io='${i}' aria-pressed='${b.out?"false":"true"}' aria-label='${b.out?"Put the "+b.club+" back in the bag":"Take the "+b.club+" out of the bag"}'>${b.out?"OUT":"IN"}</button></td>`
    +`<td><button type='button' class='clubname' data-swap='${i}' title='Swap ${b.club}'>${b.club}</button></td><td class='bagnum'><input class='num' data-i='${i}' data-f='carry' type='number' value='${b.carry}'></td>
    <td class='bagnum'><input class='num' data-i='${i}' data-f='total' type='number' value='${b.total}'></td>
    <td class='bagx'><button type='button' class='rmclub' data-rm='${i}' aria-label='Remove ${b.club}'>×</button></td></tr>`}).join("");}
@@ -2047,14 +2075,14 @@ function swapClub(i){const p=store.p;if(!p||!p.bag[i])return;
    the handicap field, which already has a slider beside it. */
 function wireSteppers(){
   document.querySelectorAll("input[type=number]").forEach(inp=>{
-    if(inp.dataset.stepped||inp.closest("#bagtable")||inp.closest(".hcp-row"))return;
+    if(inp.dataset.stepped||inp.closest("#bagtable"))return;
     inp.dataset.stepped="1";
     const wrap=document.createElement("div");
     wrap.className="numfield"+(inp.dataset.narrow!==undefined?" narrow":"");
     inp.parentNode.insertBefore(wrap,inp);wrap.appendChild(inp);
     wrap.insertAdjacentHTML("beforeend",
-      `<span class='numstep'><button type='button' tabindex='-1' data-d='-1' aria-label='Less'>&minus;</button><button type='button' tabindex='-1' data-d='1' aria-label='More'>+</button></span>`);
-    wrap.querySelector(".numstep").addEventListener("click",e=>{
+      `<button type='button' class='btn2 icon' tabindex='-1' data-d='-1' aria-label='Less'>&minus;</button><button type='button' class='btn2 icon' tabindex='-1' data-d='1' aria-label='More'>+</button>`);
+    wrap.addEventListener("click",e=>{
       const b=e.target.closest("button");if(!b)return;
       const st=+inp.dataset.step||1;
       let v=(+inp.value||0)+(+b.dataset.d)*st;
@@ -2354,7 +2382,7 @@ function resetSituation(){ // new hole: back to the tee, keep the wind (it doesn
   pinKnown=false;pinDepth=1;pinSide=null;pinXY=null;
   sideVal="centre";
   const sm=document.getElementById("sideme"),sl=document.getElementById("sidelab");
-  if(sm){sm.style.left="50%";sl.textContent="CENTRE";sl.style.left="calc(50% - 28px)";}
+  if(sm){sm.style.left="50%";sl.textContent="Centre";sl.style.left="calc(50% - 28px)";}
   $$("#sit-lieq .chip").forEach(c=>c.classList.toggle("on",c.dataset.v==="clean"));
   $$("#sit-window .chip").forEach(c=>c.classList.toggle("on",c.dataset.v==="none"));
   $$("#sit-swing .chip").forEach(c=>c.classList.toggle("on",c.dataset.v==="full"));
@@ -2362,6 +2390,7 @@ function resetSituation(){ // new hole: back to the tee, keep the wind (it doesn
   setAskOpen(askOpenPref());sitSummary();}
 function renderHoles(){const c=COURSES[cur.course];store.cur=cur;
   applySolarPaper();
+  renderHdr();
   $("#hn-lab").textContent=`Hole ${cur.hole} of ${c.holes.length}`;
   $("#holestrip").innerHTML=c.holes.map(h=>`<div class='hole-n ${h.n===cur.hole?"on":""}' data-n='${h.n}'>${h.n}</div>`).join("");
   $$("#holestrip .hole-n").forEach(el=>el.addEventListener("click",()=>{cur.hole=+el.dataset.n;resetSituation();renderHoles();}));
@@ -2380,8 +2409,8 @@ function renderHoles(){const c=COURSES[cur.course];store.cur=cur;
   const par=(h.tpar&&h.tpar[sel])||h.par;
   const shown=ty||h.yards;
   $("#holecard").innerHTML=`<div class='corner-num num' aria-hidden='true'><span>${h.n}</span>${h.si?`<i>SI ${h.si}</i>`:""}</div>
-   <p class="eyebrow">Hole ${h.n}${h.name?" · "+h.name:""}</p>
-   <h2 class="parline">Par ${par}${shown?` <span class='num'>· <i class='teedot ${ty?tc:"gold"}'></i>${shown} yds</span>`:""}</h2>
+   <h2 class="cardhead">Hole ${h.n}${h.name?" · "+h.name:""}</h2>
+   <p class="parline">Par ${par}${shown?` <span class='num'>· <i class='teedot ${ty?tc:"gold"}'></i>${shown} yds</span>`:""}</p>
    ${ty?((h.tpar&&h.tpar[sel]&&h.tpar[sel]!==h.par)?`<p class="teenote">Par changes by tee here. From the ${sel} tees this is a par ${par}.</p>`
        :(sel!=="champ"&&h.ty.champ&&h.ty.champ!==ty?`<p class="teenote">From the ${sel} tees. Champ card: ${h.ty.champ}y.</p>`:""))
      :(store.p&&store.p.tees!=="champ"&&h.yards?`<p class="teenote"><i class="teedot gold"></i>Per-tee card not sourced yet for this hole. Gold = championship-class number; from your ${sel} tees it plays shorter.</p>`:"")}
@@ -2401,6 +2430,7 @@ function renderHoles(){const c=COURSES[cur.course];store.cur=cur;
     else fetchWx().then(applyWx).catch(wxOff);}
   $("#advice").innerHTML="";
   if(typeof renderLedger==="function")renderLedger();   // the new hole's page
+  if(typeof renderVerdict==="function")renderVerdict();
   autoAsk();}
 /* ---------- live ASCII fields: silhouettes spelled from real course data ----------
    Locked spec: glyph POSITIONS never move; glyphs swap IDENTITY and gain color,
@@ -2584,7 +2614,7 @@ async function d3Toggle(){
   const wrap=document.getElementById("holemap");
   wrap.insertAdjacentHTML("beforeend",
    `<div id='d3wrap' style='position:relative;margin-top:6px'>
-     <canvas id='d3c' style='width:100%;height:230px;display:block;border:1px solid var(--line);border-radius:10px;background:var(--card)'></canvas>
+     <canvas id='d3c' style='width:100%;height:230px;display:block;border:1px solid var(--line);border-radius:var(--r-m);background:var(--card)'></canvas>
      <button id='d3x' aria-label='Close 3D' style='position:absolute;top:2px;right:6px;border:0;background:none;font:600 1.15rem var(--disp);color:var(--dim);cursor:pointer;padding:6px 9px'>×</button>
      <div class='hm-cap' style='padding:5px 3px 0'><span>Elevation ×2 · drag to turn</span><span>SRTM 30m · ${g.el.d>0?"+":""}${g.el.d}y tee to green</span></div>
     </div>`);
@@ -2880,8 +2910,10 @@ function mapCF(g){if(!g||!g.card||!g.len)return 1;
 function renderHoleMap(h){
   lastTap=null;
   const wrap=$("#holemap"),g=h.geo;
-  if(!g||!g.cl||g.cl.length<2){wrap.classList.add("hidden");wrap.innerHTML="";return}
-  wrap.classList.remove("hidden");
+  const mr=document.getElementById("maprow");
+  if(!g||!g.cl||g.cl.length<2){wrap.classList.add("hidden");wrap.innerHTML="";
+    if(mr)mr.classList.add("hidden");return}
+  wrap.classList.remove("hidden");if(mr)mr.classList.remove("hidden");
   // hole-local coords: x lateral (left negative), y along (tee 0 -> green).
   // Rendered sideways: along -> svg x (tee left), lateral -> svg y (left = top).
   let pts=[...g.cl];
@@ -2952,7 +2984,7 @@ function renderHoleMap(h){
   const partial=!(g.fw&&g.fw.length)||!(g.gn&&g.gn.length);
   const calNote=straightUnderCard?` <em class='hm-warn'>· straight-line map, card ${g.card}y</em>`
     :Math.abs(cf-1)>0.03?` <em class='hm-warn'>· ×${cf.toFixed(2)} card-calibrated</em>`:"";
-  wrap.innerHTML=`<div class='hm-cap'><span>Hole ${h.n} · tap to drop your ball</span><span id='hm-read'>${g.sketch?`<em class='hm-warn'>sketch · card line only, unsurveyed</em>`:g.derived?`${cardLen}y · OSM · ${g.cl.length>2?"tee to green through the fairway":"straight tee to green"}${partial?", no fairway mapped":""}`:partial?`<em class='hm-warn'>partial map · line ${g.gn&&g.gn.length?"":"+ bunkers "}only</em>`:`${cardLen}y · OSM`}${g.sketch?"":calNote}</span><button class='chip' id='gps-chip' style='padding:6px 12px;font-size:.66rem;font-family:var(--mono);letter-spacing:.08em'>GPS</button>${(g.el&&!g.sketch&&g.cl.length>2)?`<button class='chip' id='d3-chip' style='padding:6px 12px;font-size:.66rem;font-family:var(--mono);letter-spacing:.08em'>3D</button>`:""}</div>
+  wrap.innerHTML=`<div class='hm-cap'><span>Hole ${h.n} · tap to drop your ball</span><span id='hm-read'>${g.sketch?`<em class='hm-warn'>sketch · card line only, unsurveyed</em>`:g.derived?`${cardLen}y · OSM · ${g.cl.length>2?"tee to green through the fairway":"straight tee to green"}${partial?", no fairway mapped":""}`:partial?`<em class='hm-warn'>partial map · line ${g.gn&&g.gn.length?"":"+ bunkers "}only</em>`:`${cardLen}y · OSM`}${g.sketch?"":calNote}</span><button class='chip' id='gps-chip'>GPS</button>${(g.el&&!g.sketch&&g.cl.length>2)?`<button class='chip' id='d3-chip'>3D</button>`:""}</div>
    <svg viewBox='0 0 ${W.toFixed(0)} ${Hh.toFixed(0)}' preserveAspectRatio='xMidYMid meet'>
     ${corridor}${polys(g.tr,"hm-tr")}${polys(g.fw,"hm-fw")}${polys(g.wa,"hm-wa")}${polys(g.te,"hm-te")}${polys(g.bk,"hm-bk")}${(g.gn||[]).map(f=>polys([f],"hm-gn"+(f.src==="trace"?" approx":""))).join("")}${rings}${greenArt}
     <polyline points='${P(g.cl)}' class='hm-cl'/>${ticks}
@@ -3040,7 +3072,7 @@ function renderBand(h){const band=$("#posband");band.innerHTML="";
     m.title=g.label;band.appendChild(m);}});
   const tc={forward:"red",member:"white",champ:"gold"}[(store.p&&store.p.tees)||"member"];
   band.insertAdjacentHTML("beforeend",
-    `<div class='teelab' style='left:5px'><i class='teedot ${tc}'></i>TEE</div><div class='pinlab' style='right:5px'>PIN</div>
+    `<div class='teelab' style='left:5px'><i class='teedot ${tc}'></i>Tee</div><div class='pinlab' style='right:5px'>Pin</div>
      <div class='me'></div><div class='melab'></div>`);
   // slider, not just tap: drag to fine-tune; numbers stay on the card's scale
   const setPos=clientX=>{const r=band.getBoundingClientRect();
@@ -3061,10 +3093,9 @@ function renderBand(h){const band=$("#posband");band.innerHTML="";
   band.addEventListener("pointerup",()=>{pdown=false;autoAsk();});}
 function ask(){const p=store.p;if(!p){show("onboard");return}
   sitSummary();   // the one-line situation can never disagree with the call below it
-  chosenPick=null;
   // every club marked out: say so instead of crashing on an empty pool
   if(!p.bag||!p.bag.some(b=>!b.out)){
-    $("#advice").innerHTML=`<div class='call'><p class='eyebrow'>The call</p><p class='albiesays'><span class='who'>ALBIE ▸</span> Your whole bag is marked out of play. Check some clubs back in on the Bag tab and I'll get back to work.</p></div>`;
+    $("#advice").innerHTML=`<div class='call' data-verb='The call'><p class='albiesays'><span class='who'>Albie</span> Your whole bag is marked out of play. Check some clubs back in on the Bag tab and I'll get back to work.</p></div>`;
     return;}
   const c=COURSES[cur.course],h=c.holes.find(x=>x.n===cur.hole);
   const sit={lie:chipVal("sit-lie"),dist:+$("#sit-dist").value||null,
@@ -3173,7 +3204,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
     if(elevAdj>=3)frac0=.07;else if(elevAdj<=-3)frac0=-.07;
     const aim=Math.abs(glat)>=2?`Start it a step ${glat>0?"right":"left"}; the slope brings it back.`:"";
     const cands=[run,pit,sof].filter(o=>o&&o.club).sort((a,b)=>b.score-a.score);
-    if(!cands.length){$("#advice").innerHTML=`<div class='call'><p class='eyebrow'>The call</p><p class='albiesays'><span class='who'>ALBIE ▸</span> No clubs in play for a chip. Check some back in on the Bag tab.</p></div>`;return}
+    if(!cands.length){$("#advice").innerHTML=`<div class='call' data-verb='The call'><p class='albiesays'><span class='who'>Albie</span> No clubs in play for a chip. Check some back in on the Bag tab.</p></div>`;return}
     const mnS=Math.min(...cands.map(o=>o.score));
     const totS=cands.reduce((a,o)=>a+(o.score-mnS+15),0);
     const pct=o=>Math.round((o.score-mnS+15)/totS*100);
@@ -3189,8 +3220,8 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
     lastOpts=cands.slice(0,3).map(o=>({id:"chip",club:o.club,leave:D-land(o),
       aim:`Land it at ${land(o)}, ${Math.max(0,D-land(o))} of roll to the hole.${aim?" "+aim:""}`}));
     approachOpts=`<div class='opts'>`+cands.slice(0,3).map((o,i)=>
-      `<div class='opt ${i===0?"rec":""}' data-i='${i}' data-pick='${escAttr(o.club.club+" "+o.name)}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="run"?"advance":o.id==="pitch"?"punch":"window"]}</span><div style='flex:1'><span class='orank'><span class='oidx'>${String(i+1).padStart(2,"0")}</span>${i===0?"The play":""}<span class='opct'>rec ${pct(o)}%</span></span><h4>${o.club.club}, ${o.name}</h4><p>${fmt(`Land it at ${land(o)}, the ground does the rest.${aim?" "+aim:""}`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p></div></div>`).join("")+
-      `<p class='small' style='margin:2px 0 0'>Tap the option you're playing. It goes in the log. Putting stays yours.</p></div>`;
+      `<div class='opt ${i===0?"rec":""}' data-i='${i}' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="run"?"advance":o.id==="pitch"?"punch":"window"]}</span><div style='flex:1'><span class='orank'><span class='oidx'>${String(i+1).padStart(2,"0")}</span>${i===0?"The play":""}<span class='opct'>rec ${pct(o)}%</span></span><h4>${o.club.club}, ${o.name}</h4><p>${fmt(`Land it at ${land(o)}, the ground does the rest.${aim?" "+aim:""}`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p>${i===0?AIMBTN(i):""}</div></div>`).join("")+
+      `<p class='small' style='margin:2px 0 0'>Putting stays yours.</p></div>`;
     drawCallTarget(h,{id:"chip",club:cands[0].club,leave:D-land(cands[0])},sit);
   }
   if(distShot&&!chipRange){const eff=effShot;
@@ -3320,8 +3351,8 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
           :o.id==="cons"?`Aim the fat middle of the green, not the flag. A ${sit.pin!=="mid"?"long putt from the safe side":"two-putt par"} is the win here.`
           :`${aimAway?mxSays:"Straight at it."} Your ${o.club.club} carries ${o.club.carry}${eff>o.club.carry?", so this needs a good one":""}.`}));
       approachOpts=`<div class='opts'>`+cands.slice(0,3).map((o,i)=>
-        `<div class='opt ${i===0?"rec":""}' data-i='${i}' data-pick='${escAttr(o.title)}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="lay"?"punch":o.id==="cons"?"advance":"window"]}</span><div style='flex:1'><span class='orank'><span class='oidx'>${String(i+1).padStart(2,"0")}</span>${i===0?"The play":""}<span class='opct'>rec ${pct(o)}%</span></span><h4>${o.title}</h4><p>${fmt(o.body||`${sit.dist} plays ${eff}. Your ${o.club.club} carries ${o.club.carry}.`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p></div></div>`).join("")+
-        `<p class='small' style='margin:2px 0 0'>Tap the option you're playing. It goes in the log.</p></div>`;
+        `<div class='opt ${i===0?"rec":""}' data-i='${i}' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.id==="lay"?"punch":o.id==="cons"?"advance":"window"]}</span><div style='flex:1'><span class='orank'><span class='oidx'>${String(i+1).padStart(2,"0")}</span>${i===0?"The play":""}<span class='opct'>rec ${pct(o)}%</span></span><h4>${o.title}</h4><p>${fmt(o.body||`${sit.dist} plays ${eff}. Your ${o.club.club} carries ${o.club.carry}.`)}${o.why.length?`<span class='src'>${o.why.join(" · ")}</span>`:""}</p>${i===0?AIMBTN(i):""}</div></div>`).join("")+
+        `</div>`;
       drawCallTarget(h,win,sit);
     }}
   else if(sit.lie==="tee"){const g=(h.gates||[])[0];
@@ -3342,7 +3373,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
   // carry gates are tee/approach furniture; a 25y chip has no gate to argue
   const gates=chipRange?"":applicableGates(h,sit).map(g=>{const need=Math.max(0,g.carry-teeDelta);
     const ok=gateClub.carry>=need;
-    return `<div class='gate'>${g.label}: needs <b>${need}</b> carry${teeDelta?` <span class='small'>(${g.carry} on the champ card, translated to your ${selT} tees)</span>`:""}. Your ${gateClub.club} carries <b>${gateClub.carry}</b>.
+    return `<div class='tag warn'>${g.label}: needs <b>${need}</b> carry${teeDelta?` <span class='small'>(${g.carry} on the champ card, translated to your ${selT} tees)</span>`:""}. Your ${gateClub.club} carries <b>${gateClub.carry}</b>.
      ${ok?`<b>You clear it${gateClub.carry-need<10?", barely. Only with a good one":""}.</b> ${fmt(g.beat)}`:`<b>Not your number.</b> ${fmt(g.fail)}`}${teeShort?` <span class='small'>(championship-tee number; from your tees the real carry is shorter)</span>`:""}</div>`;}).join("");
   const persona=[];
   if(sit.lie==="tee"&&h.par>3&&p.weaknesses.includes("driving"))persona.push("Driving is your listed weakness. Unless a rule below demands the driver, take the 3-wood or position club and play to the widest number, not the longest.");
@@ -3435,8 +3466,7 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
       :recNote?`In the trouble${side?` on the ${side}`:""}. ${recNote}`
       :`In the trouble${side?` on the ${side}`:""}. No course-sourced recovery notes for this hole yet; standard rule applies: out first, score second.`;
     troubleHTML=`<div class='sitblock'><span class='who'>The situation${side?` · ${side} side`:""}${rec&&rec.src?` · ${rec.src}`:""}</span>${fmt(sitText)}</div>
-      <div class='opts'>${opts.map((o,i)=>`<div class='opt ${o.recc?"rec":""}' data-pick='${escAttr(o.title)}' role='button' tabindex='0' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.icon]}</span><div style='flex:1'><span class='orank'><span class='oidx'>${String(i+1).padStart(2,"0")}</span>${o.rank.replace(/^\d+\s*·?\s*/,"")}</span><h4>${o.title}</h4><p>${fmt(o.body)}</p></div></div>`).join("")}
-      <p class='small' style='margin:2px 0 0'>Tap the option you're playing. It goes in the log.</p></div>`;
+      <div class='opts'>${opts.map((o,i)=>`<div class='opt ${o.recc?"rec":""}' style='animation-delay:${i*70}ms'><span class='oicon'>${ICONS[o.icon]}</span><div style='flex:1'><span class='orank'><span class='oidx'>${String(i+1).padStart(2,"0")}</span>${o.rank.replace(/^\d+\s*·?\s*/,"")}</span><h4>${o.title}</h4><p>${fmt(o.body)}</p></div></div>`).join("")}</div>`;
     clubLine="";
   }
   const angleBlock=sit.side&&sit.side!=="centre"?
@@ -3485,12 +3515,12 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
       "Dry ground, expect runout on approaches and lay-ups"}. <span class='src'>inferred from Open-Meteo rain, not observed</span>`);
   if(!distShot)drawCallTarget(h,null,sit);
   $("#advice").innerHTML=`
-   <div class='call'><p class='eyebrow'>${sit.lie==="trouble"?"The way out":"The call"}</p>
+   <div class='call' data-verb='${sit.lie==="trouble"?"The way out":"The call"}'>
      ${confChips}
      ${sit.lie==="trouble"?troubleHTML:`${clubLine?`<div class='club'>${clubLine}</div>`:""}${callMath}${approachOpts}`}
      ${wxReadout(sit)}
-     ${albieSays?`<p class='albiesays'><span class='who'>ALBIE ▸</span> ${fmt(albieSays)}</p>`:""}
-     ${windCaveat?`<p class='albiesays caveat'><span class='who'>TODAY ▸</span> ${fmt(windCaveat)}</p>`:""}
+     ${albieSays?`<p class='albiesays'><span class='who'>Albie</span> ${fmt(albieSays)}</p>`:""}
+     ${windCaveat?`<p class='albiesays caveat'><span class='who'>Today</span> ${fmt(windCaveat)}</p>`:""}
      ${(h.grn&&sit.lie!=="tee")||runoutNote?`<div class='rules' style='margin:8px 0 2px'>${h.grn&&sit.lie!=="tee"?noteRow("","the green",`${fmt(h.grn.note)} <span class='src'>${h.grn.src||""}</span>`):""}${runoutNote}</div>`:""}
      <button class='expand' id='share-call'>Share this call ▸</button>
      <button class='expand' id='expand-call'>Full reasoning ▾</button>
@@ -3511,14 +3541,20 @@ function ask(){const p=store.p;if(!p){show("onboard");return}
   // advice named nothing at all (seam sweep, 2026-09-03). Record what was
   // actually voiced: the way out, or the hole rule that stood in for a club.
   shotSync(clubLine||(sit.lie==="trouble"?"the way out":"hole rules"),sit,clubLine);
-  if(shot.pick){const o=$$("#advice .opt[data-pick]").find(x=>x.dataset.pick===shot.pick);
-    if(o){o.classList.add("chosen");chosenPick=shot.pick;}}
 }
 /* pace of play: Albie speaks FIRST. The call renders the moment a hole opens
    (tee, live wind, unknown pin) and re-thinks on every refinement - the
    inputs are optional sharpening, not a form to fill (tester feedback). */
 let autoAskT;
-function autoAsk(src){sitSummary();if(!store.p)return;
+function autoAsk(src){sitSummary();
+  // Albie cannot speak without carry numbers. He used to just stay silent, which
+  // read as broken (Maahir, 2026-09-03): the caddie view rendered in full and
+  // nothing ever appeared in the call. Say what is missing, and open the door.
+  if(!store.p){$("#advice").innerHTML=`<div class='card'>
+     <h2 class='askhead'>Albie needs your numbers first</h2>
+     <p class='small'>Every call is a club out of your bag, so he cannot make one until he knows how far you hit them. Two minutes, and honest guesses are fine.</p>
+     <button data-verb='Set up' class='btn2 sage' id='need-profile'>My game</button></div>`;
+    $("#need-profile").addEventListener("click",()=>show("onboard"));return}
   // a background re-think (GPS fix, live weather) never redraws what a finger
   // is on or a shot already committed to: it leaves a readout on the record
   if((src==="gps"||src==="wx")&&fbLive()){
@@ -3526,9 +3562,8 @@ function autoAsk(src){sitSummary();if(!store.p)return;
     paintShotFb();return}
   clearTimeout(autoAskT);autoAskT=setTimeout(ask,90);}
 /* ---------- the shot record ----------
-   One object per shot: which call it got, which option was locked, the
-   rating and the note. Rendered ONCE into #shotfb; ask() only updates the
-   record's advice. One log entry per shot, edited in place, so re-tapping a
+   One object per shot: which call it got, the verdict and the note. The
+   verdict renders ONCE into #verdict; ask() only updates the record's advice. One log entry per shot, edited in place, so re-tapping a
    ball corrects the rating instead of logging a second shot. */
 let shot=null;
 function shotNew(){const c=COURSES[cur.course];
@@ -3542,18 +3577,18 @@ function shotNew(){const c=COURSES[cur.course];
   const n=Math.max(logged,prev)+1;
   // the next shot has been logged: whatever the last one closed at is final now
   if(shot&&shot.logIdx!==null)sinkCloseEntry(shot.logIdx);
-  shot={course:c.slug,hole:cur.hole,n,advice:null,pick:null,club:null,clubSet:false,sit:null,rating:0,note:"",logIdx:null,stale:null};
-  renderShotFb();}
+  shot={course:c.slug,hole:cur.hole,n,advice:null,club:null,clubSet:false,sit:null,rating:0,note:"",logIdx:null,stale:null};
+  renderShotFb();renderVerdict();}
 function shotSync(advice,sit,club){const c=COURSES[cur.course];
   if(!shot||shot.course!==c.slug||shot.hole!==cur.hole)shotNew();
   shot.advice=advice;shot.sit=sit;shot.stale=null;
-  if(!shot.pick&&!shot.clubSet){const bg=(store.p&&store.p.bag)||[];
-    shot.club=(club&&bg.some(b=>b.club===club))?club:null;}   // a locked pick owns the club until it is replaced
+  if(!shot.clubSet){const bg=(store.p&&store.p.bag)||[];
+    shot.club=(club&&bg.some(b=>b.club===club))?club:null;}   // a named club owns it until it is replaced
   if(shot.logIdx!==null)shotSave();
-  $("#shotfb").classList.remove("hidden");paintShotFb();renderLedger();}
+  $("#shotfb").classList.remove("hidden");renderShotFb();renderLedger();renderVerdict();}
 function shotSave(){const lg=store.log;
   const e={t:new Date().toISOString(),type:"shot",course:shot.course,hole:shot.hole,n:shot.n,
-    sit:shot.sit,advice:shot.pick||shot.advice||"rules",club:shot.club||null,
+    sit:shot.sit,advice:shot.advice||"rules",club:shot.club||null,
     rating:shot.rating,note:shot.note};
   if(shot.logIdx!==null&&lg[shot.logIdx]&&lg[shot.logIdx].type==="shot"){e.t=lg[shot.logIdx].t;lg[shot.logIdx]=e;}
   else{lg.push(e);shot.logIdx=lg.length-1;}
@@ -3570,7 +3605,7 @@ function ledgerRows(){const c=COURSES[cur.course],today=new Date().toISOString()
   const byN=new Map();rows.forEach(r=>byN.set(r.e.n||0,r));
   const out=[...byN.values()].sort((a,b)=>(a.e.n||0)-(b.e.n||0));
   if(shot&&shot.course===c.slug&&shot.hole===cur.hole&&shot.logIdx===null&&shot.advice)
-    out.push({idx:null,e:{n:shot.n,club:shot.club,advice:shot.pick||shot.advice,
+    out.push({idx:null,e:{n:shot.n,club:shot.club,advice:shot.advice,
       sit:shot.sit,rating:shot.rating}});
   return out;}
 /* Albie's tee call is often a rule, not a club ("your tee club per the rules
@@ -3587,9 +3622,9 @@ function nameClub(r){const p=store.p;if(!p||!p.bag)return;
     renderLedger();});}
 function renderLedger(){const el=$("#ledger");if(!el)return;
   const rows=ledgerRows();
-  // one shot is not a stack, and #shotfb already carries its rating
-  el.classList.toggle("hidden",rows.length<2);
-  if(rows.length<2){el.innerHTML="";return}
+  // the verdict now hangs off the open row, so one shot is already a page
+  el.classList.toggle("hidden",!rows.length);
+  if(!rows.length){el.innerHTML="";return}
   el.innerHTML=rows.map((r,i)=>{const s=r.e.sit||{},nx=rows[i+1]&&rows[i+1].e.sit,last=i===rows.length-1;
     const got=last?(s.dist?s.dist+" out":"")
       :(s.lie==="tee"&&nx&&nx.hit!=null&&s.hit!=null&&nx.hit-s.hit>=50)?(nx.hit-s.hit)+"y"
@@ -3598,23 +3633,13 @@ function renderLedger(){const el=$("#ledger");if(!el)return;
       <span class='lnum'>${r.e.n||i+1}</span>
       <span class='lwhat' data-club='${i}'>${safeText(r.e.club||(s.lie==="tee"?"Tee shot":r.e.advice)||"no call",44)} <i class='lcaret'>▾</i></span>
       <span class='lgot'>${got}</span>
-      <span class='lstars' data-i='${i}'>${[1,2,3,4,5].map(k=>
-        `<span class='${k<=(r.e.rating||0)?"on":""}' data-r='${k}'></span>`).join("")}</span>
+      ${r.e.rating?`<i class='lverd${r.e.rating<3?" bad":""}'></i>`:""}
     </div>`;}).join("");
   el.onclick=ev=>{const w=ev.target.closest("[data-club]");
-    if(w){const rw=ledgerRows()[+w.dataset.club];if(rw)nameClub(rw);return}
-    const b=ev.target.closest("[data-r]");if(!b)return;
-    const i=+b.parentNode.dataset.i,r=ledgerRows()[i];if(!r)return;const v=+b.dataset.r;
-    if(r.idx===null){shot.rating=shot.rating===v?0:v;shotSave();paintShotFb();
-      if(shot.rating&&shot.logIdx!==null)sinkCloseEntry(shot.logIdx);}
-    else{const lg=store.log;lg[r.idx].rating=lg[r.idx].rating===v?0:v;store.log=lg;
-      if(shot&&shot.logIdx===r.idx){shot.rating=lg[r.idx].rating;paintShotFb();}
-      renderLog();
-      if(lg[r.idx].rating)sinkCloseEntry(r.idx);}
-    renderLedger();};}
-function shotPlayed(){return !!(shot&&shot.advice&&(shot.rating||shot.pick||shot.note
+    if(w){const rw=ledgerRows()[+w.dataset.club];if(rw)nameClub(rw);return}};}
+function shotPlayed(){return !!(shot&&shot.advice&&(shot.rating||shot.note
   ||shot.clubSet||(shot.sit&&shot.sit.src)));}
-function fbLive(){return !!(shot&&(shot.rating||shot.pick||document.activeElement===$("#fb-note")));}
+function fbLive(){return !!(shot&&(shot.rating||document.activeElement===$("#fb-note")));}
 /* Scritto grammar on the yardage, the twin of wxMoment() on the wind: a GPS
    fix that moves you NAMES the new number and rolls to it, so the change is
    legible without spending a re-think. Still on first appearance (there is
@@ -3628,51 +3653,89 @@ function rollNum(el,to){if(!el)return;
     el.textContent=Math.round(from+(to-from)*e);
     if(f<1)requestAnimationFrame(step);};
   requestAnimationFrame(step);}
-function paintShotFb(){if(!shot||!$("#fb-stars"))return;
-  [...$("#fb-stars").children].forEach((s,j)=>s.classList.toggle("on",j<shot.rating));
+/* One verdict vocabulary, in words, everywhere a golfer judges a call.
+   5 and 1 rather than a boolean: the log entry, the Supabase row, the export
+   importer and pull_feedback.py all read `rating` as an integer, and words on
+   screen must not become a schema change underneath them. */
+const VERDICTS=[["Good call",5],["Bad call",1]];
+function renderVerdict(){const el=$("#verdict");if(!el)return;
+  const live=!!(shot&&shot.advice);
+  el.classList.toggle("hidden",!live);
+  if(!live){el.innerHTML="";el.dataset.k="";return}
+  const k=shot.course+"/"+shot.hole+"/"+shot.n;
+  // rebuilt only when the shot changes: a note being typed must survive every
+  // background re-think, the same reason the slot lives outside #advice
+  if(el.dataset.k!==k){el.dataset.k=k;
+    el.innerHTML=VERDICTS.map(([w,v])=>`<button class='chip' data-v='${v}'>${w}</button>`).join("")+
+      `<input type='text' class='field' id='fb-note' placeholder='Optional: what happened'>`;
+    $("#fb-note").addEventListener("change",e=>{shot.note=e.target.value;shotSave();});
+    el.onclick=ev=>{const b=ev.target.closest("[data-v]");if(!b||!shot)return;
+      const v=+b.dataset.v;shot.rating=shot.rating===v?0:v;shotSave();
+      if(shot.rating&&shot.logIdx!==null)sinkCloseEntry(shot.logIdx);
+      paintVerdict();renderLedger();};}
+  paintVerdict();}
+function paintVerdict(){if(!shot)return;
+  $$("#verdict [data-v]").forEach(b=>b.classList.toggle("on",+b.dataset.v===shot.rating));
+  const n=$("#fb-note");if(n&&document.activeElement!==n)n.value=shot.note||"";}
+function paintShotFb(){if(!shot||!$("#fb-stale"))return;
   const st=$("#fb-stale");st.classList.toggle("hidden",!shot.stale);
   if(!shot.stale)return;
   const k=shot.stale.k;
   if(st.dataset.k!==k){st.dataset.k=k;
-    st.innerHTML=k==="gps"?"GPS moved you · <b class='rollnum'>0</b>y · re-think ▸"
-                          :"Weather changed · re-think ▸";}
+    st.dataset.verb=k==="gps"?"GPS moved you":"Weather changed";
+    st.innerHTML=k==="gps"?"<b class='rollnum'>0</b>y out · Re-think":"Re-think";}
   if(k==="gps")rollNum(st.querySelector(".rollnum"),shot.stale.d);}
+/* One door row, always last, and only the doors that are real from here.
+   Skipping a hole is only offered while nothing has been played on it: once a
+   shot is logged the way on is the next shot, and once the ball is inside 40
+   the way on is the score. Three buttons standing over a ball is a menu. */
 function renderShotFb(){const c=COURSES[cur.course],h=c.holes.find(x=>x.n===cur.hole);
-  $("#shotfb").innerHTML=`<div class='fbhead'><p class='eyebrow'>Rate this call</p>
-     <button class='fb-chip hidden' id='fb-stale' data-verb='Re-think'></button></div>
-   <div class='stars' id='fb-stars'>${"<span></span>".repeat(5)}</div>
-   <input type='text' class='fb-note' id='fb-note' placeholder='Optional: what happened / what was wrong' style='margin-top:8px'>
-   <div class='row' style='margin-top:12px'>
-     <button data-verb='Next' class='btn2' id='nextshot'>Hit it</button>
-     ${h.n<c.holes.length?`<button data-verb='Go to' class='btn2 sage' id='nexthole'>Hole ${h.n+1}</button>`
-       :`<button data-verb='Finish' class='btn2 sage' id='nexthole'>Round done</button>`}
+  const d=+$("#sit-dist").value||0, near=d>0&&d<40;
+  const virgin=!(shot&&(shot.n>1||shotPlayed()));
+  const key=[h.n,near,virgin].join("/");
+  // never rebuilt under a finger: only a change of doors redraws the row
+  if($("#shotfb").dataset.k===key){paintShotFb();return}
+  $("#shotfb").dataset.k=key;
+  const door=near
+    ?`<button data-verb='Done' class='btn2 sage' id='scorehole'>Score this hole</button>`
+    :virgin?(h.n<c.holes.length
+        ?`<button data-verb='Go to' class='btn2 sage' id='nexthole'>Hole ${h.n+1}</button>`
+        :`<button data-verb='Finish' class='btn2 sage' id='nexthole'>Round done</button>`)
+      :"";
+  $("#shotfb").innerHTML=`
+   <button class='btn2 compact sage hidden' id='fb-stale' data-verb='Weather changed'>Re-think</button>
+   <div class='row'>
+     <button data-verb='Then' class='btn2' id='nextshot'>Next shot</button>
+     ${door}
    </div>`;
-  $("#fb-stars").addEventListener("click",e=>{const i=[...$("#fb-stars").children].indexOf(e.target);
-    if(i<0)return;shot.rating=i+1;shotSave();paintShotFb();});
-  $("#fb-note").addEventListener("change",e=>{shot.note=e.target.value;shotSave();});
   $("#fb-stale").addEventListener("click",()=>{shot.stale=null;paintShotFb();ask();});
   $("#nextshot").addEventListener("click",()=>{
     // the ball moved: clear position and the old call, keep hole/wind/pin
-    $("#sit-dist").value="";lastTap=null;chosenPick=null;
+    $("#sit-dist").value="";lastTap=null;
     const sv=document.querySelector("#holemap svg");
     if(sv){const b=sv.querySelector("#hm-ball");if(b)b.style.display="none";
       const sh=sv.querySelector("#hm-shot");if(sh)sh.innerHTML="";
       const tg=sv.querySelector("#hm-target");if(tg)tg.remove();
       const ac=sv.querySelector("#hm-acc");if(ac)ac.remove();}
     if(shotPlayed())shotSave();
-    $("#advice").innerHTML="";shotNew();renderLedger();
-    const hm=document.getElementById("holemap");
-    (hm.classList.contains("hidden")?$("#posband"):hm)
-      .scrollIntoView({block:"center",behavior:motionOK?"smooth":"auto"});
+    // shot 1 is off a tee; every shot after it is off the deck until told otherwise
+    $$("#sit-lie .chip").forEach(c=>c.classList.toggle("on",c.dataset.v==="fairway"));
+    syncSide();sitSummary();
+    $("#advice").innerHTML="";shotNew();renderLedger();renderVerdict();
+    window.scrollTo(0,0);$("#sit-dist").focus();
     // the last fix was held back while the shot was committed: use it now
     if(gpsWatch!==null&&gpsLastBall&&gpsLastBall.n===cur.hole&&typeof hmPlaceFn==="function"&&hmPlaceHole===cur.hole)
       hmPlaceFn(gpsLastBall.ball,{src:"gps",acc:gpsLastBall.acc});
     else toast(gpsWatch!==null?"Walk to the ball. GPS picks it up.":"Tap the map where the ball ended up.");});
-  $("#nexthole").addEventListener("click",()=>{
+  const onScore=()=>{
     if(shotPlayed())shotSave();   // the last shot on the hole still counts
     askScore(h,()=>{
-    if(h.n<c.holes.length){cur.hole=h.n+1;resetSituation();renderHoles();}
-    else show("log");});});
+      // the hole advances on the score, not on a door of its own
+      if(h.n<c.holes.length){cur.hole=h.n+1;resetSituation();renderHoles();shotNew();
+        window.scrollTo(0,0);}
+      else show("log");});};
+  const nh=$("#nexthole");if(nh)nh.addEventListener("click",onScore);
+  const sh=$("#scorehole");if(sh)sh.addEventListener("click",onScore);
   paintShotFb();}
 $("#ask").addEventListener("click",ask);
 $("#sit-dist").addEventListener("input",autoAsk);
@@ -3687,33 +3750,33 @@ $("#advice").addEventListener("click",e=>{
   if(e.target.id==="expand-call"){const m=$("#advice .call-more");
     m.classList.toggle("hidden");
     e.target.textContent=m.classList.contains("hidden")?"Full reasoning ▾":"Less ▴";return}
-  // selectable options: tapping a card locks the pick, redraws the map for
-  // THAT option, and opens the aim panel for it
-  const o=e.target.closest(".opt[data-pick]");
-  if(o){$$("#advice .opt").forEach(x=>{x.classList.toggle("chosen",x===o);
-      const ap=x.querySelector(".aimpanel");if(ap&&x!==o)ap.remove();});
-    chosenPick=o.dataset.pick;
-    const oi=+o.dataset.i,pick=lastOpts&&lastOpts[oi];
-    if(pick&&lastAsk){
-      drawCallTarget(lastAsk.h,pick,lastAsk.sit);
-      if(!o.querySelector(".aimpanel"))
-        o.querySelector("div").insertAdjacentHTML("beforeend",
-         `<div class='aimpanel'><span class='when'>where to aim</span>${fmt(pick.aim||"Middle of the target, take your medicine if you miss.")}
-          ${miniMap(lastAsk.h,pick,lastAsk.sit)||(lastAsk.h.geo&&!lastAsk.h.geo.sketch?"<span class='src'>Marked on the hole map above</span>":"<span class='src'>No surveyed map for this hole, aim by feel</span>")}</div>`);}
-    const c=COURSES[cur.course];
-    const entry={t:new Date().toISOString(),type:"choice",course:c.slug,hole:cur.hole,
-      pick:chosenPick,rec:o.classList.contains("rec")};
-    const log=store.log,last=log[log.length-1];
-    if(last&&last.type==="choice"&&last.course===c.slug&&last.hole===cur.hole)
-      log[log.length-1]=entry;else log.push(entry);
-    store.log=log;renderLog();
-    if(shot){shot.pick=chosenPick;
-      if(pick&&pick.club&&pick.club.club)shot.club=pick.club.club;
-      if(shot.logIdx!==null)shotSave();}
-    renderLedger();
-    toast("Locked in. Rate the call after the shot.");}});
-let chosenPick=null,lastOpts=null,lastAsk=null;
+  // the aim panel opens from the play's own verb. Tapping a card used to lock
+  // a pick: a step nobody found, standing over the ball, whose one useful
+  // output (the measured drive) the next shot's position already gives us.
+  const a=e.target.closest("[data-aim]");
+  if(a){const o=a.closest(".opt"),open=o.querySelector(".aimpanel");
+    if(open){open.remove();a.dataset.verb="Show";return}
+    const pick=lastOpts&&lastOpts[+a.dataset.aim];if(!pick||!lastAsk)return;
+    drawCallTarget(lastAsk.h,pick,lastAsk.sit);
+    o.querySelector("div").insertAdjacentHTML("beforeend",
+     `<div class='aimpanel'><span class='when'>where to aim</span>${fmt(pick.aim||"Middle of the target, take your medicine if you miss.")}
+      ${miniMap(lastAsk.h,pick,lastAsk.sit)||(lastAsk.h.geo&&!lastAsk.h.geo.sketch?"<span class='src'>Marked on the hole map above</span>":"<span class='src'>No surveyed map for this hole, aim by feel</span>")}</div>`);
+    a.dataset.verb="Hide";}});
+const AIMBTN=i=>`<div class='aimrow'><button class='btn2 compact' data-verb='Show' data-aim='${i}'>Aim</button></div>`;
+let lastOpts=null,lastAsk=null;
 /* hole nav + score capture */
+/* the one line the golfer reads standing over the ball: course, hole, par,
+   yards off the tees they are actually playing */
+function renderHdr(){const el=document.getElementById("hdr-line");if(!el)return;
+  const c=COURSES[cur.course],h=c.holes.find(x=>x.n===cur.hole);if(!h)return;
+  const sel=(store.p&&store.p.tees)||"member";
+  const par=(h.tpar&&h.tpar[sel])||h.par,y=(h.ty&&h.ty[sel])||h.yards;
+  const nm=c.course.split(/\s[—–-]\s/).pop();
+  el.textContent=[nm,"Hole "+h.n,"Par "+par].concat(y?[y+"y"]:[]).join(" · ");}
+(function(){const b=document.getElementById("hdrstrip");if(!b)return;
+  b.addEventListener("click",()=>{const s=document.getElementById("holesheet");
+    const open=s.classList.toggle("hidden")===false;
+    b.setAttribute("aria-expanded",String(open));});})();
 function goHole(n){const c=COURSES[cur.course];if(n<1||n>c.holes.length)return;
   if(shot&&shot.hole!==n&&shotPlayed())shotSave();
   cur.hole=n;resetSituation();renderHoles();}
@@ -3763,6 +3826,10 @@ $("#prevhole").addEventListener("click",()=>goHole(cur.hole-1));
 $("#nextholenav").addEventListener("click",()=>{
   const c=COURSES[cur.course],h=c.holes.find(x=>x.n===cur.hole);
   askScore(h,()=>{if(cur.hole<c.holes.length)goHole(cur.hole+1);else show("log");});});
+(function(){const b=document.getElementById("map-toggle");if(!b)return;
+  b.addEventListener("click",()=>{
+    const open=!document.getElementById("holemap").classList.toggle("collapsed");
+    b.dataset.verb=open?"Hide":"Show";});})();
 $("#holemap").addEventListener("click",e=>{
   if(e.target.id==="gps-chip"){gpsToggle();return}
   if(e.target.closest&&e.target.closest("#d3-chip"))d3Toggle();});
@@ -3867,24 +3934,25 @@ function renderLog(){renderScorecard();renderKeep();renderDrives();const log=sto
   const start=Math.max(0,log.length-12);
   $("#logentries").innerHTML=log.slice(start).map((e,i)=>({e,idx:start+i})).reverse()
    .map(({e,idx})=>`<div class='card' style='padding:9px 12px'>
-    <span class='pill'>${e.type==="round"?"ROUND":e.type==="signup"?"LIST":e.type==="course-request"?"ASK":"H"+e.hole}</span>
+    <span class='tag'>${e.type==="round"?"ROUND":e.type==="signup"?"LIST":e.type==="course-request"?"ASK":"H"+e.hole}</span>
     <span class='small'> ${e.type==="round"?`score ${e.score||"?"} · ${safeText(e.notes,240)}`
       :e.type==="hole"?`scored ${scoreSym(e.score,e.par,scoreFresh(e))} par ${e.par}`
       :e.type==="signup"?`updates signup pending export`
       :e.type==="choice"?`picked: ${e.pick}${e.rec?"":", against the recommendation"}`
       :e.type==="course-request"?`asked for ${safeText(e.course,80)}`
       :`${e.n?`shot ${e.n} · `:""}${e.advice} · ${"★".repeat(e.rating||0)} ${safeText(e.note,240)}`}</span>
-    ${e.type==="hole"?`<button class='pill' data-edit='${idx}' style='float:right;cursor:pointer;border:0'>Edit</button>`:""}</div>`).join("");
+    ${e.type==="hole"?`<button class='btn2 icon mono' data-edit='${idx}' style='float:right' aria-label='Edit this entry'>Edit</button>`:""}</div>`).join("");
   $("#logentries").onclick=ev=>{const b=ev.target.closest("[data-edit]");if(!b)return;
     const idx=+b.dataset.edit,entry=store.log[idx];if(!entry)return;
     scoreSheet(entry.hole,entry.par,`Hole ${entry.hole} · par ${entry.par} · correct the score`,(score,label)=>{
       if(score===null)return;
       const lg=store.log;lg[idx].score=score;lg[idx].edited=new Date().toISOString();
       store.log=lg;renderLog();toast(`Hole ${entry.hole} corrected: ${label}.`);});};}
+// the same verdict idiom one level up: words, two of them, numeric underneath
 let rsRating=0;
-$("#rs-stars").addEventListener("click",e=>{const s=[...$("#rs-stars").children];const i=s.indexOf(e.target);
-  if(i<0)return;rsRating=i+1;s.forEach((x,j)=>x.classList.toggle("on",j<=i));
-  $("#rs-count").textContent=rsRating+" of 5";});
+$("#rs-verdict").addEventListener("click",e=>{const b=e.target.closest("[data-v]");if(!b)return;
+  rsRating=rsRating===+b.dataset.v?0:+b.dataset.v;
+  $$("#rs-verdict [data-v]").forEach(x=>x.classList.toggle("on",+x.dataset.v===rsRating));});
 $("#save-round").addEventListener("click",()=>{const log=store.log;
   log.push({t:new Date().toISOString(),type:"round",course:COURSES[cur.course].slug,
     score:$("#rs-score").value,rating:rsRating,notes:$("#rs-notes").value,
@@ -4044,7 +4112,7 @@ if("serviceWorker" in navigator&&window===top&&location.protocol==="https:")
 function moveTabInd(){const t=document.querySelector(".tab.on"),ind=document.getElementById("tab-ind");
   if(!t||!ind)return;
   const r=t.getBoundingClientRect(),b=t.parentElement.getBoundingClientRect();
-  ind.style.left=(r.left-b.left+r.width/2-15)+"px";}
+  ind.style.transform="translateX("+(r.left-b.left+r.width/2-15)+"px)";}
 /* About stats count up from zero when the tab opens — real numbers, briefly alive */
 function countUpStats(){if(!motionOK)return;
   $$("#ab-stats b").forEach(el=>{
@@ -4055,7 +4123,7 @@ function countUpStats(){if(!motionOK)return;
       el.textContent=Math.round(target*(1-Math.pow(1-f,3))).toLocaleString()+suf;
       if(f<1)requestAnimationFrame(step)};
     requestAnimationFrame(step);});}
-function show(v){if(v==="onboard")prefillOnboard();
+function show(v){if(v==="onboard"){prefillOnboard();v="bag";}
   // a sheet belongs to the screen that opened it: leaving the tab dismisses it
   const sheet=document.getElementById("scoresheet");if(sheet)sheet.remove();
   $$(".view").forEach(x=>x.classList.add("hidden"));$("#view-"+v).classList.remove("hidden");
@@ -4094,7 +4162,7 @@ renderCourseSel();renderHoles();renderLog();renderAbout();
    Fails soft (artifact, offline): mild air, calm unless slid. */
 (async()=>{applySolarPaper();
   try{await fetchWx();wxAuto=true;$("#wx-live").classList.add("on");applyWx();}catch(e){}})();
-if(location.search.includes("gpssim"))setTimeout(()=>{show("caddie");gpsSimStart();},900);
+if(location.search.includes("gpssim"))setTimeout(()=>{show("caddie");renderHoles();gpsSimStart();},900);
 if(store.p)renderBag();
 const cta=document.getElementById("land-cta");
 if(store.p)cta.textContent="Open the caddie";
@@ -4122,8 +4190,17 @@ document.getElementById("a2hs").addEventListener("click",async()=>{
       :`1. Open your browser's <b>menu</b> (usually three dots).<br>2. Tap <b>Add to Home screen</b> or <b>Install app</b>.<br>3. Confirm. Albie installs like an app, works offline after the first load.`}</div></div>`);
   document.getElementById("scoresheet").addEventListener("click",e=>{
     if(e.target.id==="ss-x")document.getElementById("scoresheet").remove();});});
-$$(".wordmark").forEach(w=>{w.style.cursor="pointer";w.title="Home";
-  w.addEventListener("click",()=>show("landing"));});
+$$(".wordmark").forEach(w=>{w.title="About Albie";
+  w.addEventListener("click",()=>show("about"));});
+document.getElementById("to-landing").addEventListener("click",()=>show("landing"));
+document.getElementById("land-about").addEventListener("click",()=>show("about"));
+/* a text field must never leave the keyboard up with no way to put it down:
+   any pointer landing outside one blurs it (Maahir's standing rule) */
+document.addEventListener("pointerdown",e=>{
+  const a=document.activeElement;
+  if(!a||!/^(INPUT|TEXTAREA)$/.test(a.tagName))return;
+  if(e.target===a||(e.target.closest&&e.target.closest("label")))return;
+  a.blur();},true);
 /* the landing is the front door for everyone (Maahir's call); the CTA is
    smart instead - returning golfers jump straight to the caddie from it */
 show("landing");
