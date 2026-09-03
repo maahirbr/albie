@@ -812,6 +812,7 @@ h1,h2,.eyebrow,.land-mark,.ab-mark,.land-line,.land-oss,.ab-fieldcap,
     <div class="brand"><span class="wordmark">Albie<i>.</i></span><span class="beta">test</span></div>
     <h1>Tell your caddie about your game</h1>
     <p class="small">Two minutes. No launch monitor needed, honest guesses beat no data. Everything stays on this phone.</p>
+    <p class="small hidden" id="sink-disclosure">Your shot calls are sent to Maahir anonymously. Add your name if you want him to be able to ask you about them.</p>
     <div class="card">
       <label>Your name</label><input type="text" id="ob-name" placeholder="First name">
       <label>Handicap</label>
@@ -3539,6 +3540,8 @@ function shotNew(){const c=COURSES[cur.course];
     &&(e.t||"").slice(0,10)===today)?Math.max(m,e.n||0):m,0);
   const prev=(shot&&shot.course===c.slug&&shot.hole===cur.hole)?shot.n:0;
   const n=Math.max(logged,prev)+1;
+  // the next shot has been logged: whatever the last one closed at is final now
+  if(shot&&shot.logIdx!==null)sinkCloseEntry(shot.logIdx);
   shot={course:c.slug,hole:cur.hole,n,advice:null,pick:null,club:null,clubSet:false,sit:null,rating:0,note:"",logIdx:null,stale:null};
   renderShotFb();}
 function shotSync(advice,sit,club){const c=COURSES[cur.course];
@@ -3602,10 +3605,12 @@ function renderLedger(){const el=$("#ledger");if(!el)return;
     if(w){const rw=ledgerRows()[+w.dataset.club];if(rw)nameClub(rw);return}
     const b=ev.target.closest("[data-r]");if(!b)return;
     const i=+b.parentNode.dataset.i,r=ledgerRows()[i];if(!r)return;const v=+b.dataset.r;
-    if(r.idx===null){shot.rating=shot.rating===v?0:v;shotSave();paintShotFb();}
+    if(r.idx===null){shot.rating=shot.rating===v?0:v;shotSave();paintShotFb();
+      if(shot.rating&&shot.logIdx!==null)sinkCloseEntry(shot.logIdx);}
     else{const lg=store.log;lg[r.idx].rating=lg[r.idx].rating===v?0:v;store.log=lg;
       if(shot&&shot.logIdx===r.idx){shot.rating=lg[r.idx].rating;paintShotFb();}
-      renderLog();}
+      renderLog();
+      if(lg[r.idx].rating)sinkCloseEntry(r.idx);}
     renderLedger();};}
 function shotPlayed(){return !!(shot&&shot.advice&&(shot.rating||shot.pick||shot.note
   ||shot.clubSet||(shot.sit&&shot.sit.src)));}
@@ -3887,7 +3892,7 @@ $("#save-round").addEventListener("click",()=>{const log=store.log;
   $("#rs-notes").value="";$("#rs-score").value="";});
 $("#export").addEventListener("click",async()=>{
   const payload=JSON.stringify({exported:new Date().toISOString(),version:"1.0",build:"2026-09-03",
-    profile:store.p,log:store.log},null,1);
+    profile:store.p,log:store.log,sinkBank:sinkBank()},null,1);
   const fname=`caddie-feedback-${(store.p?.name||"tester").toLowerCase()}-${new Date().toISOString().slice(0,10)}.json`;
   if(window.claude?.downloads?.save){try{await window.claude.downloads.save({filename:fname,data:payload});
     toast("Feedback file saved.");return}catch(e){}}
@@ -3937,6 +3942,77 @@ function renderAbout(){
    blocked (published artifact), the signup is banked into the feedback export
    instead — captured either way, address never surfaced. */
 const UPDATES_ENDPOINT="https://formspree.io/f/xzeppzgd".startsWith("__")?"":"https://formspree.io/f/xzeppzgd";
+
+/* ---------- sink ---------- */
+/* Anonymous per-shot feedback to Maahir's Supabase table. SINK_URL empty means
+   the feature is off and every path below is a no-op: zero fetch calls, byte-
+   for-byte today's behaviour. See docs/NEXT-SESSION.md decisions 1-4. */
+const SINK_URL="https://eifjcbylfpwowewyfyje.supabase.co", SINK_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpZmpjYnlsZnB3b3dld3lmeWplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTU0NDYsImV4cCI6MjEwMzk3MTQ0Nn0.xUbPbWpDvmZKqS5P-J_DYrTKRVOfv5S2EL3ursyjil4", SINK_KEY="albie-shots-2026-09";
+function uuid(){try{return crypto.randomUUID()}catch(e){
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{
+    const r=Math.random()*16|0;return (c==="x"?r:(r&0x3|0x8)).toString(16);});}}
+function deviceId(){let d=kv.get("pc.device");
+  if(!d){d=uuid();kv.set("pc.device",d);}return d;}
+// a round is scoped like the ledger already scopes it: this course, today
+function curRound(){const c=COURSES[cur.course],today=new Date().toISOString().slice(0,10);
+  const key="pc.round."+c.slug+"."+today;
+  let r=kv.get(key);if(!r){r=uuid();kv.set(key,r);}return r;}
+// stable across devices for the same bag: same clubs, same carries, same hash
+function bagHash(){const bag=(store.p&&store.p.bag)||[];
+  const s=bag.filter(b=>!b.out).map(b=>b.club+":"+b.carry).sort().join("|");
+  let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;
+  return (h>>>0).toString(36).slice(0,16);}
+function stripGeo(v){
+  if(Array.isArray(v))return v.map(stripGeo);
+  if(v&&typeof v==="object"){const o={};
+    for(const k in v)if(!/^(lat|lon|lng|latitude|longitude)$/i.test(k))o[k]=stripGeo(v[k]);
+    return o}
+  return v;}
+function sinkRow(e){const c=COURSES[cur.course],{_sunk,...clean}=e;
+  const row={device_id:deviceId(),round_id:curRound(),shot_id:e.shot_id,
+    app_build:"2026-09-03",course:c.slug,tee:(store.p&&store.p.tees)||"member",
+    hole:e.hole,shot_no:e.n,bag_hash:bagHash(),payload:stripGeo(clean)};
+  const nm=store.p&&store.p.name;
+  if(nm&&nm!=="Player")row.tester_name=nm;
+  return row;}
+function sinkBank(){try{return JSON.parse(kv.get("pc.sinkBank"))||[]}catch(e){return []}}
+function sinkBankSet(v){kv.set("pc.sinkBank",JSON.stringify(v))}
+function sinkPush(row){const b=sinkBank();b.push(row);
+  if(b.length>2000)b.splice(0,b.length-2000);sinkBankSet(b);}
+async function sinkPost(row){
+  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),8000);
+  try{const r=await fetch(SINK_URL+"/rest/v1/shots",{method:"POST",keepalive:true,
+    signal:ctl.signal,headers:{apikey:SINK_ANON,Authorization:"Bearer "+SINK_ANON,
+      "x-albie-key":SINK_KEY,Prefer:"return=minimal","Content-Type":"application/json"},
+    body:JSON.stringify(row)});
+    return r.status===201||r.status===409;}
+  catch(e){return false}
+  finally{clearTimeout(t);}}
+function sinkFirstSendToast(){
+  if(kv.get("pc.sinkToast"))return;kv.set("pc.sinkToast","1");
+  toast("Sent to Maahir. Anonymous unless you add your name in Profile.");}
+async function sinkSend(row){
+  if(!SINK_URL)return;
+  if(navigator.onLine===false){sinkPush(row);return}
+  if(!await sinkPost(row)){sinkPush(row);return}
+  sinkFirstSendToast();sinkDrain();}
+async function sinkDrain(){
+  if(!SINK_URL)return;
+  let b=sinkBank();
+  while(b.length){
+    if(!await sinkPost(b[0]))break;
+    b=b.slice(1);sinkBankSet(b);sinkFirstSendToast();}}
+function sinkDisclosure(){const el=$("#sink-disclosure");if(el)el.classList.toggle("hidden",!SINK_URL);}
+// closes ONE ledger entry (rated, or superseded by the next shot); never twice
+function sinkCloseEntry(idx){
+  if(!SINK_URL||idx==null)return;
+  const lg=store.log,e=lg[idx];
+  if(!e||e.type!=="shot"||e._sunk)return;
+  e._sunk=true;e.shot_id=e.shot_id||uuid();
+  lg[idx]=e;store.log=lg;
+  sinkSend(sinkRow(e));}
+window.__sink={send:sinkSend,drain:sinkDrain,row:sinkRow,
+  bank:()=>sinkBank(),reset:()=>{sinkBankSet([]);kv.set("pc.sinkToast","");}};
 $("#updates-form").addEventListener("submit",async e=>{
   e.preventDefault();
   const em=$("#upd-email").value.trim();if(!em)return;
@@ -4011,6 +4087,7 @@ $$(".ab-plate img[data-fb]").forEach(im=>im.addEventListener("error",()=>{
   const cap=fig.querySelector("figcaption");
   if(cap&&im.dataset.fbcap)cap.textContent=im.dataset.fbcap;},{once:true}));
 banner();
+sinkDisclosure();sinkDrain();
 renderCourseSel();renderHoles();renderLog();renderAbout();
 /* weather runs itself: silent fetch at the course's coordinates on open.
    The user never sets temperature; wind pre-sets unless they slide it.
